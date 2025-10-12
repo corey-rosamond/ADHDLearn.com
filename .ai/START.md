@@ -1,9 +1,9 @@
 # START HERE - Development Entry Point
 
 ## Current Status
-**Active Phase:** Phase 8 - Bubble Animation
+**Active Phase:** Phase 9 - Multiple Bubbles
 **Status:** Ready to begin implementation
-**Estimated Time:** 45 minutes
+**Estimated Time:** 60 minutes
 
 ---
 
@@ -41,23 +41,23 @@ This defines code quality standards, best practices, and common pitfalls to avoi
 
 ## Current Phase Documentation
 
-### Phase 8: Bubble Animation
+### Phase 9: Multiple Bubbles
 
 **Read these three files IN ORDER:**
 
 1. **PLAN.md** - Implementation plan with tasks and code examples
    ```
-   Read: .ai/phases/phase-8/PLAN.md
+   Read: .ai/phases/phase-9/PLAN.md
    ```
 
 2. **UML.md** - Architecture diagrams (Mermaid)
    ```
-   Read: .ai/phases/phase-8/UML.md
+   Read: .ai/phases/phase-9/UML.md
    ```
 
 3. **GHERKIN.md** - BDD acceptance criteria
    ```
-   Read: .ai/phases/phase-8/GHERKIN.md
+   Read: .ai/phases/phase-9/GHERKIN.md
    ```
 
 **After reading, you should understand:**
@@ -166,23 +166,26 @@ Do not start Phase 2 until:
 ```
 
 ### Current Phase Goals
-**Phase 8 Goal:** Add floating animation to make bubble move up and down
+**Phase 9 Goal:** Spawn multiple bubbles with different letters simultaneously
 
 **You will create:**
-- Floating animation for bubble
-- Smooth up/down movement using tweens
-- Looping animation that runs continuously
-- Foundation for more complex animations
+- Multiple bubble instances (3 bubbles: A, B, C)
+- Random horizontal positioning for each bubble
+- Independent interaction for each bubble
+- Letter-specific audio for each bubble
+- Foundation for dynamic bubble spawning
 
 **Acceptance Criteria:**
-- Bubble floats up and down smoothly
-- Animation loops infinitely
-- Movement feels natural and engaging
-- Animation starts automatically when bubble is created
-- Ready for click interaction (Phase 9)
+- 3 bubbles spawn at scene start
+- Each bubble has different letter (A, B, C)
+- Each bubble positioned randomly horizontally
+- Each bubble independently clickable
+- Each bubble plays correct letter audio
+- Bubbles don't overlap
+- Ready for dynamic spawning (Phase 10+)
 - No console errors
 
-**Time Estimate:** 45 minutes
+**Time Estimate:** 60 minutes
 
 ---
 
