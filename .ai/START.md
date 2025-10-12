@@ -1,9 +1,9 @@
 # START HERE - Development Entry Point
 
 ## Current Status
-**Active Phase:** Phase 7 - First Bubble Display
+**Active Phase:** Phase 8 - Bubble Animation
 **Status:** Ready to begin implementation
-**Estimated Time:** 60 minutes
+**Estimated Time:** 45 minutes
 
 ---
 
@@ -41,23 +41,23 @@ This defines code quality standards, best practices, and common pitfalls to avoi
 
 ## Current Phase Documentation
 
-### Phase 7: First Bubble Display
+### Phase 8: Bubble Animation
 
 **Read these three files IN ORDER:**
 
 1. **PLAN.md** - Implementation plan with tasks and code examples
    ```
-   Read: .ai/phases/phase-7/PLAN.md
+   Read: .ai/phases/phase-8/PLAN.md
    ```
 
 2. **UML.md** - Architecture diagrams (Mermaid)
    ```
-   Read: .ai/phases/phase-7/UML.md
+   Read: .ai/phases/phase-8/UML.md
    ```
 
 3. **GHERKIN.md** - BDD acceptance criteria
    ```
-   Read: .ai/phases/phase-7/GHERKIN.md
+   Read: .ai/phases/phase-8/GHERKIN.md
    ```
 
 **After reading, you should understand:**
@@ -166,23 +166,23 @@ Do not start Phase 2 until:
 ```
 
 ### Current Phase Goals
-**Phase 7 Goal:** Add first static bubble to Letter Pop scene with letter display
+**Phase 8 Goal:** Add floating animation to make bubble move up and down
 
 **You will create:**
-- Bubble game object class
-- Single static bubble in center of scene
-- Letter rendering inside bubble
-- Foundation for bubble interaction (Phase 8)
+- Floating animation for bubble
+- Smooth up/down movement using tweens
+- Looping animation that runs continuously
+- Foundation for more complex animations
 
 **Acceptance Criteria:**
-- Bubble class exists and is well-structured
-- Single bubble displays in center of LetterPopScene
-- Bubble shows a letter clearly inside
-- Bubble is visually appealing and child-friendly
-- Ready for click interaction (Phase 8)
+- Bubble floats up and down smoothly
+- Animation loops infinitely
+- Movement feels natural and engaging
+- Animation starts automatically when bubble is created
+- Ready for click interaction (Phase 9)
 - No console errors
 
-**Time Estimate:** 60 minutes
+**Time Estimate:** 45 minutes
 
 ---
 
