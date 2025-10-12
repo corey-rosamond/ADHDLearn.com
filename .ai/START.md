@@ -1,9 +1,9 @@
 # START HERE - Development Entry Point
 
 ## Current Status
-**Active Phase:** Phase 1 - Project Bootstrap
+**Active Phase:** Phase 2 - Basic Scene System
 **Status:** Ready to begin implementation
-**Estimated Time:** 30 minutes
+**Estimated Time:** 45 minutes
 
 ---
 
@@ -41,23 +41,23 @@ This defines code quality standards, best practices, and common pitfalls to avoi
 
 ## Current Phase Documentation
 
-### Phase 1: Project Bootstrap
+### Phase 2: Basic Scene System
 
 **Read these three files IN ORDER:**
 
 1. **PLAN.md** - Implementation plan with tasks and code examples
    ```
-   Read: .ai/phases/phase-1/PLAN.md
+   Read: .ai/phases/phase-2/PLAN.md
    ```
 
 2. **UML.md** - Architecture diagrams (Mermaid)
    ```
-   Read: .ai/phases/phase-1/UML.md
+   Read: .ai/phases/phase-2/UML.md
    ```
 
 3. **GHERKIN.md** - BDD acceptance criteria
    ```
-   Read: .ai/phases/phase-1/GHERKIN.md
+   Read: .ai/phases/phase-2/GHERKIN.md
    ```
 
 **After reading, you should understand:**
@@ -166,20 +166,21 @@ Do not start Phase 2 until:
 ```
 
 ### Current Phase Goals
-**Phase 1 Goal:** Get Phaser 3 running in browser with basic display
+**Phase 2 Goal:** Implement proper Phaser scene structure with transitions
 
 **You will create:**
-- Folder structure
-- index.html with Phaser CDN
-- src/config.js with basic Phaser config
-- Display "Aurora's Letter Adventure" text
+- BootScene.js - Initial scene that starts the game
+- PreloadScene.js - Asset loading scene (placeholder for now)
+- MainMenuScene.js - Main menu with title and start instruction
+- Update config.js to use scene array
 
 **Acceptance Criteria:**
-- Open index.html in browser
-- See Phaser canvas with welcome text
+- Scenes transition automatically: Boot → Preload → MainMenu
+- Console logs show scene progression
+- Main menu displays title and instruction text
 - No console errors
 
-**Time Estimate:** 30 minutes
+**Time Estimate:** 45 minutes
 
 ---
 
