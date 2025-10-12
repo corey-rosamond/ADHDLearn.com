@@ -6,68 +6,117 @@ class MainMenuScene extends Phaser.Scene {
     create() {
         console.log('MainMenuScene started');
 
-        // Initialize AudioManager (Phase 4)
-        const audioManager = AudioManager.getInstance();
-        audioManager.init(this);
+        // Create gradient background
+        this.createGradientBackground();
 
-        // Title (Phase 2)
+        // Add game title
         this.add.text(400, 150, "Aurora's Letter Adventure", {
-            fontSize: '40px',
-            color: '#ffff00',
+            fontSize: '48px',
+            fontFamily: 'Arial',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 6
+        }).setOrigin(0.5);
+
+        // Create START button
+        this.createStartButton();
+    }
+
+    createGradientBackground() {
+        const graphics = this.add.graphics();
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
+
+        // Create vertical gradient from purple to pink to orange
+        const colorTop = Phaser.Display.Color.ValueToColor(0x6B46C1);    // Purple
+        const colorMid = Phaser.Display.Color.ValueToColor(0xEC4899);    // Pink
+        const colorBottom = Phaser.Display.Color.ValueToColor(0xF97316); // Orange
+
+        // Draw gradient line by line
+        for (let i = 0; i < height; i++) {
+            const progress = i / height;
+            let color;
+
+            if (progress < 0.5) {
+                // Purple to Pink (first half)
+                color = Phaser.Display.Color.Interpolate.ColorWithColor(
+                    colorTop,
+                    colorMid,
+                    100,
+                    (progress / 0.5) * 100
+                );
+            } else {
+                // Pink to Orange (second half)
+                color = Phaser.Display.Color.Interpolate.ColorWithColor(
+                    colorMid,
+                    colorBottom,
+                    100,
+                    ((progress - 0.5) / 0.5) * 100
+                );
+            }
+
+            graphics.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b));
+            graphics.fillRect(0, i, width, 1);
+        }
+    }
+
+    createStartButton() {
+        // Create button background (green rectangle)
+        const buttonBg = this.add.rectangle(400, 400, 200, 80, 0x4CAF50);
+        buttonBg.setStrokeStyle(4, 0xffffff);
+        buttonBg.setInteractive({ useHandCursor: true });
+
+        // Create button text
+        const buttonText = this.add.text(400, 400, 'START', {
+            fontSize: '36px',
+            fontFamily: 'Arial',
+            color: '#ffffff',
             fontStyle: 'bold'
         }).setOrigin(0.5);
 
-        // Phase 3: Display test image to verify asset loading
-        const testImage = this.add.image(400, 250, 'testImage');
-        testImage.setOrigin(0.5);
-
-        // Phase 3: Test asset loaded message
-        this.add.text(400, 360, 'Test Image Loaded Successfully!', {
-            fontSize: '20px',
-            color: '#ffffff'
-        }).setOrigin(0.5);
-
-        // Phase 4: Test button for AudioManager
-        const testButton = this.add.text(400, 420, 'Test Sound (AudioManager)', {
-            fontSize: '18px',
-            color: '#ffffff',
-            backgroundColor: '#4488ff',
-            padding: { x: 20, y: 10 }
-        }).setOrigin(0.5).setInteractive();
-
-        // Test AudioManager.playSound() on button click
-        testButton.on('pointerdown', () => {
-            console.log('[MainMenuScene] Test button clicked');
-            audioManager.playSound('testSound');
+        // Hover effect - scale up
+        buttonBg.on('pointerover', () => {
+            this.tweens.add({
+                targets: [buttonBg, buttonText],
+                scaleX: 1.1,
+                scaleY: 1.1,
+                duration: 200,
+                ease: 'Power2'
+            });
         });
 
-        // Visual feedback for button
-        testButton.on('pointerover', () => {
-            testButton.setStyle({ backgroundColor: '#6699ff' });
+        // Hover out - scale back to normal
+        buttonBg.on('pointerout', () => {
+            this.tweens.add({
+                targets: [buttonBg, buttonText],
+                scaleX: 1.0,
+                scaleY: 1.0,
+                duration: 200,
+                ease: 'Power2'
+            });
         });
 
-        testButton.on('pointerout', () => {
-            testButton.setStyle({ backgroundColor: '#4488ff' });
+        // Click handler
+        buttonBg.on('pointerdown', () => {
+            console.log('[MainMenuScene] START button clicked');
+
+            // Play sound if available
+            if (this.cache.audio.exists('testSound')) {
+                this.sound.play('testSound');
+            }
+
+            // Scale down animation with yoyo
+            this.tweens.add({
+                targets: [buttonBg, buttonText],
+                scaleX: 0.95,
+                scaleY: 0.95,
+                duration: 100,
+                yoyo: true,
+                onComplete: () => {
+                    // Transition to LetterPopScene
+                    this.scene.start('LetterPop');
+                }
+            });
         });
-
-        // Instruction text (Phase 2 + Phase 3/4 testing info)
-        this.add.text(400, 490, '(Click button to test AudioManager)', {
-            fontSize: '14px',
-            color: '#cccccc'
-        }).setOrigin(0.5);
-
-        // Also keep image click for direct Phaser sound test (Phase 3)
-        testImage.setInteractive();
-        testImage.on('pointerdown', () => {
-            console.log('[MainMenuScene] Image clicked - direct Phaser sound');
-            this.sound.play('testSound');
-        });
-
-        this.add.text(400, 310, '(Click image for direct Phaser sound)', {
-            fontSize: '12px',
-            color: '#cccccc'
-        }).setOrigin(0.5);
-
-        // Note: Full menu implementation will be in Phase 5
     }
 }
