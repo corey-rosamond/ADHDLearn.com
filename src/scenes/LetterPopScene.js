@@ -22,7 +22,8 @@ class LetterPopScene extends Phaser.Scene {
         // Create back button
         this.createBackButton();
 
-        // Center area is ready for bubbles (Phase 7)
+        // Create bubble with letter A
+        this.createBubble();
     }
 
     createBackground() {
@@ -127,5 +128,16 @@ class LetterPopScene extends Phaser.Scene {
                 }
             });
         });
+    }
+
+    createBubble() {
+        // Create bubble at center of screen
+        const centerX = this.cameras.main.width / 2;  // 800 / 2 = 400
+        const centerY = this.cameras.main.height / 2; // 600 / 2 = 300
+
+        // Instantiate bubble with letter "A"
+        this.bubble = new Bubble(this, centerX, centerY, 'A');
+
+        console.log('[LetterPopScene] Bubble created at', centerX, centerY);
     }
 }
