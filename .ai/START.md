@@ -1,7 +1,7 @@
 # START HERE - Development Entry Point
 
 ## Current Status
-**Active Phase:** Phase 4 - AudioManager Service
+**Active Phase:** Phase 5 - Main Menu UI
 **Status:** Ready to begin implementation
 **Estimated Time:** 1 hour
 
@@ -41,23 +41,23 @@ This defines code quality standards, best practices, and common pitfalls to avoi
 
 ## Current Phase Documentation
 
-### Phase 4: AudioManager Service
+### Phase 5: Main Menu UI
 
 **Read these three files IN ORDER:**
 
 1. **PLAN.md** - Implementation plan with tasks and code examples
    ```
-   Read: .ai/phases/phase-4/PLAN.md
+   Read: .ai/phases/phase-5/PLAN.md
    ```
 
 2. **UML.md** - Architecture diagrams (Mermaid)
    ```
-   Read: .ai/phases/phase-4/UML.md
+   Read: .ai/phases/phase-5/UML.md
    ```
 
 3. **GHERKIN.md** - BDD acceptance criteria
    ```
-   Read: .ai/phases/phase-4/GHERKIN.md
+   Read: .ai/phases/phase-5/GHERKIN.md
    ```
 
 **After reading, you should understand:**
@@ -166,21 +166,21 @@ Do not start Phase 2 until:
 ```
 
 ### Current Phase Goals
-**Phase 4 Goal:** Create centralized AudioManager service
+**Phase 5 Goal:** Create interactive Main Menu with gradient background and START button
 
 **You will create:**
-- AudioManager.js singleton service in src/services/
-- Sound effect playback methods
-- Voice clip playback methods with overlap prevention
-- Volume control system
-- Graceful error handling for missing audio
+- Colorful gradient background in MainMenuScene
+- Interactive START button with visual feedback
+- Audio feedback on button interactions
+- Smooth scene transition to gameplay
+- ADHD-friendly visual design
 
 **Acceptance Criteria:**
-- AudioManager initialized in BootScene
-- Sound effects play on demand
-- Voice clips prevent overlap
-- Volume controls work correctly
-- Missing audio handled gracefully
+- Gradient background displays correctly
+- START button is prominent and interactive
+- Button has hover and click effects
+- Audio plays on button interactions
+- Transitions to next scene on START
 - No console errors
 
 **Time Estimate:** 1 hour
