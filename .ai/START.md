@@ -1,9 +1,9 @@
 # START HERE - Development Entry Point
 
 ## Current Status
-**Active Phase:** Phase 5 - Main Menu UI
+**Active Phase:** Phase 6 - Letter Pop Scene Setup
 **Status:** Ready to begin implementation
-**Estimated Time:** 1 hour
+**Estimated Time:** 45 minutes
 
 ---
 
@@ -41,23 +41,23 @@ This defines code quality standards, best practices, and common pitfalls to avoi
 
 ## Current Phase Documentation
 
-### Phase 5: Main Menu UI
+### Phase 6: Letter Pop Scene Setup
 
 **Read these three files IN ORDER:**
 
 1. **PLAN.md** - Implementation plan with tasks and code examples
    ```
-   Read: .ai/phases/phase-5/PLAN.md
+   Read: .ai/phases/phase-6/PLAN.md
    ```
 
 2. **UML.md** - Architecture diagrams (Mermaid)
    ```
-   Read: .ai/phases/phase-5/UML.md
+   Read: .ai/phases/phase-6/UML.md
    ```
 
 3. **GHERKIN.md** - BDD acceptance criteria
    ```
-   Read: .ai/phases/phase-5/GHERKIN.md
+   Read: .ai/phases/phase-6/GHERKIN.md
    ```
 
 **After reading, you should understand:**
@@ -166,24 +166,22 @@ Do not start Phase 2 until:
 ```
 
 ### Current Phase Goals
-**Phase 5 Goal:** Create interactive Main Menu with gradient background and START button
+**Phase 6 Goal:** Create foundational visual structure for Letter Pop game scene
 
 **You will create:**
-- Colorful gradient background in MainMenuScene
-- Interactive START button with visual feedback
-- Audio feedback on button interactions
-- Smooth scene transition to gameplay
-- ADHD-friendly visual design
+- Colorful background for LetterPopScene
+- Scene title/header
+- Navigation back to main menu
+- Visual foundation for bubble gameplay
 
 **Acceptance Criteria:**
-- Gradient background displays correctly
-- START button is prominent and interactive
-- Button has hover and click effects
-- Audio plays on button interactions
-- Transitions to next scene on START
+- LetterPopScene has colorful child-friendly background
+- Scene displays correctly when accessed from main menu
+- Back button returns to MainMenuScene
+- Ready for bubble spawning implementation (Phase 7)
 - No console errors
 
-**Time Estimate:** 1 hour
+**Time Estimate:** 45 minutes
 
 ---
 
