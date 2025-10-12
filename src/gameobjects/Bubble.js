@@ -94,39 +94,15 @@ class Bubble extends Phaser.GameObjects.Container {
     }
 
     /**
-     * Handle bubble pop interaction
-     * Plays sounds, animates, and destroys the bubble
+     * Handle bubble click - delegates to scene for correct/incorrect logic
      */
     onPop() {
-        console.log(`[Bubble] ${this.letter} popped!`);
+        console.log(`[Bubble] ${this.letter} clicked!`);
 
-        // Prevent multiple clicks
-        this.disableInteractive();
-
-        // Play pop sound immediately (if available)
-        if (this.scene.sound.get('pop')) {
-            this.scene.sound.play('pop');
+        // Delegate to scene's handleBubbleClick method
+        // Scene will determine if this is correct or incorrect
+        if (this.scene.handleBubbleClick) {
+            this.scene.handleBubbleClick(this, this.letter);
         }
-
-        // Play letter sound after short delay (if available)
-        this.scene.time.delayedCall(100, () => {
-            const letterKey = `letter-${this.letter.toLowerCase()}`;
-            if (this.scene.sound.get(letterKey)) {
-                this.scene.sound.play(letterKey);
-            }
-        });
-
-        // Pop animation: scale up and fade out
-        this.scene.tweens.add({
-            targets: this,
-            scaleX: 1.5,
-            scaleY: 1.5,
-            alpha: 0,
-            duration: 300,
-            ease: 'Power2',
-            onComplete: () => {
-                this.destroy();
-            }
-        });
     }
 }

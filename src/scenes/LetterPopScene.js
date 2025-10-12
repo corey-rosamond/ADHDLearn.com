@@ -24,6 +24,9 @@ class LetterPopScene extends Phaser.Scene {
         // Initialize bubbles array for tracking
         this.bubbles = [];
 
+        // Initialize score
+        this.score = 0;
+
         // Create gradient background
         this.createBackground();
 
@@ -33,8 +36,37 @@ class LetterPopScene extends Phaser.Scene {
         // Create back button
         this.createBackButton();
 
+        // Start first round
+        this.startRound();
+    }
+
+    startRound() {
+        // Select target letter
+        this.selectTargetLetter();
+
+        // Play audio instruction (if available)
+        this.playTargetLetterAudio();
+
         // Create multiple bubbles with different letters
         this.createBubbles();
+    }
+
+    selectTargetLetter() {
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+        const randomIndex = Phaser.Math.Between(0, letters.length - 1);
+        this.targetLetter = letters[randomIndex];
+        console.log(`[LetterPopScene] Target letter selected: ${this.targetLetter}`);
+        return this.targetLetter;
+    }
+
+    playTargetLetterAudio() {
+        // Play audio instruction like "Find the letter B!"
+        const audioKey = `find_letter_${this.targetLetter}`;
+        if (this.sound.get(audioKey)) {
+            this.sound.play(audioKey);
+        } else {
+            console.log(`[LetterPopScene] Audio not available: ${audioKey}`);
+        }
     }
 
     createBackground() {
@@ -144,7 +176,15 @@ class LetterPopScene extends Phaser.Scene {
     createBubbles() {
         // Generate spawn positions for 3 bubbles with 150px minimum spacing
         const positions = this.generateSpawnPositions(3, 150);
+
+        // Ensure target letter is included
         const letters = ['A', 'B', 'C'];
+
+        // Replace one random letter with target letter to ensure it's present
+        if (!letters.includes(this.targetLetter)) {
+            const randomIndex = Phaser.Math.Between(0, letters.length - 1);
+            letters[randomIndex] = this.targetLetter;
+        }
 
         // Create bubbles at different positions
         letters.forEach((letter, index) => {
@@ -154,9 +194,99 @@ class LetterPopScene extends Phaser.Scene {
                 positions[index].y,
                 letter
             );
+
+            // Store reference to scene for bubble to access targetLetter
+            bubble.scene = this;
+
             this.bubbles.push(bubble);
             console.log(`[LetterPopScene] Bubble ${letter} created at (${positions[index].x}, ${positions[index].y})`);
         });
+    }
+
+    handleBubbleClick(bubble, clickedLetter) {
+        console.log(`[LetterPopScene] Bubble clicked: ${clickedLetter}, Target: ${this.targetLetter}`);
+
+        if (clickedLetter === this.targetLetter) {
+            // CORRECT!
+            this.handleCorrectClick(bubble);
+        } else {
+            // INCORRECT - but non-punitive
+            this.handleIncorrectClick(bubble);
+        }
+    }
+
+    handleCorrectClick(bubble) {
+        console.log('[LetterPopScene] Correct click!');
+
+        // Play success sound if available
+        if (this.sound.get('success')) {
+            this.sound.play('success');
+        }
+
+        // Create celebration particles
+        this.createCelebrationEffect(bubble.x, bubble.y);
+
+        // Disable further interaction
+        bubble.disableInteractive();
+
+        // Pop animation: scale up and fade out
+        this.tweens.add({
+            targets: bubble,
+            scaleX: 1.5,
+            scaleY: 1.5,
+            alpha: 0,
+            duration: 300,
+            ease: 'Power2',
+            onComplete: () => {
+                bubble.destroy();
+                this.incrementScore();
+            }
+        });
+    }
+
+    handleIncorrectClick(bubble) {
+        console.log('[LetterPopScene] Incorrect click - wobble');
+
+        // Wobble animation - gentle side-to-side
+        this.tweens.add({
+            targets: bubble,
+            x: bubble.x - 10,
+            duration: 50,
+            yoyo: true,
+            repeat: 2,
+            ease: 'Power1'
+        });
+
+        // Bubble stays on screen - player can try again
+    }
+
+    createCelebrationEffect(x, y) {
+        // Simple star burst effect
+        const colors = [0xFFD700, 0xFF69B4, 0x00CED1, 0x90EE90];
+
+        for (let i = 0; i < 8; i++) {
+            const angle = (Math.PI * 2 * i) / 8;
+            const star = this.add.circle(x, y, 5, colors[i % colors.length]);
+
+            const targetX = x + Math.cos(angle) * 100;
+            const targetY = y + Math.sin(angle) * 100;
+
+            this.tweens.add({
+                targets: star,
+                x: targetX,
+                y: targetY,
+                alpha: 0,
+                duration: 400,
+                ease: 'Power2',
+                onComplete: () => star.destroy()
+            });
+        }
+    }
+
+    incrementScore() {
+        this.score++;
+        console.log(`[LetterPopScene] Score: ${this.score}`);
+        // Score display will be added in Phase 11
     }
 
     generateSpawnPositions(count, minDistance = 150) {
