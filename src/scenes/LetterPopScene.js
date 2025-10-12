@@ -12,12 +12,17 @@ class LetterPopScene extends Phaser.Scene {
         // Load bubble pop sound
         this.load.audio('pop', 'assets/audio/pop.mp3');
 
-        // Load letter audio for A
+        // Load letter audio for A, B, C
         this.load.audio('letter-a', 'assets/audio/letters/A.mp3');
+        this.load.audio('letter-b', 'assets/audio/letters/B.mp3');
+        this.load.audio('letter-c', 'assets/audio/letters/C.mp3');
     }
 
     create() {
         console.log('LetterPopScene started');
+
+        // Initialize bubbles array for tracking
+        this.bubbles = [];
 
         // Create gradient background
         this.createBackground();
@@ -28,8 +33,8 @@ class LetterPopScene extends Phaser.Scene {
         // Create back button
         this.createBackButton();
 
-        // Create bubble with letter A
-        this.createBubble();
+        // Create multiple bubbles with different letters
+        this.createBubbles();
     }
 
     createBackground() {
@@ -136,14 +141,52 @@ class LetterPopScene extends Phaser.Scene {
         });
     }
 
-    createBubble() {
-        // Create bubble at center of screen
-        const centerX = this.cameras.main.width / 2;  // 800 / 2 = 400
-        const centerY = this.cameras.main.height / 2; // 600 / 2 = 300
+    createBubbles() {
+        // Generate spawn positions for 3 bubbles with 150px minimum spacing
+        const positions = this.generateSpawnPositions(3, 150);
+        const letters = ['A', 'B', 'C'];
 
-        // Instantiate bubble with letter "A"
-        this.bubble = new Bubble(this, centerX, centerY, 'A');
+        // Create bubbles at different positions
+        letters.forEach((letter, index) => {
+            const bubble = new Bubble(
+                this,
+                positions[index].x,
+                positions[index].y,
+                letter
+            );
+            this.bubbles.push(bubble);
+            console.log(`[LetterPopScene] Bubble ${letter} created at (${positions[index].x}, ${positions[index].y})`);
+        });
+    }
 
-        console.log('[LetterPopScene] Bubble created at', centerX, centerY);
+    generateSpawnPositions(count, minDistance = 150) {
+        const positions = [];
+        const minX = 100;
+        const maxX = 700;
+        const y = 400; // Middle height for better visibility
+
+        for (let i = 0; i < count; i++) {
+            let attempts = 0;
+            let validPosition = false;
+            let x;
+
+            while (!validPosition && attempts < 50) {
+                x = Phaser.Math.Between(minX, maxX);
+                validPosition = true;
+
+                // Check distance from existing positions
+                for (let pos of positions) {
+                    if (Math.abs(pos.x - x) < minDistance) {
+                        validPosition = false;
+                        break;
+                    }
+                }
+                attempts++;
+            }
+
+            positions.push({ x, y });
+        }
+
+        return positions;
     }
 }
