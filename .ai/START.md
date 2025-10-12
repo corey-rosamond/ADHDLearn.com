@@ -1,9 +1,9 @@
 # START HERE - Development Entry Point
 
 ## Current Status
-**Active Phase:** Phase 9 - Multiple Bubbles
+**Active Phase:** Phase 10 - Target Letter Game Logic
 **Status:** Ready to begin implementation
-**Estimated Time:** 60 minutes
+**Estimated Time:** 90 minutes
 
 ---
 
@@ -41,23 +41,23 @@ This defines code quality standards, best practices, and common pitfalls to avoi
 
 ## Current Phase Documentation
 
-### Phase 9: Multiple Bubbles
+### Phase 10: Target Letter Game Logic
 
 **Read these three files IN ORDER:**
 
 1. **PLAN.md** - Implementation plan with tasks and code examples
    ```
-   Read: .ai/phases/phase-9/PLAN.md
+   Read: .ai/phases/phase-10/PLAN.md
    ```
 
 2. **UML.md** - Architecture diagrams (Mermaid)
    ```
-   Read: .ai/phases/phase-9/UML.md
+   Read: .ai/phases/phase-10/UML.md
    ```
 
 3. **GHERKIN.md** - BDD acceptance criteria
    ```
-   Read: .ai/phases/phase-9/GHERKIN.md
+   Read: .ai/phases/phase-10/GHERKIN.md
    ```
 
 **After reading, you should understand:**
@@ -166,26 +166,27 @@ Do not start Phase 2 until:
 ```
 
 ### Current Phase Goals
-**Phase 9 Goal:** Spawn multiple bubbles with different letters simultaneously
+**Phase 10 Goal:** Implement correct/incorrect feedback logic for target letter gameplay
 
 **You will create:**
-- Multiple bubble instances (3 bubbles: A, B, C)
-- Random horizontal positioning for each bubble
-- Independent interaction for each bubble
-- Letter-specific audio for each bubble
-- Foundation for dynamic bubble spawning
+- Target letter selection system
+- Audio instruction ("Find the letter B!")
+- Correct click feedback (celebration sound/animation)
+- Incorrect click feedback (gentle wobble, non-punitive)
+- ADHD-friendly design (encouraging, not frustrating)
+- Foundation for scoring and progression
 
 **Acceptance Criteria:**
-- 3 bubbles spawn at scene start
-- Each bubble has different letter (A, B, C)
-- Each bubble positioned randomly horizontally
-- Each bubble independently clickable
-- Each bubble plays correct letter audio
-- Bubbles don't overlap
-- Ready for dynamic spawning (Phase 10+)
+- Game selects target letter at scene start
+- Audio instruction plays ("Find the letter X!")
+- Clicking correct bubble gives positive feedback
+- Clicking incorrect bubble gives gentle feedback
+- No punitive or discouraging messages
+- Clear visual/audio distinction between correct/incorrect
+- Ready for scoring system (Phase 11+)
 - No console errors
 
-**Time Estimate:** 60 minutes
+**Time Estimate:** 90 minutes
 
 ---
 
