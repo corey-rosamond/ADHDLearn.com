@@ -29,6 +29,13 @@ class Bubble extends Phaser.GameObjects.Container {
 
         // Add this container to the scene
         scene.add.existing(this);
+
+        // Make bubble interactive
+        this.setInteractive(
+            new Phaser.Geom.Circle(0, 0, this.radius),
+            Phaser.Geom.Circle.Contains
+        );
+        this.on('pointerdown', () => this.onPop());
     }
 
     /**
@@ -87,15 +94,39 @@ class Bubble extends Phaser.GameObjects.Container {
     }
 
     /**
-     * Pop the bubble
-     * Placeholder for future phases (animation, sound, etc.)
+     * Handle bubble pop interaction
+     * Plays sounds, animates, and destroys the bubble
      */
-    pop() {
-        console.log(`Bubble ${this.letter} popped!`);
-        // Will be implemented in future phases with:
-        // - Pop animation (scale down, fade out)
-        // - Pop sound effect
-        // - Score increment
-        // - Particle effects
+    onPop() {
+        console.log(`[Bubble] ${this.letter} popped!`);
+
+        // Prevent multiple clicks
+        this.disableInteractive();
+
+        // Play pop sound immediately (if available)
+        if (this.scene.sound.get('pop')) {
+            this.scene.sound.play('pop');
+        }
+
+        // Play letter sound after short delay (if available)
+        this.scene.time.delayedCall(100, () => {
+            const letterKey = `letter-${this.letter.toLowerCase()}`;
+            if (this.scene.sound.get(letterKey)) {
+                this.scene.sound.play(letterKey);
+            }
+        });
+
+        // Pop animation: scale up and fade out
+        this.scene.tweens.add({
+            targets: this,
+            scaleX: 1.5,
+            scaleY: 1.5,
+            alpha: 0,
+            duration: 300,
+            ease: 'Power2',
+            onComplete: () => {
+                this.destroy();
+            }
+        });
     }
 }

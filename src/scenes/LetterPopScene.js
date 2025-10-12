@@ -8,6 +8,12 @@ class LetterPopScene extends Phaser.Scene {
         if (!this.sound.get('buttonClick')) {
             this.load.audio('buttonClick', 'assets/audio/button-click.mp3');
         }
+
+        // Load bubble pop sound
+        this.load.audio('pop', 'assets/audio/pop.mp3');
+
+        // Load letter audio for A
+        this.load.audio('letter-a', 'assets/audio/letters/A.mp3');
     }
 
     create() {
