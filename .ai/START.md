@@ -1,9 +1,9 @@
 # START HERE - Development Entry Point
 
 ## Current Status
-**Active Phase:** Phase 2 - Basic Scene System
+**Active Phase:** Phase 3 - Asset Loading Infrastructure
 **Status:** Ready to begin implementation
-**Estimated Time:** 45 minutes
+**Estimated Time:** 1 hour
 
 ---
 
@@ -41,23 +41,23 @@ This defines code quality standards, best practices, and common pitfalls to avoi
 
 ## Current Phase Documentation
 
-### Phase 2: Basic Scene System
+### Phase 3: Asset Loading Infrastructure
 
 **Read these three files IN ORDER:**
 
 1. **PLAN.md** - Implementation plan with tasks and code examples
    ```
-   Read: .ai/phases/phase-2/PLAN.md
+   Read: .ai/phases/phase-3/PLAN.md
    ```
 
 2. **UML.md** - Architecture diagrams (Mermaid)
    ```
-   Read: .ai/phases/phase-2/UML.md
+   Read: .ai/phases/phase-3/UML.md
    ```
 
 3. **GHERKIN.md** - BDD acceptance criteria
    ```
-   Read: .ai/phases/phase-2/GHERKIN.md
+   Read: .ai/phases/phase-3/GHERKIN.md
    ```
 
 **After reading, you should understand:**
@@ -166,21 +166,22 @@ Do not start Phase 2 until:
 ```
 
 ### Current Phase Goals
-**Phase 2 Goal:** Implement proper Phaser scene structure with transitions
+**Phase 3 Goal:** Implement asset loading with progress feedback
 
 **You will create:**
-- BootScene.js - Initial scene that starts the game
-- PreloadScene.js - Asset loading scene (placeholder for now)
-- MainMenuScene.js - Main menu with title and start instruction
-- Update config.js to use scene array
+- Test assets (image and audio) for verification
+- Progress bar display in PreloadScene
+- Asset loading in PreloadScene's preload() method
+- Asset display verification in MainMenuScene
 
 **Acceptance Criteria:**
-- Scenes transition automatically: Boot → Preload → MainMenu
-- Console logs show scene progression
-- Main menu displays title and instruction text
+- Progress bar displays during asset loading
+- Test image loads and displays correctly
+- Test sound loads and can be played
+- Progress bar shows accurate loading progress
 - No console errors
 
-**Time Estimate:** 45 minutes
+**Time Estimate:** 1 hour
 
 ---
 
