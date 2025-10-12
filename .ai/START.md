@@ -1,9 +1,9 @@
 # START HERE - Development Entry Point
 
 ## Current Status
-**Active Phase:** Phase 10 - Target Letter Game Logic
+**Active Phase:** Phase 11 - Score System
 **Status:** Ready to begin implementation
-**Estimated Time:** 90 minutes
+**Estimated Time:** 60 minutes
 
 ---
 
@@ -41,23 +41,23 @@ This defines code quality standards, best practices, and common pitfalls to avoi
 
 ## Current Phase Documentation
 
-### Phase 10: Target Letter Game Logic
+### Phase 11: Score System
 
 **Read these three files IN ORDER:**
 
 1. **PLAN.md** - Implementation plan with tasks and code examples
    ```
-   Read: .ai/phases/phase-10/PLAN.md
+   Read: .ai/phases/phase-11/PLAN.md
    ```
 
 2. **UML.md** - Architecture diagrams (Mermaid)
    ```
-   Read: .ai/phases/phase-10/UML.md
+   Read: .ai/phases/phase-11/UML.md
    ```
 
 3. **GHERKIN.md** - BDD acceptance criteria
    ```
-   Read: .ai/phases/phase-10/GHERKIN.md
+   Read: .ai/phases/phase-11/GHERKIN.md
    ```
 
 **After reading, you should understand:**
@@ -166,27 +166,26 @@ Do not start Phase 2 until:
 ```
 
 ### Current Phase Goals
-**Phase 10 Goal:** Implement correct/incorrect feedback logic for target letter gameplay
+**Phase 11 Goal:** Add score tracking and display to show player progress
 
 **You will create:**
-- Target letter selection system
-- Audio instruction ("Find the letter B!")
-- Correct click feedback (celebration sound/animation)
-- Incorrect click feedback (gentle wobble, non-punitive)
-- ADHD-friendly design (encouraging, not frustrating)
-- Foundation for scoring and progression
+- Score display UI showing correct letters found
+- Total letters tracked per session
+- Optional: Time elapsed (non-pressured display)
+- Clean, visible score presentation
+- Foundation for statistics and achievements
 
 **Acceptance Criteria:**
-- Game selects target letter at scene start
-- Audio instruction plays ("Find the letter X!")
-- Clicking correct bubble gives positive feedback
-- Clicking incorrect bubble gives gentle feedback
-- No punitive or discouraging messages
-- Clear visual/audio distinction between correct/incorrect
-- Ready for scoring system (Phase 11+)
+- Score displays on screen
+- Score increments when correct bubble clicked
+- Score is clearly visible and readable
+- Score updates smoothly (no flashing)
+- Optional time display works if implemented
+- No distracting or overwhelming UI
+- Ready for statistics (Phase 12+)
 - No console errors
 
-**Time Estimate:** 90 minutes
+**Time Estimate:** 60 minutes
 
 ---
 

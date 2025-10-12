@@ -4,7 +4,7 @@ A browser-based educational game designed specifically for children with ADHD to
 
 ## Current Status
 
-**Active Phase:** Phase 10 - Target Letter Game Logic
+**Active Phase:** Phase 11 - Score System
 **Status:** Ready to implement
 **Last Updated:** October 12, 2025
 
@@ -96,14 +96,27 @@ A browser-based educational game designed specifically for children with ADHD to
 - Multi-instance system complete
 - **Completed:** October 12, 2025
 
+### Phase 10: Target Letter Game Logic ✅
+- Implemented target letter selection system (random from A-Z)
+- Added audio instruction playback with graceful fallback
+- Implemented handleCorrectClick with 8-particle celebration effect
+- Correct clicks: success sound, scale to 1.5x, fade out, destroy (300ms)
+- Implemented handleIncorrectClick with gentle wobble (150ms)
+- Incorrect clicks: bubbles stay on screen (non-punitive)
+- Modified Bubble class to delegate click handling to scene
+- Ensures target letter is included in spawned bubbles
+- Added score tracking (display in Phase 11)
+- All 49 Gherkin acceptance criteria verified
+- ADHD-friendly design: immediate feedback, non-punitive errors
+- **Completed:** October 12, 2025
+
 ## Next Steps
 
-- Implement target letter selection system
-- Add audio instruction ("Find the letter X!")
-- Implement correct/incorrect feedback logic
-- Add celebration for correct clicks
-- Add gentle wobble for incorrect clicks (non-punitive)
-- Prepare for scoring and progression (Phase 11+)
+- Add score display UI on screen
+- Show total letters found per session
+- Optional: Add time elapsed display (non-pressured)
+- Clean, visible score presentation
+- Prepare for statistics and achievements (Phase 12+)
 
 ## Project Structure
 
