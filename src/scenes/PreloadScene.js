@@ -19,9 +19,9 @@ class PreloadScene extends Phaser.Scene {
     }
 
     create() {
-        // Transition to MainScene after brief delay
+        // Transition to MainMenu after brief delay
         this.time.delayedCall(500, () => {
-            this.scene.start('MainScene');
+            this.scene.start('MainMenu');
         });
     }
 
