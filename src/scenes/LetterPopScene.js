@@ -3,48 +3,129 @@ class LetterPopScene extends Phaser.Scene {
         super({ key: 'LetterPop' });
     }
 
+    preload() {
+        // Audio is already loaded from MainMenuScene, but check if needed
+        if (!this.sound.get('buttonClick')) {
+            this.load.audio('buttonClick', 'assets/audio/button-click.mp3');
+        }
+    }
+
     create() {
         console.log('LetterPopScene started');
 
-        // Simple placeholder background
-        this.cameras.main.setBackgroundColor('#4488ff');
+        // Create gradient background
+        this.createBackground();
 
-        // Placeholder text
-        this.add.text(400, 250, 'Letter Pop Game', {
-            fontSize: '48px',
+        // Add game title and subtitle
+        this.createTitle();
+
+        // Create back button
+        this.createBackButton();
+
+        // Center area is ready for bubbles (Phase 7)
+    }
+
+    createBackground() {
+        // Sky blue to turquoise gradient
+        const graphics = this.add.graphics();
+        const colors = [0x87CEEB, 0x00CED1]; // Sky blue to turquoise
+        const height = this.cameras.main.height;
+        const width = this.cameras.main.width;
+
+        // Draw gradient line by line
+        for (let i = 0; i < height; i++) {
+            const progress = i / height;
+            const color = Phaser.Display.Color.Interpolate.ColorWithColor(
+                Phaser.Display.Color.ValueToColor(colors[0]),
+                Phaser.Display.Color.ValueToColor(colors[1]),
+                100,
+                progress * 100
+            );
+            graphics.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b));
+            graphics.fillRect(0, i, width, 1);
+        }
+    }
+
+    createTitle() {
+        // Main title
+        this.add.text(400, 80, 'Letter Pop!', {
+            fontSize: '64px',
+            fontFamily: 'Arial',
+            color: '#ffffff',
+            fontStyle: 'bold',
+            stroke: '#0066cc',
+            strokeThickness: 8
+        }).setOrigin(0.5);
+
+        // Subtitle
+        this.add.text(400, 140, 'Pop the bubbles to learn letters!', {
+            fontSize: '24px',
+            fontFamily: 'Arial',
+            color: '#ffffff',
+            stroke: '#0066cc',
+            strokeThickness: 4
+        }).setOrigin(0.5);
+    }
+
+    createBackButton() {
+        // Create button background (red/coral color)
+        const buttonBg = this.add.rectangle(100, 50, 150, 60, 0xff6b6b);
+        buttonBg.setStrokeStyle(3, 0xffffff);
+
+        // Create button text
+        const buttonText = this.add.text(100, 50, '< Menu', {
+            fontSize: '24px',
             fontFamily: 'Arial',
             color: '#ffffff',
             fontStyle: 'bold'
         }).setOrigin(0.5);
 
-        this.add.text(400, 320, 'Coming Soon!', {
-            fontSize: '32px',
-            fontFamily: 'Arial',
-            color: '#ffff00'
-        }).setOrigin(0.5);
+        // Make button interactive
+        buttonBg.setInteractive({ useHandCursor: true });
 
-        // Back button for testing
-        const backButton = this.add.text(400, 450, 'Back to Menu', {
-            fontSize: '24px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            backgroundColor: '#666666',
-            padding: { x: 20, y: 10 }
-        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-
-        // Hover effect for back button
-        backButton.on('pointerover', () => {
-            backButton.setStyle({ backgroundColor: '#888888' });
+        // Hover effect - scale up
+        buttonBg.on('pointerover', () => {
+            this.tweens.add({
+                targets: [buttonBg, buttonText],
+                scaleX: 1.1,
+                scaleY: 1.1,
+                duration: 200,
+                ease: 'Power2'
+            });
         });
 
-        backButton.on('pointerout', () => {
-            backButton.setStyle({ backgroundColor: '#666666' });
+        // Mouse out - scale back to normal
+        buttonBg.on('pointerout', () => {
+            this.tweens.add({
+                targets: [buttonBg, buttonText],
+                scaleX: 1.0,
+                scaleY: 1.0,
+                duration: 200,
+                ease: 'Power2'
+            });
         });
 
-        // Click handler to return to main menu
-        backButton.on('pointerdown', () => {
+        // Click handler
+        buttonBg.on('pointerdown', () => {
             console.log('[LetterPopScene] Back button clicked');
-            this.scene.start('MainMenu');
+
+            // Play sound if available
+            if (this.sound.get('buttonClick')) {
+                this.sound.play('buttonClick');
+            }
+
+            // Scale down animation with yoyo
+            this.tweens.add({
+                targets: [buttonBg, buttonText],
+                scaleX: 0.95,
+                scaleY: 0.95,
+                duration: 100,
+                yoyo: true,
+                onComplete: () => {
+                    // Return to main menu
+                    this.scene.start('MainMenu');
+                }
+            });
         });
     }
 }
