@@ -1,9 +1,9 @@
 # START HERE - Development Entry Point
 
 ## Current Status
-**Active Phase:** Phase 11 - Score System
+**Active Phase:** Phase 12 - Round System & Continuous Gameplay
 **Status:** Ready to begin implementation
-**Estimated Time:** 60 minutes
+**Estimated Time:** 75 minutes
 
 ---
 
@@ -41,23 +41,23 @@ This defines code quality standards, best practices, and common pitfalls to avoi
 
 ## Current Phase Documentation
 
-### Phase 11: Score System
+### Phase 12: Round System & Continuous Gameplay
 
 **Read these three files IN ORDER:**
 
 1. **PLAN.md** - Implementation plan with tasks and code examples
    ```
-   Read: .ai/phases/phase-11/PLAN.md
+   Read: .ai/phases/phase-12/PLAN.md
    ```
 
 2. **UML.md** - Architecture diagrams (Mermaid)
    ```
-   Read: .ai/phases/phase-11/UML.md
+   Read: .ai/phases/phase-12/UML.md
    ```
 
 3. **GHERKIN.md** - BDD acceptance criteria
    ```
-   Read: .ai/phases/phase-11/GHERKIN.md
+   Read: .ai/phases/phase-12/GHERKIN.md
    ```
 
 **After reading, you should understand:**
@@ -166,26 +166,28 @@ Do not start Phase 2 until:
 ```
 
 ### Current Phase Goals
-**Phase 11 Goal:** Add score tracking and display to show player progress
+**Phase 12 Goal:** Implement continuous gameplay with multiple rounds
 
 **You will create:**
-- Score display UI showing correct letters found
-- Total letters tracked per session
-- Optional: Time elapsed (non-pressured display)
-- Clean, visible score presentation
-- Foundation for statistics and achievements
+- Automatic round advancement after correct clicks
+- New bubbles spawn after previous round completes
+- New target letter selected each round
+- Clear all bubbles between rounds
+- Smooth transitions between rounds
+- Continuous gameplay loop (no manual restart needed)
+- Score persists across rounds
 
 **Acceptance Criteria:**
-- Score displays on screen
-- Score increments when correct bubble clicked
-- Score is clearly visible and readable
-- Score updates smoothly (no flashing)
-- Optional time display works if implemented
-- No distracting or overwhelming UI
-- Ready for statistics (Phase 12+)
+- Game continues after correct bubble clicked
+- New round starts automatically (~1 second delay)
+- Old bubbles removed before new ones appear
+- New target letter announced each round
+- Score continues to increment across rounds
+- Time continues to track across rounds
+- No crashes or bugs during round transitions
 - No console errors
 
-**Time Estimate:** 60 minutes
+**Time Estimate:** 75 minutes
 
 ---
 

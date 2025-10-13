@@ -4,9 +4,9 @@ A browser-based educational game designed specifically for children with ADHD to
 
 ## Current Status
 
-**Active Phase:** Phase 11 - Score System
+**Active Phase:** Phase 12 - Round System & Continuous Gameplay
 **Status:** Ready to implement
-**Last Updated:** October 12, 2025
+**Last Updated:** October 13, 2025
 
 ## Completed Phases
 
@@ -110,13 +110,29 @@ A browser-based educational game designed specifically for children with ADHD to
 - ADHD-friendly design: immediate feedback, non-punitive errors
 - **Completed:** October 12, 2025
 
+### Phase 11: Score System ✅
+- Created score display UI (top-left, 28px bold white with stroke)
+- Created time display UI (top-right, 24px white with stroke)
+- Score increments only on correct clicks (non-punitive)
+- Score never decreases (positive reinforcement)
+- Display updates immediately with pulse animation (1.0 → 1.2 → 1.0)
+- Time tracks elapsed gameplay (M:SS format)
+- Updates every second via timer event
+- Both UI elements at depth 1000 (always visible)
+- Updated audio preload for all 26 letters A-Z
+- All 60+ Gherkin acceptance criteria verified
+- ADHD-friendly: clear, encouraging, immediate feedback
+- **Completed:** October 13, 2025
+
 ## Next Steps
 
-- Add score display UI on screen
-- Show total letters found per session
-- Optional: Add time elapsed display (non-pressured)
-- Clean, visible score presentation
-- Prepare for statistics and achievements (Phase 12+)
+- Implement continuous gameplay with multiple rounds
+- Auto-advance to new round after correct click
+- Clear old bubbles and spawn new ones
+- Select new target letter each round
+- Smooth round transitions (~1 second delay)
+- Score and time persist across rounds
+- Prepare for difficulty progression (Phase 13+)
 
 ## Project Structure
 
