@@ -1,9 +1,9 @@
 # START HERE - Development Entry Point
 
 ## Current Status
-**Active Phase:** Phase 13 - (Check phases directory for next phase)
-**Status:** Phase 12 complete, ready for next phase
-**Estimated Time:** TBD
+**Active Phase:** Phase 12.5 - Responsive Design, Visual Overhaul & PWA
+**Status:** Ready to implement
+**Estimated Time:** 4-6 hours
 
 ---
 
@@ -41,23 +41,23 @@ This defines code quality standards, best practices, and common pitfalls to avoi
 
 ## Current Phase Documentation
 
-### Phase 12: Round System & Continuous Gameplay
+### Phase 12.5: Responsive Design, Visual Overhaul & PWA
 
 **Read these three files IN ORDER:**
 
 1. **PLAN.md** - Implementation plan with tasks and code examples
    ```
-   Read: .ai/phases/phase-12/PLAN.md
+   Read: .ai/phases/phase-12.5/PLAN.md
    ```
 
 2. **UML.md** - Architecture diagrams (Mermaid)
    ```
-   Read: .ai/phases/phase-12/UML.md
+   Read: .ai/phases/phase-12.5/UML.md
    ```
 
 3. **GHERKIN.md** - BDD acceptance criteria
    ```
-   Read: .ai/phases/phase-12/GHERKIN.md
+   Read: .ai/phases/phase-12.5/GHERKIN.md
    ```
 
 **After reading, you should understand:**
@@ -166,28 +166,36 @@ Do not start Phase 2 until:
 ```
 
 ### Current Phase Goals
-**Phase 12 Goal:** Implement continuous gameplay with multiple rounds
+**Phase 12.5 Goal:** Transform game into responsive, colorful PWA optimized for Samsung Galaxy Tab S7 FE
 
 **You will create:**
-- Automatic round advancement after correct clicks
-- New bubbles spawn after previous round completes
-- New target letter selected each round
-- Clear all bubbles between rounds
-- Smooth transitions between rounds
-- Continuous gameplay loop (no manual restart needed)
-- Score persists across rounds
+- Responsive canvas scaling (1920x1200 base → 2560x1600 tablet)
+- Aurora's Rainbow color palette (6 bright, ADHD-friendly colors)
+- Fredoka One kid-friendly font
+- Non-overlapping UI layout (fix score/back button overlap)
+- Touch-friendly sizing (bubbles 160px, buttons 400x120px)
+- Decorative clouds with floating animations
+- Progressive Web App (installable, offline-capable)
+- GitHub Pages deployment with auto-updates
+- ResponsiveUtils class for percentage-based positioning
+- Service worker for caching and offline play
 
 **Acceptance Criteria:**
-- Game continues after correct bubble clicked
-- New round starts automatically (~1 second delay)
-- Old bubbles removed before new ones appear
-- New target letter announced each round
-- Score continues to increment across rounds
-- Time continues to track across rounds
-- No crashes or bugs during round transitions
+- Game scales perfectly to Tab S7 FE (2560x1600)
+- All UI elements positioned without overlapping
+- Bright colorful gradients on all backgrounds
+- Bubbles use random bright colors
+- Fredoka One font loaded and applied
+- All buttons styled consistently (rounded, bright)
+- PWA installs to home screen
+- Works offline after first load
+- Auto-updates when code changes
+- Fullscreen mode on tablet (no browser UI)
+- Touch targets large enough for 5-year-old
+- 60fps performance maintained
 - No console errors
 
-**Time Estimate:** 75 minutes
+**Time Estimate:** 4-6 hours
 
 ---
 
