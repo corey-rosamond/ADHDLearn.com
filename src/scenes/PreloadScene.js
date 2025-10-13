@@ -13,8 +13,38 @@ class PreloadScene extends Phaser.Scene {
         this.load.image('testImage', 'assets/images/test-image.png');
         this.load.audio('testSound', 'assets/audio/test-sound.wav');
 
+        // Load game backgrounds
+        this.load.image('gameBackground', 'assets/images/game-background.png');
+
         // Load welcome audio
         this.load.audio('welcome', 'assets/audio/welcome.mp3');
+
+        // Load game sound effects
+        this.load.audio('bubblePop', 'assets/audio/bubble-pop.mp3');
+        this.load.audio('wrongAnswer', 'assets/audio/wrong-answer.mp3');
+        this.load.audio('correctAnswer', 'assets/audio/correct-answer.mp3');
+        this.load.audio('gameComplete', 'assets/audio/game-complete.mp3');
+
+        // Load ONET UI assets
+        this.load.image('mainMenuBg', 'assets/ui/MainMenu_Bg.png');
+        this.load.image('btnGreen', 'assets/ui/Btn_Green.png');
+        this.load.image('btnGreenPressed', 'assets/ui/Btn_Geen_Pressed.png');
+        this.load.image('btnBlue', 'assets/ui/Btn_Blue.png');
+        this.load.image('btnBluePressed', 'assets/ui/Btn_Blue_Pressed.png');
+        this.load.image('popupResult', 'assets/ui/PopUp_Result.png');
+        this.load.image('topBar', 'assets/ui/Top_Bar.png');
+        this.load.image('headerBar', 'assets/ui/header-bar.png');  // New peach/purple header
+        this.load.image('bookmarkContainer', 'assets/ui/bookmark-container.png');  // Orange bookmark for round indicator
+        this.load.image('bottomBar', 'assets/ui/Bottom_Bar.png');
+        this.load.image('iconCrown', 'assets/ui/Icon_Crown.png');
+        this.load.image('iconTime', 'assets/ui/Icon_Time.png');
+        this.load.image('clockIcon', 'assets/ui/Clock_Icon.png');
+        this.load.image('btnHome', 'assets/ui/Btn_Home.png');
+        this.load.image('btnPause', 'assets/ui/Btn_Pause.png');
+        this.load.image('scoreBox', 'assets/ui/Score_Box.png');
+        this.load.image('btnBrown', 'assets/ui/Btn_Brown.png');
+        this.load.image('timerBarBg', 'assets/ui/Load_Bar_Bg.png');  // Timer bar background
+        this.load.image('timerBarFg', 'assets/ui/Load_Bar_Fg.png');  // Timer bar foreground
 
         // Progress event listeners
         this.load.on('progress', this.updateProgressBar, this);

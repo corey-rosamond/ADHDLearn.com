@@ -15,6 +15,15 @@ class LetterPopScene extends Phaser.Scene {
         this.currentLetterIndex = 0;   // Which letter (0-9) we're on
         this.roundStartTime = 0;       // When round started
         this.progressText = null;      // "Letter X of 10" display
+
+        // Countdown timer (per letter)
+        this.letterTimeLimit = 10;     // 10 seconds per letter
+        this.letterTimeRemaining = 10;
+        this.countdownText = null;
+        this.countdownTimer = null;
+
+        // Physics collider for bubbles
+        this.bubbleCollider = null;
     }
 
     preload() {
@@ -40,26 +49,188 @@ class LetterPopScene extends Phaser.Scene {
     create() {
         console.log('LetterPopScene started');
 
-        // Initialize bubbles array for tracking
-        this.bubbles = [];
+        // Initialize responsive utilities
+        this.r = new ResponsiveUtils(this);
 
-        // Initialize score
+        // Enable physics for this scene
+        if (!this.physics.world) {
+            console.error('[LetterPopScene] Physics not available! Check game config.');
+        }
+
+        // RESET all round state (fixes Play Again bug)
+        this.bubbles = [];
         this.score = 0;
+        this.roundLetters = [];
+        this.currentLetterIndex = 0;
+        this.roundStartTime = 0;
+        this.startTime = 0;
+        this.isPaused = false;
+
+        // Handle page visibility to prevent audio queuing
+        this.setupVisibilityHandling();
 
         // Create gradient background
         this.createBackground();
 
-        // Create UI (score and time displays)
-        this.createUI();
+        // Create top menu bar with all info
+        this.createMenuBar();
 
         // Add game title and subtitle
         this.createTitle();
 
-        // Create back button
-        this.createBackButton();
-
         // Start first round
         this.startRound();
+    }
+
+    setupVisibilityHandling() {
+        // Handle both tab switching AND window focus loss
+
+        // Tab visibility change (switching tabs)
+        this.visibilityChangeHandler = () => {
+            if (document.hidden) {
+                console.log('[LetterPopScene] ========== TAB HIDDEN - PAUSING EVERYTHING ==========');
+                console.log('[LetterPopScene] Countdown before pause:', this.letterTimeRemaining);
+                this.pauseGame();
+            } else {
+                console.log('[LetterPopScene] ========== TAB VISIBLE - RESUMING ==========');
+                console.log('[LetterPopScene] Countdown after resume:', this.letterTimeRemaining);
+                this.resumeGame();
+            }
+        };
+
+        // Window focus loss (clicking outside, switching windows)
+        this.blurHandler = () => {
+            console.log('[LetterPopScene] ========== WINDOW BLUR - PAUSING EVERYTHING ==========');
+            console.log('[LetterPopScene] Countdown before pause:', this.letterTimeRemaining);
+            this.pauseGame();
+        };
+
+        this.focusHandler = () => {
+            console.log('[LetterPopScene] ========== WINDOW FOCUS - RESUMING ==========');
+            console.log('[LetterPopScene] Countdown after resume:', this.letterTimeRemaining);
+            this.resumeGame();
+        };
+
+        // Attach all event listeners
+        document.addEventListener('visibilitychange', this.visibilityChangeHandler);
+        window.addEventListener('blur', this.blurHandler);
+        window.addEventListener('focus', this.focusHandler);
+
+        console.log('[LetterPopScene] All pause handlers attached (visibility + focus/blur)');
+    }
+
+    pauseGame() {
+        // Prevent duplicate pauses
+        if (this.isPaused) return;
+        this.isPaused = true;
+
+        // Pause all sounds
+        this.sound.pauseAll();
+
+        // Pause the scene (stops physics, timers, animations)
+        this.scene.pause('LetterPop');
+
+        console.log('[LetterPopScene] Game paused');
+    }
+
+    resumeGame() {
+        // Prevent duplicate resumes
+        if (!this.isPaused) return;
+        this.isPaused = false;
+
+        // Resume the scene
+        this.scene.resume('LetterPop');
+
+        console.log('[LetterPopScene] Game resumed');
+    }
+
+    shutdown() {
+        // Clean up all event handlers when scene is destroyed
+        if (this.visibilityChangeHandler) {
+            document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
+        }
+        if (this.blurHandler) {
+            window.removeEventListener('blur', this.blurHandler);
+        }
+        if (this.focusHandler) {
+            window.removeEventListener('focus', this.focusHandler);
+        }
+        console.log('[LetterPopScene] All pause handlers removed');
+    }
+
+
+    smooshBubbles(bubbleA, bubbleB) {
+        // Physics handles the actual bounce - this is just visual squish
+        // Prevent rapid-fire effects
+        if (bubbleA.isSmooshing || bubbleB.isSmooshing) return;
+
+        bubbleA.isSmooshing = true;
+        bubbleB.isSmooshing = true;
+
+        // Play bubble pop sound
+        if (this.cache.audio.exists('bubblePop')) {
+            this.sound.play('bubblePop', { volume: 0.3 });
+        }
+
+        // Quick squish effect on both bubbles
+        this.tweens.add({
+            targets: bubbleA,
+            scaleX: 0.8,  // Compress
+            scaleY: 1.2,  // Expand vertically
+            duration: 60,
+            ease: 'Quad.easeOut',
+            yoyo: true,
+            onComplete: () => {
+                this.time.delayedCall(200, () => {
+                    bubbleA.isSmooshing = false;
+                });
+            }
+        });
+
+        this.tweens.add({
+            targets: bubbleB,
+            scaleX: 0.8,  // Compress
+            scaleY: 1.2,  // Expand vertically
+            duration: 60,
+            ease: 'Quad.easeOut',
+            yoyo: true,
+            onComplete: () => {
+                this.time.delayedCall(200, () => {
+                    bubbleB.isSmooshing = false;
+                });
+            }
+        });
+
+        console.log(`[LetterPopScene] Smoosh! ${bubbleA.letter} <-> ${bubbleB.letter}`);
+    }
+
+    squeezeBubbleOnWall(bubble) {
+        // Visual squish when bubble hits wall/header
+        if (bubble.isSmooshing) return;
+
+        bubble.isSmooshing = true;
+
+        // Play bubble pop sound
+        if (this.cache.audio.exists('bubblePop')) {
+            this.sound.play('bubblePop', { volume: 0.3 });
+        }
+
+        // Quick squish effect
+        this.tweens.add({
+            targets: bubble,
+            scaleX: 0.8,  // Compress
+            scaleY: 1.2,  // Expand vertically
+            duration: 60,
+            ease: 'Quad.easeOut',
+            yoyo: true,
+            onComplete: () => {
+                this.time.delayedCall(200, () => {
+                    bubble.isSmooshing = false;
+                });
+            }
+        });
+
+        console.log(`[LetterPopScene] Squeeze! ${bubble.letter} hit wall`);
     }
 
     startRound() {
@@ -76,8 +247,39 @@ class LetterPopScene extends Phaser.Scene {
         this.targetLetter = this.roundLetters[this.currentLetterIndex];
         console.log(`[LetterPopScene] Letter ${this.currentLetterIndex + 1}/10: ${this.targetLetter}`);
 
+        // Fade out title on first letter only
+        if (this.currentLetterIndex === 0) {
+            this.time.delayedCall(1000, () => {
+                this.fadeOutTitle();
+            });
+        }
+
+        // Reset countdown timer for this letter
+        this.letterTimeRemaining = this.letterTimeLimit;
+
+        // Reset timer bar to full
+        if (this.timerBarFg) {
+            this.timerBarFg.setScale(this.timerBarMaxWidth, this.r.scaleY(0.038));
+        }
+
+        // Clear any existing countdown timer
+        if (this.countdownTimer) {
+            this.countdownTimer.remove();
+        }
+
+        // Start countdown timer (1 second intervals)
+        this.countdownTimer = this.time.addEvent({
+            delay: 1000,
+            callback: this.updateCountdown,
+            callbackScope: this,
+            loop: true
+        });
+
         // Update progress display
         this.updateProgressDisplay();
+
+        // Create/update countdown display (if you want to keep the number display)
+        // this.createCountdownDisplay();
 
         // Play audio instruction (if available)
         this.playTargetLetterAudio();
@@ -98,184 +300,333 @@ class LetterPopScene extends Phaser.Scene {
     }
 
     updateProgressDisplay() {
-        // Destroy previous progress text
-        if (this.progressText) {
-            this.progressText.destroy();
+        // Update bookmark to show current round progress
+        if (this.roundText) {
+            // Format the round number with proper line break
+            this.roundText.setText(`ROUND\n${this.currentLetterIndex + 1}`);
+        }
+    }
+
+    createCountdownDisplay() {
+        // Destroy previous countdown display
+        if (this.countdownText) {
+            this.countdownText.destroy();
         }
 
-        // Create new progress text
-        this.progressText = this.add.text(400, 200, `Letter ${this.currentLetterIndex + 1} of 10`, {
-            fontSize: '24px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            stroke: '#0066cc',
-            strokeThickness: 4
+        // Create countdown text (in header bar, bottom row)
+        this.countdownText = this.add.text(this.r.centerX, this.countdownY, `${this.letterTimeRemaining}`, {
+            fontSize: this.r.getFontSize(48) + 'px',
+            fontFamily: 'Fredoka One, Arial',
+            color: this.getCountdownColor(),
+            stroke: '#000000',
+            strokeThickness: this.r.scaleX(4),
+            fontStyle: 'bold'
         }).setOrigin(0.5);
-        this.progressText.setDepth(1000); // Always on top
+        this.countdownText.setDepth(1000);
+    }
+
+    getCountdownColor() {
+        // Color code based on time remaining (green → yellow → red)
+        if (this.letterTimeRemaining > 6) {
+            return '#00E676'; // Grass Green - plenty of time
+        } else if (this.letterTimeRemaining > 3) {
+            return '#FFEB3B'; // Sunshine Yellow - getting close
+        } else {
+            return '#FF6B6B'; // Orange Pop - hurry up!
+        }
+    }
+
+    updateCountdown() {
+        this.letterTimeRemaining--;
+
+        // Update timer bar (shrink from right to left as time decreases)
+        if (this.timerBarFg) {
+            const progress = this.letterTimeRemaining / this.letterTimeLimit;
+            // Since origin is (0, 0.5), scaling X will shrink from the right
+            this.timerBarFg.setScale(this.timerBarMaxWidth * progress, this.r.scaleY(0.038));
+        }
+
+        // Update countdown number display (if exists)
+        if (this.countdownText) {
+            this.countdownText.setText(`${this.letterTimeRemaining}`);
+            this.countdownText.setColor(this.getCountdownColor());
+        }
+
+        // Check for timeout
+        if (this.letterTimeRemaining <= 0) {
+            this.handleLetterTimeout();
+        }
     }
 
     playTargetLetterAudio() {
         // Play audio instruction like "Find the letter B!"
         const audioKey = `find_letter_${this.targetLetter}`;
-        if (this.sound.get(audioKey)) {
+        if (this.cache.audio.exists(audioKey)) {
+            console.log(`[LetterPopScene] Playing: ${audioKey}`);
             this.sound.play(audioKey);
         } else {
-            console.log(`[LetterPopScene] Audio not available: ${audioKey}`);
+            console.warn(`[LetterPopScene] Audio not available: ${audioKey}`);
         }
     }
 
     createBackground() {
-        // Sky blue to turquoise gradient
-        const graphics = this.add.graphics();
-        const colors = [0x87CEEB, 0x00CED1]; // Sky blue to turquoise
-        const height = this.cameras.main.height;
         const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
 
-        // Draw gradient line by line
-        for (let i = 0; i < height; i++) {
-            const progress = i / height;
-            const color = Phaser.Display.Color.Interpolate.ColorWithColor(
-                Phaser.Display.Color.ValueToColor(colors[0]),
-                Phaser.Display.Color.ValueToColor(colors[1]),
-                100,
-                progress * 100
-            );
-            graphics.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b));
-            graphics.fillRect(0, i, width, 1);
-        }
+        // Add underwater background image
+        const bg = this.add.image(0, 0, 'gameBackground').setOrigin(0, 0);
+
+        // Scale to cover entire screen
+        const scaleX = width / bg.width;
+        const scaleY = height / bg.height;
+        const scale = Math.max(scaleX, scaleY);
+        bg.setScale(scale);
+
+        // Center if needed
+        bg.x = (width - bg.width * scale) / 2;
+        bg.y = (height - bg.height * scale) / 2;
+
+        bg.setDepth(0); // Make sure it's behind everything
     }
 
-    createUI() {
-        // Create score display (top-left)
-        this.scoreText = this.add.text(20, 20, 'Correct: 0', {
-            fontSize: '28px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 4,
-            fontStyle: 'bold'
-        });
-        this.scoreText.setDepth(1000); // Always on top
+    createMenuBar() {
+        const menuBarHeight = this.r.scaleY(150); // Taller to fit timer bar
+        const topRowY = this.r.getY(4);
 
-        // Create time display (top-right)
-        this.timeText = this.add.text(780, 20, 'Time: 0:00', {
-            fontSize: '24px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 4
-        }).setOrigin(1, 0); // Right-aligned
-        this.timeText.setDepth(1000); // Always on top
+        // Create header bar background using ONET Top_Bar (has bookmark built-in)
+        const headerBar = this.add.image(0, 0, 'topBar').setOrigin(0, 0);
 
-        // Start time tracking
-        this.startTime = this.time.now;
+        // Scale to fit screen width and desired height
+        const scaleX = this.cameras.main.width / headerBar.width;
+        const scaleY = menuBarHeight / headerBar.height;
+        headerBar.setScale(scaleX, scaleY);
+        headerBar.setDepth(998);
 
-        // Create timer event to update time every second
-        this.time.addEvent({
-            delay: 1000, // 1 second
-            callback: this.updateTimeDisplay,
-            callbackScope: this,
-            loop: true
-        });
+        // Store header height for physics bounds
+        this.headerBarHeight = menuBarHeight;
 
-        console.log('[LetterPopScene] UI created - Score and Time displays initialized');
-    }
+        // LEFT: Round text inside the built-in orange bookmark
+        const bookmarkX = this.r.getX(8.5);  // Moved right to center inside orange bookmark
+        const bookmarkY = this.r.getY(5);    // Vertically centered in bookmark
 
-    createTitle() {
-        // Main title
-        this.add.text(400, 80, 'Letter Pop!', {
-            fontSize: '64px',
-            fontFamily: 'Arial',
+        // Round text inside bookmark (Top_Bar has bookmark built-in)
+        this.roundText = this.add.text(bookmarkX, bookmarkY, 'ROUND\n1', {
+            fontSize: this.r.getFontSize(16) + 'px',
+            fontFamily: 'Fredoka One, Arial',
             color: '#ffffff',
             fontStyle: 'bold',
-            stroke: '#0066cc',
-            strokeThickness: 8
+            stroke: '#8B4513',
+            strokeThickness: 3,  // Fixed thickness
+            align: 'center',
+            lineSpacing: -3
         }).setOrigin(0.5);
+        this.roundText.setDepth(1001);
 
-        // Subtitle
-        this.add.text(400, 140, 'Pop the bubbles to learn letters!', {
-            fontSize: '24px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            stroke: '#0066cc',
-            strokeThickness: 4
+        // CENTER: Score display with Score_Box background
+        const scoreX = this.r.centerX;
+        const scoreY = this.r.getY(4);
+
+        // Score box background
+        const scoreBox = this.add.image(scoreX, scoreY, 'scoreBox').setOrigin(0.5);
+        const scoreBoxScale = this.r.scaleX(0.35);
+        scoreBox.setScale(scoreBoxScale);
+        scoreBox.setDepth(999);
+
+        // "SCORE" label
+        const scoreLabel = this.add.text(scoreX, scoreY - this.r.scaleY(22), 'SCORE', {
+            fontSize: this.r.getFontSize(24) + 'px',
+            fontFamily: 'Fredoka One, Arial',
+            color: '#FFEB3B',
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 4  // Fixed thickness
         }).setOrigin(0.5);
+        scoreLabel.setDepth(1000);
+
+        // Score number
+        this.scoreText = this.add.text(scoreX, scoreY + this.r.scaleY(12), '0', {
+            fontSize: this.r.getFontSize(52) + 'px',
+            fontFamily: 'Fredoka One, Arial',
+            color: '#ffffff',
+            fontStyle: 'bold',
+            stroke: '#9C27B0',
+            strokeThickness: 6  // Fixed thickness
+        }).setOrigin(0.5);
+        this.scoreText.setDepth(1000);
+
+        // RIGHT: Home button (pause button position)
+        this.createHomeButton();
+
+        // BOTTOM: Timer progress bar
+        this.createTimerBar();
+
+        // Set physics world bounds to keep bubbles in play area
+        this.physics.world.setBounds(
+            0,
+            this.headerBarHeight,
+            this.cameras.main.width,
+            this.cameras.main.height - this.headerBarHeight
+        );
+
+        console.log('[LetterPopScene] Menu bar created with Gameplay_1 layout');
     }
 
-    createBackButton() {
-        // Create button background (red/coral color)
-        const buttonBg = this.add.rectangle(100, 50, 150, 60, 0xff6b6b);
-        buttonBg.setStrokeStyle(3, 0xffffff);
+    createHomeButton() {
+        const btnX = this.r.getX(93);   // Right side, inside top bar
+        const btnY = this.r.getY(5);    // Centered in the peach area
 
-        // Create button text
-        const buttonText = this.add.text(100, 50, '< Menu', {
-            fontSize: '24px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
+        // Create home button sprite (using btnHome instead of btnPause)
+        const button = this.add.image(btnX, btnY, 'btnHome').setInteractive({ useHandCursor: true });
 
-        // Make button interactive
-        buttonBg.setInteractive({ useHandCursor: true });
+        // Scale button to appropriate size
+        const targetSize = this.r.scaleX(55);
+        const scale = targetSize / button.width;
+        button.setScale(scale);
+        button.setDepth(1000);
 
-        // Hover effect - scale up
-        buttonBg.on('pointerover', () => {
+        // Hover effect
+        button.on('pointerover', () => {
             this.tweens.add({
-                targets: [buttonBg, buttonText],
-                scaleX: 1.1,
-                scaleY: 1.1,
-                duration: 200,
-                ease: 'Power2'
+                targets: button,
+                scaleX: scale * 1.1,
+                scaleY: scale * 1.1,
+                duration: 150,
+                ease: 'Back.easeOut'
             });
         });
 
-        // Mouse out - scale back to normal
-        buttonBg.on('pointerout', () => {
+        button.on('pointerout', () => {
             this.tweens.add({
-                targets: [buttonBg, buttonText],
-                scaleX: 1.0,
-                scaleY: 1.0,
-                duration: 200,
-                ease: 'Power2'
+                targets: button,
+                scaleX: scale,
+                scaleY: scale,
+                duration: 150,
+                ease: 'Back.easeIn'
             });
         });
 
-        // Click handler
-        buttonBg.on('pointerdown', () => {
-            console.log('[LetterPopScene] Back button clicked');
-
-            // Play sound if available
-            if (this.sound.get('buttonClick')) {
-                this.sound.play('buttonClick');
-            }
-
-            // Scale down animation with yoyo
+        // Click handler - goes back to main menu
+        button.on('pointerdown', () => {
             this.tweens.add({
-                targets: [buttonBg, buttonText],
-                scaleX: 0.95,
-                scaleY: 0.95,
-                duration: 100,
+                targets: button,
+                scaleX: scale * 0.9,
+                scaleY: scale * 0.9,
+                duration: 80,
                 yoyo: true,
                 onComplete: () => {
-                    // Return to main menu
                     this.scene.start('MainMenu');
                 }
             });
         });
     }
 
-    createBubbles() {
-        // Generate spawn positions for 3 bubbles with 150px minimum spacing
-        const positions = this.generateSpawnPositions(3, 150);
+    createTimerBar() {
+        // Position inside the dark purple bar area at the bottom of Top_Bar
+        const barY = this.r.getY(10.2);  // Moved down to be inside the purple section
 
-        // Ensure target letter is included
-        const letters = ['A', 'B', 'C'];
+        // Clock icon on the left
+        const clockIcon = this.add.image(this.r.getX(7), barY, 'clockIcon').setOrigin(0.5);
+        const clockScale = this.r.scaleX(0.08);  // Made larger to be visible
+        clockIcon.setScale(clockScale);
+        clockIcon.setDepth(1001);
 
-        // Replace one random letter with target letter to ensure it's present
-        if (!letters.includes(this.targetLetter)) {
-            const randomIndex = Phaser.Math.Between(0, letters.length - 1);
-            letters[randomIndex] = this.targetLetter;
+        // Calculate bar position and size (leaving room for clock icon on left)
+        const barStartX = this.r.getX(11);
+        const barEndX = this.r.getX(93);
+        const barWidth = barEndX - barStartX;
+        const barX = barStartX + (barWidth / 2);
+
+        // Timer bar background (purple) - just for visual reference, Top_Bar already has it
+        this.timerBarBg = this.add.image(barX, barY, 'timerBarBg').setOrigin(0.5);
+        const bgScale = barWidth / this.timerBarBg.width;
+        this.timerBarBg.setScale(bgScale, this.r.scaleY(0.038));
+        this.timerBarBg.setDepth(999);
+
+        // Timer bar foreground (yellow/orange) - shrinks from right to left
+        this.timerBarFg = this.add.image(barStartX, barY, 'timerBarFg').setOrigin(0, 0.5);  // Left origin
+        this.timerBarFgScale = bgScale;
+        this.timerBarFg.setScale(bgScale, this.r.scaleY(0.038));
+        this.timerBarFg.setDepth(1000);
+
+        // Store initial width for scaling
+        this.timerBarMaxWidth = bgScale;
+        this.timerBarStartX = barStartX;
+    }
+
+
+    createTitle() {
+        // Main title - centered on screen
+        this.titleText = this.add.text(this.r.centerX, this.r.centerY - this.r.scaleY(50), 'Letter Pop!', {
+            fontSize: this.r.getFontSize(72) + 'px',
+            fontFamily: 'Fredoka One, Arial',
+            color: '#ffffff',
+            fontStyle: 'bold',
+            stroke: '#9C27B0',
+            strokeThickness: this.r.scaleX(10)
+        }).setOrigin(0.5);
+        this.titleText.setDepth(2000); // Above everything
+
+        // Subtitle - centered below title
+        this.subtitleText = this.add.text(this.r.centerX, this.r.centerY + this.r.scaleY(50), 'Pop the bubbles to learn letters!', {
+            fontSize: this.r.getFontSize(32) + 'px',
+            fontFamily: 'Fredoka One, Arial',
+            color: '#ffffff',
+            stroke: '#FF6B6B',
+            strokeThickness: this.r.scaleX(5)
+        }).setOrigin(0.5);
+        this.subtitleText.setDepth(2000); // Above everything
+    }
+
+    fadeOutTitle() {
+        // Fade out and destroy the title and subtitle
+        if (this.titleText) {
+            this.tweens.add({
+                targets: this.titleText,
+                alpha: 0,
+                duration: 800,
+                ease: 'Power2',
+                onComplete: () => {
+                    this.titleText.destroy();
+                }
+            });
         }
+
+        if (this.subtitleText) {
+            this.tweens.add({
+                targets: this.subtitleText,
+                alpha: 0,
+                duration: 800,
+                ease: 'Power2',
+                onComplete: () => {
+                    this.subtitleText.destroy();
+                }
+            });
+        }
+    }
+
+    createBubbles() {
+        // Generate spawn positions for 6 bubbles with 180px minimum spacing
+        const bubbleCount = 6;
+        const positions = this.generateSpawnPositions(bubbleCount, 180);
+
+        // Generate random letters for bubbles
+        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+        const letters = [];
+
+        // Add target letter first (guaranteed to be present)
+        letters.push(this.targetLetter);
+
+        // Add random different letters for the rest
+        while (letters.length < bubbleCount) {
+            const randomLetter = Phaser.Utils.Array.GetRandom(alphabet);
+            // Avoid duplicates
+            if (!letters.includes(randomLetter)) {
+                letters.push(randomLetter);
+            }
+        }
+
+        // Shuffle letters so target isn't always first
+        Phaser.Utils.Array.Shuffle(letters);
 
         // Create bubbles at different positions
         letters.forEach((letter, index) => {
@@ -289,10 +640,43 @@ class LetterPopScene extends Phaser.Scene {
             // Store reference to scene for bubble to access targetLetter
             bubble.scene = this;
 
+            // Enable physics body for collision detection and bouncing
+            this.physics.add.existing(bubble);
+            if (bubble.body) {
+                // For Containers, we need to offset the circle to center it properly
+                // The offset is relative to the container's position
+                bubble.body.setCircle(bubble.radius, -bubble.radius, -bubble.radius);
+                bubble.body.setBounce(1.0); // Perfect bounce
+                bubble.body.setCollideWorldBounds(true);
+                bubble.body.setDamping(false);
+                bubble.body.setMass(1);
+
+                // Enable world bounds collision events
+                bubble.body.onWorldBounds = true;
+
+                // Set random velocity
+                const velocityX = Phaser.Math.Between(-120, 120);
+                const velocityY = Phaser.Math.Between(-120, 120);
+                bubble.body.setVelocity(velocityX, velocityY);
+            }
+
             this.bubbles.push(bubble);
-            console.log(`[LetterPopScene] Bubble ${letter} created at (${positions[index].x}, ${positions[index].y})`);
+
+            // Add world bounds collision listener for squeeze effect
+            bubble.body.world.on('worldbounds', (body) => {
+                if (body.gameObject === bubble && !bubble.isSmooshing) {
+                    this.squeezeBubbleOnWall(bubble);
+                }
+            }, this);
+        });
+
+        // Enable collision between all bubbles with physics
+        this.physics.add.collider(this.bubbles, this.bubbles, (bubbleA, bubbleB) => {
+            // Visual squish effect only - physics handles the actual bounce
+            this.smooshBubbles(bubbleA, bubbleB);
         });
     }
+
 
     handleBubbleClick(bubble, clickedLetter) {
         console.log(`[LetterPopScene] Bubble clicked: ${clickedLetter}, Target: ${this.targetLetter}`);
@@ -309,9 +693,15 @@ class LetterPopScene extends Phaser.Scene {
     handleCorrectClick(bubble) {
         console.log('[LetterPopScene] Correct click!');
 
-        // Play success sound if available
-        if (this.sound.get('success')) {
-            this.sound.play('success');
+        // Stop countdown timer
+        if (this.countdownTimer) {
+            this.countdownTimer.remove();
+            this.countdownTimer = null;
+        }
+
+        // Play correct answer sound
+        if (this.cache.audio.exists('correctAnswer')) {
+            this.sound.play('correctAnswer', { volume: 0.6 });
         }
 
         // Create celebration particles
@@ -345,9 +735,54 @@ class LetterPopScene extends Phaser.Scene {
         });
     }
 
+    handleLetterTimeout() {
+        console.log('[LetterPopScene] Time ran out for this letter - no score');
+
+        // Stop countdown timer
+        if (this.countdownTimer) {
+            this.countdownTimer.remove();
+            this.countdownTimer = null;
+        }
+
+        // Play gentle encouragement audio
+        const encouragements = ['next-time', 'keep-trying', 'nice-try', 'almost'];
+        const randomEncouragement = Phaser.Utils.Array.GetRandom(encouragements);
+        if (this.sound.get(randomEncouragement)) {
+            this.sound.play(randomEncouragement);
+        }
+
+        // Flash countdown red briefly
+        if (this.countdownText) {
+            this.tweens.add({
+                targets: this.countdownText,
+                alpha: 0.3,
+                duration: 200,
+                yoyo: true,
+                repeat: 2
+            });
+        }
+
+        // Wait a moment, then advance to next letter (NO score increment)
+        this.time.delayedCall(1500, () => {
+            // Check if round is complete
+            if (this.currentLetterIndex >= 9) {
+                // Round complete!
+                this.endRound();
+            } else {
+                // Advance to next letter
+                this.currentLetterIndex++;
+                this.advanceToNextLetter();
+            }
+        });
+    }
+
     advanceToNextLetter() {
-        // Clear all remaining bubbles
-        this.bubbles.forEach(bubble => bubble.destroy());
+        // Clear all remaining bubbles and their tweens
+        this.bubbles.forEach(bubble => {
+            // Stop all tweens on this bubble
+            this.tweens.killTweensOf(bubble);
+            bubble.destroy();
+        });
         this.bubbles = [];
 
         // Wait a moment, then start next letter
@@ -378,6 +813,11 @@ class LetterPopScene extends Phaser.Scene {
 
     handleIncorrectClick(bubble) {
         console.log('[LetterPopScene] Incorrect click - wobble');
+
+        // Play wrong answer sound
+        if (this.cache.audio.exists('wrongAnswer')) {
+            this.sound.play('wrongAnswer', { volume: 0.4 });
+        }
 
         // Wobble animation - gentle side-to-side
         this.tweens.add({
@@ -434,7 +874,7 @@ class LetterPopScene extends Phaser.Scene {
     }
 
     updateScoreDisplay() {
-        this.scoreText.setText(`Correct: ${this.score}`);
+        this.scoreText.setText(`${this.score}`);
     }
 
     updateTimeDisplay() {
@@ -450,24 +890,32 @@ class LetterPopScene extends Phaser.Scene {
         this.timeText.setText(`Time: ${minutes}:${secondsStr}`);
     }
 
-    generateSpawnPositions(count, minDistance = 150) {
+    generateSpawnPositions(count, minDistance = null) {
         const positions = [];
-        const minX = 100;
-        const maxX = 700;
-        const y = 400; // Middle height for better visibility
+
+        // Use responsive dimensions
+        const minX = this.r.getX(10);  // 10% from left
+        const maxX = this.r.getX(90);  // 10% from right
+        const minY = this.r.getY(40);  // Play area starts at 40%
+        const maxY = this.r.getY(80);  // Play area ends at 80%
+
+        // Scale minimum distance if not provided
+        const scaledMinDistance = minDistance ? this.r.scaleX(minDistance) : this.r.scaleX(180);
 
         for (let i = 0; i < count; i++) {
             let attempts = 0;
             let validPosition = false;
-            let x;
+            let x, y;
 
             while (!validPosition && attempts < 50) {
                 x = Phaser.Math.Between(minX, maxX);
+                y = Phaser.Math.Between(minY, maxY);
                 validPosition = true;
 
                 // Check distance from existing positions
                 for (let pos of positions) {
-                    if (Math.abs(pos.x - x) < minDistance) {
+                    const distance = Phaser.Math.Distance.Between(x, y, pos.x, pos.y);
+                    if (distance < scaledMinDistance) {
                         validPosition = false;
                         break;
                     }

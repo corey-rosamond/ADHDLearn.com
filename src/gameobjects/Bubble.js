@@ -21,7 +21,21 @@ class Bubble extends Phaser.GameObjects.Container {
         // Store properties
         this.scene = scene;
         this.letter = letter;
-        this.radius = 70;
+
+        // Use responsive sizing (80px at 1920x1200 base)
+        this.r = new ResponsiveUtils(scene);
+        this.radius = this.r.scaleX(80);
+
+        // Select random bright color from Aurora's Rainbow
+        const rainbowColors = [
+            0x00BCD4, // Sky Blue
+            0xFFEB3B, // Sunshine Yellow
+            0xFF4081, // Bubble Pink
+            0x00E676, // Grass Green
+            0xFF6B6B, // Orange Pop
+            0x9C27B0  // Purple Magic
+        ];
+        this.bubbleColor = Phaser.Utils.Array.GetRandom(rainbowColors);
 
         // Create visual components
         this.createBubble();
@@ -41,33 +55,23 @@ class Bubble extends Phaser.GameObjects.Container {
     /**
      * Create the bubble graphics with gradient effect
      * Uses multiple layered circles to simulate a 3D gradient
+     * Color is randomly selected from Aurora's Rainbow palette
      */
     createBubble() {
         // Create graphics object for bubble
         const graphics = this.scene.add.graphics();
 
-        // Layer 1: Shadow (outer glow for depth)
-        graphics.fillStyle(0xcccccc, 0.3);
-        graphics.fillCircle(0, 0, this.radius + 5);
-
-        // Layer 2: Outer gradient (lightest)
-        graphics.fillStyle(0xffffff, 0.9);
+        // Simplified rendering - just 3 layers for better performance
+        // Layer 1: Main bubble (base color)
+        graphics.fillStyle(this.bubbleColor, 0.9);
         graphics.fillCircle(0, 0, this.radius);
 
-        // Layer 3: Middle gradient (light purple)
-        graphics.fillStyle(0xe0e0ff, 0.8);
-        graphics.fillCircle(0, 0, this.radius - 10);
+        // Layer 2: Glossy highlight (top-left for shine effect)
+        graphics.fillStyle(0xffffff, 0.5);
+        graphics.fillCircle(-this.r.scaleX(12), -this.r.scaleY(12), this.r.scaleX(18));
 
-        // Layer 4: Inner gradient (darker purple)
-        graphics.fillStyle(0xc0c0ff, 0.7);
-        graphics.fillCircle(0, 0, this.radius - 20);
-
-        // Layer 5: Glossy highlight (top-left for shine effect)
-        graphics.fillStyle(0xffffff, 0.6);
-        graphics.fillCircle(-15, -15, 20);
-
-        // Layer 6: Border/outline for definition
-        graphics.lineStyle(3, 0xaaaaff, 0.8);
+        // Layer 3: Border/outline for definition
+        graphics.lineStyle(this.r.scaleX(3), 0xffffff, 0.8);
         graphics.strokeCircle(0, 0, this.radius);
 
         // Add graphics to this container
@@ -78,12 +82,14 @@ class Bubble extends Phaser.GameObjects.Container {
      * Create the letter text centered in the bubble
      */
     createLetter() {
-        // Create text for letter
+        // Create text for letter with Fredoka One font
         const letterText = this.scene.add.text(0, 0, this.letter, {
-            fontSize: '56px',
-            fontFamily: 'Arial',
-            color: '#333333',
-            fontStyle: 'bold'
+            fontSize: this.r.getFontSize(64) + 'px',
+            fontFamily: 'Fredoka One, Arial',
+            color: '#ffffff',
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 4  // Fixed thickness instead of responsive
         });
 
         // Center the text (origin 0.5, 0.5 = center)

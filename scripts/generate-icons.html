@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate App Icons</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        h1 {
+            color: #00BCD4;
+        }
+        canvas {
+            border: 2px solid #ddd;
+            margin: 10px;
+            background: white;
+        }
+        button {
+            background: #00BCD4;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0097A7;
+        }
+        .icon-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .icon-wrapper {
+            text-align: center;
+        }
+        .instructions {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .instructions ol {
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Aurora's Letter Adventure - Icon Generator</h1>
+
+    <div class="instructions">
+        <h2>Instructions:</h2>
+        <ol>
+            <li>Click the "Generate Icons" button below</li>
+            <li>Right-click on each icon and select "Save Image As..."</li>
+            <li>Save icon-192.png to: <code>assets/images/icon-192.png</code></li>
+            <li>Save icon-512.png to: <code>assets/images/icon-512.png</code></li>
+        </ol>
+    </div>
+
+    <button onclick="generateIcons()">Generate Icons</button>
+
+    <div class="icon-container" id="iconContainer"></div>
+
+    <script>
+        function generateIcons() {
+            const container = document.getElementById('iconContainer');
+            container.innerHTML = '';
+
+            // Generate 192x192 icon
+            generateIcon(192, container);
+
+            // Generate 512x512 icon
+            generateIcon(512, container);
+        }
+
+        function generateIcon(size, container) {
+            // Create canvas
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            // Aurora's Rainbow gradient background (Sky Blue → Purple Magic → Bubble Pink)
+            const gradient = ctx.createLinearGradient(0, 0, 0, size);
+            gradient.addColorStop(0, '#00BCD4');    // Sky Blue
+            gradient.addColorStop(0.5, '#9C27B0');  // Purple Magic
+            gradient.addColorStop(1, '#FF4081');    // Bubble Pink
+
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+
+            // Draw large letter "A" in center
+            ctx.fillStyle = '#FFFFFF';
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = size * 0.02;
+            ctx.font = `bold ${size * 0.6}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.strokeText('A', size / 2, size / 2);
+            ctx.fillText('A', size / 2, size / 2);
+
+            // Create wrapper
+            const wrapper = document.createElement('div');
+            wrapper.className = 'icon-wrapper';
+
+            // Add canvas
+            wrapper.appendChild(canvas);
+
+            // Add label
+            const label = document.createElement('p');
+            label.textContent = `icon-${size}.png (${size}x${size})`;
+            wrapper.appendChild(label);
+
+            // Add download button
+            const downloadBtn = document.createElement('button');
+            downloadBtn.textContent = `Download ${size}x${size}`;
+            downloadBtn.onclick = () => downloadIcon(canvas, size);
+            wrapper.appendChild(downloadBtn);
+
+            container.appendChild(wrapper);
+        }
+
+        function downloadIcon(canvas, size) {
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `icon-${size}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        }
+
+        // Generate icons on page load
+        window.onload = generateIcons;
+    </script>
+</body>
+</html>
