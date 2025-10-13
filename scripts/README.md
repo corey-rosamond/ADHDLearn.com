@@ -12,14 +12,29 @@ Generates all required audio files using the ElevenLabs Text-to-Speech API.
    - Sign up at [ElevenLabs](https://elevenlabs.io/)
    - Get your API key from your account settings
    - Free tier: 10,000 characters/month (sufficient for this project)
+   - **IMPORTANT:** API key is stored in `.env` file (never committed to git)
 
 2. **Node.js**
    - Already installed (used for development)
 
+### Setup
+
+1. **Configure API Key** (first time only)
+
+   Your API key is already configured in the `.env` file at the project root:
+   ```
+   ELEVEN_LABS_API_KEY=your_key_here
+   ```
+
+   This file is automatically excluded from git commits via `.gitignore`.
+
 ### Usage
 
 ```bash
-# Set your API key and run the script
+# Option 1: Load .env and run (recommended)
+export $(cat .env | xargs) && node scripts/generate-audio.js
+
+# Option 2: Set directly (for testing)
 ELEVEN_LABS_API_KEY=your_api_key_here node scripts/generate-audio.js
 ```
 
@@ -77,10 +92,12 @@ Approximate character usage:
 ### Troubleshooting
 
 **Error: "ELEVEN_LABS_API_KEY environment variable not set"**
-- Solution: Set the environment variable before running the script
+- Solution: Make sure you're loading the .env file: `export $(cat .env | xargs)`
+- Or check that `.env` file exists in the project root with your API key
 
 **Error: "API error: 401"**
-- Solution: Check your API key is correct
+- Solution: Check your API key is correct in the `.env` file
+- Verify you have the correct key from your ElevenLabs account settings
 
 **Error: "API error: 429"**
 - Solution: Rate limit exceeded. Wait a few minutes and try again
