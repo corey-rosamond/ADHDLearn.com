@@ -4,8 +4,8 @@ A browser-based educational game designed specifically for children with ADHD to
 
 ## Current Status
 
-**Active Phase:** Phase 12 - Round System & Continuous Gameplay
-**Status:** Ready to implement
+**Active Phase:** Phase 13 - (TBD - Check .ai/phases for next phase)
+**Status:** Phase 12 complete
 **Last Updated:** October 13, 2025
 
 ## Completed Phases
@@ -124,15 +124,30 @@ A browser-based educational game designed specifically for children with ADHD to
 - ADHD-friendly: clear, encouraging, immediate feedback
 - **Completed:** October 13, 2025
 
+### Phase 12: Round System & Complete Game Loop ✅
+- Implemented 10-letter rounds (complete start-to-finish gameplay)
+- Added round state tracking (letter sequence, current index)
+- Created generateLetterSequence() - 10 random letters per round
+- Added progress indicator "Letter X of 10" display
+- Implemented round completion detection (after 10th correct)
+- Created ResultsScene with score (X/10) and time display
+- Performance messages based on score percentage
+- Perfect score celebration with star particles
+- Play Again button with hover/click animations
+- Data passing between scenes via scene.start()
+- Complete game loop: Play → Results → Play Again
+- State resets properly for new rounds
+- Multiple rounds playable consecutively
+- All acceptance criteria verified
+- ADHD-friendly: Fixed endpoint, immediate replay, encouraging messages
+- **Completed:** October 13, 2025
+
 ## Next Steps
 
-- Implement continuous gameplay with multiple rounds
-- Auto-advance to new round after correct click
-- Clear old bubbles and spawn new ones
-- Select new target letter each round
-- Smooth round transitions (~1 second delay)
-- Score and time persist across rounds
-- Prepare for difficulty progression (Phase 13+)
+- Explore Phase 13+ in `.ai/phases/` directory
+- Potential features: Difficulty levels, high scores, additional mini-games
+- Continue ADHD-friendly design principles
+- Expand game content and replayability
 
 ## Project Structure
 
