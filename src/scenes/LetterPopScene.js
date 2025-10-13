@@ -9,6 +9,12 @@ class LetterPopScene extends Phaser.Scene {
         // Time tracking
         this.startTime = 0;
         this.timeText = null;
+
+        // Round state
+        this.roundLetters = [];        // Array of 10 target letters for this round
+        this.currentLetterIndex = 0;   // Which letter (0-9) we're on
+        this.roundStartTime = 0;       // When round started
+        this.progressText = null;      // "Letter X of 10" display
     }
 
     preload() {
@@ -57,8 +63,21 @@ class LetterPopScene extends Phaser.Scene {
     }
 
     startRound() {
-        // Select target letter
-        this.selectTargetLetter();
+        // Generate 10 random letters for this round (or reset index if continuing)
+        if (this.roundLetters.length === 0 || this.currentLetterIndex === 0) {
+            this.roundLetters = this.generateLetterSequence();
+            this.currentLetterIndex = 0;
+            this.roundStartTime = Date.now();
+            this.score = 0; // Reset score for new round
+            console.log(`[LetterPopScene] New round started with letters: ${this.roundLetters.join(', ')}`);
+        }
+
+        // Select current target letter from sequence
+        this.targetLetter = this.roundLetters[this.currentLetterIndex];
+        console.log(`[LetterPopScene] Letter ${this.currentLetterIndex + 1}/10: ${this.targetLetter}`);
+
+        // Update progress display
+        this.updateProgressDisplay();
 
         // Play audio instruction (if available)
         this.playTargetLetterAudio();
@@ -67,12 +86,32 @@ class LetterPopScene extends Phaser.Scene {
         this.createBubbles();
     }
 
-    selectTargetLetter() {
-        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-        const randomIndex = Phaser.Math.Between(0, letters.length - 1);
-        this.targetLetter = letters[randomIndex];
-        console.log(`[LetterPopScene] Target letter selected: ${this.targetLetter}`);
-        return this.targetLetter;
+    generateLetterSequence() {
+        // Generate 10 random letters for the round
+        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+        const letters = [];
+        for (let i = 0; i < 10; i++) {
+            const randomLetter = Phaser.Utils.Array.GetRandom(alphabet);
+            letters.push(randomLetter);
+        }
+        return letters;
+    }
+
+    updateProgressDisplay() {
+        // Destroy previous progress text
+        if (this.progressText) {
+            this.progressText.destroy();
+        }
+
+        // Create new progress text
+        this.progressText = this.add.text(400, 200, `Letter ${this.currentLetterIndex + 1} of 10`, {
+            fontSize: '24px',
+            fontFamily: 'Arial',
+            color: '#ffffff',
+            stroke: '#0066cc',
+            strokeThickness: 4
+        }).setOrigin(0.5);
+        this.progressText.setDepth(1000); // Always on top
     }
 
     playTargetLetterAudio() {
@@ -292,7 +331,48 @@ class LetterPopScene extends Phaser.Scene {
             onComplete: () => {
                 bubble.destroy();
                 this.incrementScore();
+
+                // Check if round is complete
+                if (this.currentLetterIndex >= 9) {
+                    // Round complete! (finished 10th letter)
+                    this.endRound();
+                } else {
+                    // Advance to next letter
+                    this.currentLetterIndex++;
+                    this.advanceToNextLetter();
+                }
             }
+        });
+    }
+
+    advanceToNextLetter() {
+        // Clear all remaining bubbles
+        this.bubbles.forEach(bubble => bubble.destroy());
+        this.bubbles = [];
+
+        // Wait a moment, then start next letter
+        this.time.delayedCall(1000, () => {
+            this.startRound(); // This will select the next target letter
+        });
+    }
+
+    endRound() {
+        console.log('[LetterPopScene] Round complete!');
+
+        // Calculate round time
+        const roundEndTime = Date.now();
+        const totalTimeSeconds = Math.round((roundEndTime - this.roundStartTime) / 1000);
+
+        // Prepare data for results scene
+        const resultsData = {
+            score: this.score,
+            totalLetters: 10,
+            timeSeconds: totalTimeSeconds
+        };
+
+        // Transition to results screen
+        this.time.delayedCall(1000, () => {
+            this.scene.start('Results', resultsData);
         });
     }
 
