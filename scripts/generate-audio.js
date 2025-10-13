@@ -5,7 +5,11 @@
  * - Target letter instructions ("Find the letter A!" through "Find the letter Z!")
  * - Letter sounds ("A" through "Z")
  * - Success sound
- * - Pop sound (using a short audio clip)
+ * - Pop sound
+ * - Welcome message
+ * - Encouragement messages (good job, keep trying, etc.)
+ *
+ * Total: 60 audio files
  *
  * Usage:
  *   ELEVEN_LABS_API_KEY=your_key_here node scripts/generate-audio.js
@@ -121,6 +125,13 @@ async function generateAllAudio() {
         const filename = `find_letter_${letter}.mp3`;
         const filepath = path.join(audioDir, filename);
 
+        // Skip if file already exists
+        if (fs.existsSync(filepath)) {
+            console.log(`  ⏭️  Skipped: ${filename} (already exists)`);
+            successCount++;
+            continue;
+        }
+
         try {
             console.log(`  Generating: ${filename}`);
             await generateAudio(text, filepath);
@@ -142,6 +153,13 @@ async function generateAllAudio() {
         const filename = `${letter}.mp3`;
         const filepath = path.join(lettersDir, filename);
 
+        // Skip if file already exists
+        if (fs.existsSync(filepath)) {
+            console.log(`  ⏭️  Skipped: letters/${filename} (already exists)`);
+            successCount++;
+            continue;
+        }
+
         try {
             console.log(`  Generating: letters/${filename}`);
             await generateAudio(text, filepath);
@@ -158,32 +176,99 @@ async function generateAllAudio() {
 
     // 3. Generate success sound
     console.log('🎉 Generating success sound...');
-    try {
-        const successText = 'Great job!';
-        const successPath = path.join(audioDir, 'success.mp3');
-        console.log(`  Generating: success.mp3`);
-        await generateAudio(successText, successPath);
-        console.log(`  ✅ Saved: success.mp3`);
+    const successPath = path.join(audioDir, 'success.mp3');
+    if (fs.existsSync(successPath)) {
+        console.log(`  ⏭️  Skipped: success.mp3 (already exists)`);
         successCount++;
-    } catch (error) {
-        console.error(`  ❌ Failed: success.mp3 - ${error.message}`);
-        failCount++;
+    } else {
+        try {
+            const successText = 'Great job!';
+            console.log(`  Generating: success.mp3`);
+            await generateAudio(successText, successPath);
+            console.log(`  ✅ Saved: success.mp3`);
+            successCount++;
+        } catch (error) {
+            console.error(`  ❌ Failed: success.mp3 - ${error.message}`);
+            failCount++;
+        }
     }
 
     console.log('');
 
     // 4. Generate pop sound (short "pop" sound)
+    // NOTE: Consider replacing with a free sound effect from freesound.org or similar
     console.log('💥 Generating pop sound...');
-    try {
-        const popText = 'Pop!';
-        const popPath = path.join(audioDir, 'pop.mp3');
-        console.log(`  Generating: pop.mp3`);
-        await generateAudio(popText, popPath);
-        console.log(`  ✅ Saved: pop.mp3`);
+    const popPath = path.join(audioDir, 'pop.mp3');
+    if (fs.existsSync(popPath)) {
+        console.log(`  ⏭️  Skipped: pop.mp3 (already exists)`);
         successCount++;
-    } catch (error) {
-        console.error(`  ❌ Failed: pop.mp3 - ${error.message}`);
-        failCount++;
+    } else {
+        try {
+            const popText = 'Pop!';
+            console.log(`  Generating: pop.mp3`);
+            await generateAudio(popText, popPath);
+            console.log(`  ✅ Saved: pop.mp3`);
+            successCount++;
+        } catch (error) {
+            console.error(`  ❌ Failed: pop.mp3 - ${error.message}`);
+            failCount++;
+        }
+    }
+
+    console.log('');
+
+    // 5. Generate welcome message
+    console.log('👋 Generating welcome message...');
+    const welcomePath = path.join(audioDir, 'welcome.mp3');
+    if (fs.existsSync(welcomePath)) {
+        console.log(`  ⏭️  Skipped: welcome.mp3 (already exists)`);
+        successCount++;
+    } else {
+        try {
+            const welcomeText = "Welcome to Aurora's Reading Adventure!";
+            console.log(`  Generating: welcome.mp3`);
+            await generateAudio(welcomeText, welcomePath);
+            console.log(`  ✅ Saved: welcome.mp3`);
+            successCount++;
+            await delay(500);
+        } catch (error) {
+            console.error(`  ❌ Failed: welcome.mp3 - ${error.message}`);
+            failCount++;
+        }
+    }
+
+    console.log('');
+
+    // 6. Generate encouragement messages
+    console.log('🌟 Generating encouragement messages...');
+    const encouragements = [
+        { text: 'Good job!', filename: 'good-job.mp3' },
+        { text: "You'll get it next time!", filename: 'next-time.mp3' },
+        { text: 'Keep trying!', filename: 'keep-trying.mp3' },
+        { text: 'Nice try!', filename: 'nice-try.mp3' },
+        { text: 'Almost there!', filename: 'almost.mp3' }
+    ];
+
+    for (const encouragement of encouragements) {
+        const filepath = path.join(audioDir, encouragement.filename);
+
+        // Skip if file already exists
+        if (fs.existsSync(filepath)) {
+            console.log(`  ⏭️  Skipped: ${encouragement.filename} (already exists)`);
+            successCount++;
+            continue;
+        }
+
+        try {
+            console.log(`  Generating: ${encouragement.filename}`);
+            await generateAudio(encouragement.text, filepath);
+            console.log(`  ✅ Saved: ${encouragement.filename}`);
+            successCount++;
+            await delay(500);
+        } catch (error) {
+            console.error(`  ❌ Failed: ${encouragement.filename} - ${error.message}`);
+            failCount++;
+        }
     }
 
     // Summary

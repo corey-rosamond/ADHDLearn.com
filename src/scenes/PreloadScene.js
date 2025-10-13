@@ -13,6 +13,9 @@ class PreloadScene extends Phaser.Scene {
         this.load.image('testImage', 'assets/images/test-image.png');
         this.load.audio('testSound', 'assets/audio/test-sound.wav');
 
+        // Load welcome audio
+        this.load.audio('welcome', 'assets/audio/welcome.mp3');
+
         // Progress event listeners
         this.load.on('progress', this.updateProgressBar, this);
         this.load.on('complete', this.loadComplete, this);

@@ -3,6 +3,9 @@ class MainMenuScene extends Phaser.Scene {
         super({ key: 'MainMenu' });
     }
 
+    // Static flag to track if welcome message has been played
+    static welcomePlayed = false;
+
     create() {
         console.log('MainMenuScene started');
 
@@ -20,6 +23,22 @@ class MainMenuScene extends Phaser.Scene {
 
         // Create START button
         this.createStartButton();
+
+        // Play welcome message (only first time)
+        this.playWelcomeMessage();
+    }
+
+    playWelcomeMessage() {
+        // Only play welcome message once per game session
+        if (!MainMenuScene.welcomePlayed) {
+            if (this.sound.get('welcome')) {
+                console.log('[MainMenuScene] Playing welcome message');
+                this.sound.play('welcome');
+                MainMenuScene.welcomePlayed = true;
+            } else {
+                console.warn('[MainMenuScene] Welcome audio not loaded');
+            }
+        }
     }
 
     createGradientBackground() {
