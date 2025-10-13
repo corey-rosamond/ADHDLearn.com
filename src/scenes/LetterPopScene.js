@@ -1,21 +1,34 @@
 class LetterPopScene extends Phaser.Scene {
     constructor() {
         super({ key: 'LetterPop' });
+
+        // Score tracking
+        this.score = 0;
+        this.scoreText = null;
+
+        // Time tracking
+        this.startTime = 0;
+        this.timeText = null;
     }
 
     preload() {
-        // Audio is already loaded from MainMenuScene, but check if needed
-        if (!this.sound.get('buttonClick')) {
-            this.load.audio('buttonClick', 'assets/audio/button-click.mp3');
-        }
+        // Load success sound
+        this.load.audio('success', 'assets/audio/success.mp3');
 
         // Load bubble pop sound
         this.load.audio('pop', 'assets/audio/pop.mp3');
 
-        // Load letter audio for A, B, C
-        this.load.audio('letter-a', 'assets/audio/letters/A.mp3');
-        this.load.audio('letter-b', 'assets/audio/letters/B.mp3');
-        this.load.audio('letter-c', 'assets/audio/letters/C.mp3');
+        // Load all letter audio (A-Z)
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+        letters.forEach(letter => {
+            // Load individual letter sounds
+            this.load.audio(`letter_${letter}`, `assets/audio/letters/${letter}.mp3`);
+
+            // Load "Find the letter X!" instructions
+            this.load.audio(`find_letter_${letter}`, `assets/audio/find_letter_${letter}.mp3`);
+        });
+
+        console.log('[LetterPopScene] Preloading audio for all 26 letters');
     }
 
     create() {
@@ -29,6 +42,9 @@ class LetterPopScene extends Phaser.Scene {
 
         // Create gradient background
         this.createBackground();
+
+        // Create UI (score and time displays)
+        this.createUI();
 
         // Add game title and subtitle
         this.createTitle();
@@ -88,6 +104,42 @@ class LetterPopScene extends Phaser.Scene {
             graphics.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b));
             graphics.fillRect(0, i, width, 1);
         }
+    }
+
+    createUI() {
+        // Create score display (top-left)
+        this.scoreText = this.add.text(20, 20, 'Correct: 0', {
+            fontSize: '28px',
+            fontFamily: 'Arial',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 4,
+            fontStyle: 'bold'
+        });
+        this.scoreText.setDepth(1000); // Always on top
+
+        // Create time display (top-right)
+        this.timeText = this.add.text(780, 20, 'Time: 0:00', {
+            fontSize: '24px',
+            fontFamily: 'Arial',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 4
+        }).setOrigin(1, 0); // Right-aligned
+        this.timeText.setDepth(1000); // Always on top
+
+        // Start time tracking
+        this.startTime = this.time.now;
+
+        // Create timer event to update time every second
+        this.time.addEvent({
+            delay: 1000, // 1 second
+            callback: this.updateTimeDisplay,
+            callbackScope: this,
+            loop: true
+        });
+
+        console.log('[LetterPopScene] UI created - Score and Time displays initialized');
     }
 
     createTitle() {
@@ -286,7 +338,36 @@ class LetterPopScene extends Phaser.Scene {
     incrementScore() {
         this.score++;
         console.log(`[LetterPopScene] Score: ${this.score}`);
-        // Score display will be added in Phase 11
+
+        // Update display
+        this.updateScoreDisplay();
+
+        // Animate score text (pulse effect)
+        this.tweens.add({
+            targets: this.scoreText,
+            scaleX: 1.2,
+            scaleY: 1.2,
+            duration: 100,
+            yoyo: true,
+            ease: 'Power2'
+        });
+    }
+
+    updateScoreDisplay() {
+        this.scoreText.setText(`Correct: ${this.score}`);
+    }
+
+    updateTimeDisplay() {
+        // Calculate elapsed time
+        const elapsed = Math.floor((this.time.now - this.startTime) / 1000);
+        const minutes = Math.floor(elapsed / 60);
+        const seconds = elapsed % 60;
+
+        // Format seconds with leading zero
+        const secondsStr = seconds < 10 ? `0${seconds}` : `${seconds}`;
+
+        // Update time display
+        this.timeText.setText(`Time: ${minutes}:${secondsStr}`);
     }
 
     generateSpawnPositions(count, minDistance = 150) {
