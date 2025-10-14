@@ -52,6 +52,12 @@ class LetterPopScene extends Phaser.Scene {
         // Initialize responsive utilities
         this.r = new ResponsiveUtils(this);
 
+        // Load game settings from localStorage
+        const timePerRound = parseInt(localStorage.getItem('letterPop_timePerRound') || '10');
+        this.letterTimeLimit = timePerRound;
+        this.letterTimeRemaining = timePerRound;
+        console.log(`[LetterPopScene] Time per round set to: ${timePerRound} seconds`);
+
         // Enable physics for this scene
         if (!this.physics.world) {
             console.error('[LetterPopScene] Physics not available! Check game config.');
@@ -858,9 +864,14 @@ class LetterPopScene extends Phaser.Scene {
     handleIncorrectClick(bubble) {
         console.log('[LetterPopScene] Incorrect click - wobble');
 
-        // Play wrong answer sound
-        if (this.cache.audio.exists('wrongAnswer')) {
-            this.sound.play('wrongAnswer', { volume: 0.4 });
+        // Play the letter's audio (e.g., "B", "C", "D") instead of wrong answer sound
+        // Always use uppercase for audio key since files are named A.mp3, B.mp3, etc.
+        const letterAudioKey = `letter_${bubble.letter.toUpperCase()}`;
+        if (this.cache.audio.exists(letterAudioKey)) {
+            this.sound.play(letterAudioKey, { volume: 0.6 });
+            console.log(`[LetterPopScene] Playing letter audio: ${letterAudioKey}`);
+        } else {
+            console.warn(`[LetterPopScene] Letter audio not found: ${letterAudioKey}`);
         }
 
         // Wobble animation - gentle side-to-side

@@ -111,12 +111,12 @@ class LetterPopMenuScene extends Phaser.Scene {
         const spacing = this.r.scaleY(85);
 
         // Load saved settings or use defaults
-        const timePerLetter = localStorage.getItem('letterPop_timePerLetter') || '10';
+        const timePerRound = localStorage.getItem('letterPop_timePerRound') || '10';
         const enableChances = localStorage.getItem('letterPop_enableChances') || 'false';
         const letterCase = localStorage.getItem('letterPop_letterCase') || 'uppercase';
 
-        // Time Per Letter Slider
-        this.createTimeSlider(timePerLetter, startY);
+        // Time Per Round Slider
+        this.createTimeSlider(timePerRound, startY);
 
         // Enable 3 Chances Toggle
         this.createChancesToggle(enableChances, startY + spacing);
@@ -127,7 +127,7 @@ class LetterPopMenuScene extends Phaser.Scene {
 
     createTimeSlider(initialValue, y) {
         // Label
-        this.add.text(this.r.getX(20), y, 'Time Per Letter:', {
+        this.add.text(this.r.getX(20), y, 'Time Per Round:', {
             fontSize: this.r.getFontSize(28) + 'px',
             fontFamily: 'Fredoka One, Arial',
             color: '#ffffff',
@@ -202,7 +202,7 @@ class LetterPopMenuScene extends Phaser.Scene {
             valueText.setText(timeValue + 's');
 
             // Save to localStorage
-            localStorage.setItem('letterPop_timePerLetter', timeValue.toString());
+            localStorage.setItem('letterPop_timePerRound', timeValue.toString());
         });
 
         // Hover effect
