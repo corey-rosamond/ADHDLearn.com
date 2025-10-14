@@ -49,6 +49,12 @@ class PreloadScene extends Phaser.Scene {
         this.load.image('btnPause', 'assets/ui/Btn_Pause.png');
         this.load.image('scoreBox', 'assets/ui/Score_Box.png');
         this.load.image('btnBrown', 'assets/ui/Btn_Brown.png');
+        this.load.image('btnSetting', 'assets/ui/Btn_Setting.png');
+        this.load.image('btnSettingPressed', 'assets/ui/Btn_Setting_Pressed.png');
+        this.load.image('btnMusic', 'assets/ui/Btn_Music.png');
+        this.load.image('btnMusicDisable', 'assets/ui/Btn_Music_Disable.png');
+        this.load.image('btnSound', 'assets/ui/Btn_Sound.png');
+        this.load.image('btnSoundDisable', 'assets/ui/Btn_Sound_Disable.png');
         this.load.image('timerBarBg', 'assets/ui/Load_Bar_Bg.png');  // Timer bar background
         this.load.image('timerBarFg', 'assets/ui/Load_Bar_Fg.png');  // Timer bar foreground
 

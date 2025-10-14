@@ -270,34 +270,30 @@ class MainMenuScene extends Phaser.Scene {
         const btnX = this.r.getX(92);
         const btnY = this.r.getY(8);
 
-        // Create button using brown button asset
-        const button = this.add.image(btnX, btnY, 'btnBrown').setInteractive({ useHandCursor: true });
+        // Create button using settings button asset
+        const button = this.add.image(btnX, btnY, 'btnSetting').setInteractive({ useHandCursor: true });
 
         // Scale button to appropriate size
         const targetSize = this.r.scaleX(80);
         const scale = targetSize / button.width;
         button.setScale(scale);
 
-        // Create gear/settings icon using text emoji
-        const iconText = this.add.text(btnX, btnY, '⚙️', {
-            fontSize: this.r.getFontSize(40) + 'px'
-        }).setOrigin(0.5);
-
-        // Idle spin animation
+        // Idle bounce animation
         this.tweens.add({
-            targets: iconText,
-            angle: 360,
-            duration: 4000,
-            ease: 'Linear',
+            targets: button,
+            y: btnY - this.r.scaleY(8),
+            duration: 1200,
+            ease: 'Sine.easeInOut',
+            yoyo: true,
             repeat: -1
         });
 
         // Hover effect
         button.on('pointerover', () => {
             this.tweens.add({
-                targets: [button, iconText],
-                scaleX: scale * 1.1,
-                scaleY: scale * 1.1,
+                targets: button,
+                scaleX: scale * 1.15,
+                scaleY: scale * 1.15,
                 duration: 200,
                 ease: 'Back.easeOut'
             });
@@ -306,7 +302,7 @@ class MainMenuScene extends Phaser.Scene {
         // Hover out
         button.on('pointerout', () => {
             this.tweens.add({
-                targets: [button, iconText],
+                targets: button,
                 scaleX: scale,
                 scaleY: scale,
                 duration: 200,
@@ -316,13 +312,17 @@ class MainMenuScene extends Phaser.Scene {
 
         // Click handler
         button.on('pointerdown', () => {
+            // Change to pressed texture
+            button.setTexture('btnSettingPressed');
+
             this.tweens.add({
-                targets: [button, iconText],
+                targets: button,
                 scaleX: scale * 0.95,
                 scaleY: scale * 0.95,
                 duration: 100,
                 yoyo: true,
                 onComplete: () => {
+                    button.setTexture('btnSetting');
                     this.scene.start('Settings');
                 }
             });
