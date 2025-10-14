@@ -147,10 +147,20 @@ async function generateAllAudio() {
     console.log('');
 
     // 2. Generate individual letter names ("A", "B", "C", etc.)
-    // Use just the capital letter - TTS should recognize and pronounce the letter name
+    // Spell out letter names phonetically to ensure correct pronunciation
     console.log('🔤 Generating individual letter names...');
+
+    // Map letters to their phonetic pronunciations
+    const letterPronunciations = {
+        'A': 'ay', 'B': 'bee', 'C': 'see', 'D': 'dee', 'E': 'ee', 'F': 'eff',
+        'G': 'jee', 'H': 'aitch', 'I': 'eye', 'J': 'jay', 'K': 'kay', 'L': 'ell',
+        'M': 'em', 'N': 'en', 'O': 'oh', 'P': 'pee', 'Q': 'cue', 'R': 'are',
+        'S': 'ess', 'T': 'tee', 'U': 'you', 'V': 'vee', 'W': 'double you',
+        'X': 'ex', 'Y': 'why', 'Z': 'zee'
+    };
+
     for (const letter of letters) {
-        const text = letter; // Just the capital letter (e.g., "P")
+        const text = letterPronunciations[letter];
         const filename = `${letter}.mp3`;
         const filepath = path.join(lettersDir, filename);
 
