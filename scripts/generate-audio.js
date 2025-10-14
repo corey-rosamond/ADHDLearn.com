@@ -156,7 +156,7 @@ async function generateAllAudio() {
     const letterPronunciations = {
         'A': 'ay', 'B': 'bee', 'C': 'see', 'D': 'dee', 'E': 'ee', 'F': 'ehf',
         'G': 'jee', 'H': 'aych', 'I': 'eye', 'J': 'jay', 'K': 'kay', 'L': 'ehl',
-        'M': 'ehm', 'N': 'ehn', 'O': 'oh', 'P': 'pee', 'Q': 'kyoo', 'R': 'ar',
+        'M': 'ehm', 'N': 'enn', 'O': 'oh', 'P': 'pee', 'Q': 'kyoo', 'R': 'ar',
         'S': 'ehs', 'T': 'tee', 'U': 'yoo', 'V': 'vee', 'W': 'DUH-buhl-yoo',
         'X': 'ehks', 'Y': 'wy', 'Z': 'ZEE'
     };
