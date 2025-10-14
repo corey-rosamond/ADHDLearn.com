@@ -27,6 +27,9 @@ class MainMenuScene extends Phaser.Scene {
         // Create settings button (top-right corner)
         this.createSettingsButton();
 
+        // Create debug button (top-left corner)
+        this.createDebugButton();
+
         // Create game selection tiles
         this.createGameTiles();
 
@@ -324,6 +327,69 @@ class MainMenuScene extends Phaser.Scene {
                 onComplete: () => {
                     button.setTexture('btnSetting');
                     this.scene.start('Settings');
+                }
+            });
+        });
+    }
+
+    createDebugButton() {
+        // Position in top-left corner
+        const btnX = this.r.getX(8);
+        const btnY = this.r.getY(8);
+
+        // Create circular background for bug emoji
+        const circle = this.add.graphics();
+        circle.fillStyle(0xFF6B6B, 1); // Orange Pop color
+        circle.fillCircle(btnX, btnY, this.r.scaleX(40));
+        circle.setInteractive(
+            new Phaser.Geom.Circle(btnX, btnY, this.r.scaleX(40)),
+            Phaser.Geom.Circle.Contains
+        );
+
+        // Create bug emoji text
+        const bugText = this.add.text(btnX, btnY, '🐛', {
+            fontSize: this.r.getFontSize(48) + 'px'
+        }).setOrigin(0.5);
+
+        // Idle bounce animation
+        this.tweens.add({
+            targets: [circle, bugText],
+            y: btnY - this.r.scaleY(8),
+            duration: 1200,
+            ease: 'Sine.easeInOut',
+            yoyo: true,
+            repeat: -1
+        });
+
+        // Hover effect
+        circle.on('pointerover', () => {
+            this.tweens.add({
+                targets: [bugText],
+                scale: 1.15,
+                duration: 200,
+                ease: 'Back.easeOut'
+            });
+        });
+
+        circle.on('pointerout', () => {
+            this.tweens.add({
+                targets: [bugText],
+                scale: 1,
+                duration: 200,
+                ease: 'Back.easeIn'
+            });
+        });
+
+        // Click handler
+        circle.on('pointerdown', () => {
+            console.log('[MainMenuScene] Debug button clicked');
+            this.tweens.add({
+                targets: [circle, bugText],
+                scale: 0.9,
+                duration: 100,
+                yoyo: true,
+                onComplete: () => {
+                    this.scene.start('LetterTest');
                 }
             });
         });
