@@ -48,6 +48,8 @@ class PreloadScene extends Phaser.Scene {
         this.load.image('btnHome', 'assets/ui/Btn_Home.png');
         this.load.image('btnPause', 'assets/ui/Btn_Pause.png');
         this.load.image('scoreBox', 'assets/ui/Score_Box.png');
+        this.load.image('boxBg', 'assets/ui/Box_Bg.png');
+        this.load.image('highScoreBox', 'assets/ui/HighScore_Box.png');
         this.load.image('btnBrown', 'assets/ui/Btn_Brown.png');
         this.load.image('btnSetting', 'assets/ui/Btn_Setting.png');
         this.load.image('btnSettingPressed', 'assets/ui/Btn_Setting_Pressed.png');

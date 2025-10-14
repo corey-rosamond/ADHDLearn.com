@@ -347,22 +347,22 @@ class MainMenuScene extends Phaser.Scene {
     createGameTile(config) {
         const { x, y, title, icon, description, sceneKey } = config;
 
-        // Create tile background using PopUp_Result as a card
-        const tile = this.add.image(x, y, 'popupResult').setInteractive({ useHandCursor: true });
+        // Create square tile background using Box_Bg as frame
+        const tile = this.add.image(x, y, 'boxBg').setInteractive({ useHandCursor: true });
 
-        // Scale tile to appropriate size
-        const targetWidth = this.r.scaleX(400);
-        const scale = targetWidth / tile.width;
+        // Make it square - use smaller dimension
+        const targetSize = this.r.scaleX(300);
+        const scale = targetSize / tile.width;
         tile.setScale(scale);
 
-        // Icon emoji at top
-        const iconText = this.add.text(x, y - this.r.scaleY(60), icon, {
-            fontSize: this.r.getFontSize(72) + 'px'
+        // Icon emoji at top center
+        const iconText = this.add.text(x, y - this.r.scaleY(40), icon, {
+            fontSize: this.r.getFontSize(64) + 'px'
         }).setOrigin(0.5);
 
-        // Game title
-        const titleText = this.add.text(x, y - this.r.scaleY(10), title, {
-            fontSize: this.r.getFontSize(40) + 'px',
+        // Game title - centered both horizontally and vertically
+        const titleText = this.add.text(x, y + this.r.scaleY(30), title, {
+            fontSize: this.r.getFontSize(36) + 'px',
             fontFamily: 'Fredoka One, Arial',
             color: '#FFEB3B',
             fontStyle: 'bold',
@@ -370,18 +370,9 @@ class MainMenuScene extends Phaser.Scene {
             strokeThickness: this.r.scaleX(6)
         }).setOrigin(0.5);
 
-        // Description
-        const descText = this.add.text(x, y + this.r.scaleY(35), description, {
-            fontSize: this.r.getFontSize(24) + 'px',
-            fontFamily: 'Fredoka One, Arial',
-            color: '#ffffff',
-            stroke: '#9C27B0',
-            strokeThickness: this.r.scaleX(3)
-        }).setOrigin(0.5);
-
         // Idle float animation
         this.tweens.add({
-            targets: [tile, iconText, titleText, descText],
+            targets: [tile, iconText, titleText],
             y: y - this.r.scaleY(10),
             duration: 1500,
             ease: 'Sine.easeInOut',
@@ -392,9 +383,15 @@ class MainMenuScene extends Phaser.Scene {
         // Hover effect
         tile.on('pointerover', () => {
             this.tweens.add({
-                targets: [tile, iconText, titleText, descText],
+                targets: tile,
                 scaleX: scale * 1.1,
                 scaleY: scale * 1.1,
+                duration: 200,
+                ease: 'Back.easeOut'
+            });
+            this.tweens.add({
+                targets: [iconText, titleText],
+                scale: 1.1,
                 duration: 200,
                 ease: 'Back.easeOut'
             });
@@ -403,9 +400,15 @@ class MainMenuScene extends Phaser.Scene {
         // Hover out
         tile.on('pointerout', () => {
             this.tweens.add({
-                targets: [tile, iconText, titleText, descText],
+                targets: tile,
                 scaleX: scale,
                 scaleY: scale,
+                duration: 200,
+                ease: 'Back.easeIn'
+            });
+            this.tweens.add({
+                targets: [iconText, titleText],
+                scale: 1,
                 duration: 200,
                 ease: 'Back.easeIn'
             });
@@ -416,9 +419,15 @@ class MainMenuScene extends Phaser.Scene {
             console.log(`[MainMenuScene] ${title} tile clicked`);
 
             this.tweens.add({
-                targets: [tile, iconText, titleText, descText],
+                targets: tile,
                 scaleX: scale * 0.95,
                 scaleY: scale * 0.95,
+                duration: 100,
+                yoyo: true
+            });
+            this.tweens.add({
+                targets: [iconText, titleText],
+                scale: 0.95,
                 duration: 100,
                 yoyo: true,
                 onComplete: () => {
