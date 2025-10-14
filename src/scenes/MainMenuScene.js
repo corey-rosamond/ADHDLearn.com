@@ -355,13 +355,13 @@ class MainMenuScene extends Phaser.Scene {
         const scale = targetSize / tile.width;
         tile.setScale(scale);
 
-        // Icon emoji at top center
-        const iconText = this.add.text(x, y - this.r.scaleY(40), icon, {
+        // Icon emoji - positioned to be fully visible within tile
+        const iconText = this.add.text(x, y - this.r.scaleY(20), icon, {
             fontSize: this.r.getFontSize(64) + 'px'
         }).setOrigin(0.5);
 
-        // Game title - centered both horizontally and vertically
-        const titleText = this.add.text(x, y + this.r.scaleY(30), title, {
+        // Game title - below the icon
+        const titleText = this.add.text(x, y + this.r.scaleY(45), title, {
             fontSize: this.r.getFontSize(36) + 'px',
             fontFamily: 'Fredoka One, Arial',
             color: '#FFEB3B',
