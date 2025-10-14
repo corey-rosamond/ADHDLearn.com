@@ -27,8 +27,8 @@ class MainMenuScene extends Phaser.Scene {
         // Create settings button (top-right corner)
         this.createSettingsButton();
 
-        // Create START button
-        this.createStartButton();
+        // Create game selection tiles
+        this.createGameTiles();
 
         // Play welcome message when menu loads
         this.playWelcomeMessage();
@@ -329,42 +329,70 @@ class MainMenuScene extends Phaser.Scene {
         });
     }
 
-    createStartButton() {
-        const btnX = this.r.centerX;
-        const btnY = this.r.getY(70);
+    createGameTiles() {
+        // Create a tile for Letter Pop game
+        const tileX = this.r.centerX;
+        const tileY = this.r.getY(60);
 
-        // Create button sprite
-        const button = this.add.image(btnX, btnY, 'btnGreen').setInteractive({ useHandCursor: true });
+        this.createGameTile({
+            x: tileX,
+            y: tileY,
+            title: 'Letter Pop',
+            icon: '🎈',
+            description: 'Pop bubbles and learn letters!',
+            sceneKey: 'LetterPopMenu'
+        });
+    }
 
-        // Scale button to appropriate size
-        const targetWidth = this.r.scaleX(450);
-        const scale = targetWidth / button.width;
-        button.setScale(scale);
+    createGameTile(config) {
+        const { x, y, title, icon, description, sceneKey } = config;
 
-        // Create button text
-        const buttonText = this.add.text(btnX, btnY, 'PLAY GAME', {
-            fontSize: this.r.getFontSize(48) + 'px',
-            fontFamily: 'Fredoka One, Arial',
-            color: '#ffffff',
-            stroke: '#2C5F2D',
-            strokeThickness: this.r.scaleX(6),
-            fontStyle: 'bold'
+        // Create tile background using PopUp_Result as a card
+        const tile = this.add.image(x, y, 'popupResult').setInteractive({ useHandCursor: true });
+
+        // Scale tile to appropriate size
+        const targetWidth = this.r.scaleX(400);
+        const scale = targetWidth / tile.width;
+        tile.setScale(scale);
+
+        // Icon emoji at top
+        const iconText = this.add.text(x, y - this.r.scaleY(60), icon, {
+            fontSize: this.r.getFontSize(72) + 'px'
         }).setOrigin(0.5);
 
-        // Idle bounce animation
+        // Game title
+        const titleText = this.add.text(x, y - this.r.scaleY(10), title, {
+            fontSize: this.r.getFontSize(40) + 'px',
+            fontFamily: 'Fredoka One, Arial',
+            color: '#FFEB3B',
+            fontStyle: 'bold',
+            stroke: '#9C27B0',
+            strokeThickness: this.r.scaleX(6)
+        }).setOrigin(0.5);
+
+        // Description
+        const descText = this.add.text(x, y + this.r.scaleY(35), description, {
+            fontSize: this.r.getFontSize(24) + 'px',
+            fontFamily: 'Fredoka One, Arial',
+            color: '#ffffff',
+            stroke: '#9C27B0',
+            strokeThickness: this.r.scaleX(3)
+        }).setOrigin(0.5);
+
+        // Idle float animation
         this.tweens.add({
-            targets: [button, buttonText],
-            y: btnY - this.r.scaleY(15),
-            duration: 1000,
+            targets: [tile, iconText, titleText, descText],
+            y: y - this.r.scaleY(10),
+            duration: 1500,
             ease: 'Sine.easeInOut',
             yoyo: true,
             repeat: -1
         });
 
         // Hover effect
-        button.on('pointerover', () => {
+        tile.on('pointerover', () => {
             this.tweens.add({
-                targets: [button, buttonText],
+                targets: [tile, iconText, titleText, descText],
                 scaleX: scale * 1.1,
                 scaleY: scale * 1.1,
                 duration: 200,
@@ -373,9 +401,9 @@ class MainMenuScene extends Phaser.Scene {
         });
 
         // Hover out
-        button.on('pointerout', () => {
+        tile.on('pointerout', () => {
             this.tweens.add({
-                targets: [button, buttonText],
+                targets: [tile, iconText, titleText, descText],
                 scaleX: scale,
                 scaleY: scale,
                 duration: 200,
@@ -384,28 +412,17 @@ class MainMenuScene extends Phaser.Scene {
         });
 
         // Click handler
-        button.on('pointerdown', () => {
-            console.log('[MainMenuScene] START button clicked');
+        tile.on('pointerdown', () => {
+            console.log(`[MainMenuScene] ${title} tile clicked`);
 
-            // Change to pressed texture
-            button.setTexture('btnGreenPressed');
-
-            // Play sound if available
-            if (this.cache.audio.exists('testSound')) {
-                this.sound.play('testSound');
-            }
-
-            // Scale down animation with yoyo
             this.tweens.add({
-                targets: [button, buttonText],
+                targets: [tile, iconText, titleText, descText],
                 scaleX: scale * 0.95,
                 scaleY: scale * 0.95,
                 duration: 100,
                 yoyo: true,
                 onComplete: () => {
-                    button.setTexture('btnGreen');
-                    // Transition to LetterPopScene
-                    this.scene.start('LetterPop');
+                    this.scene.start(sceneKey);
                 }
             });
         });
