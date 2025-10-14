@@ -83,8 +83,10 @@ class Bubble extends Phaser.GameObjects.Container {
      */
     createLetter() {
         // Create text for letter with Fredoka One font
+        // Reduced font size from 64 to 52 to ensure letters with descenders (j, g, p, q, y)
+        // and stroke fit within the bubble circle without clipping
         const letterText = this.scene.add.text(0, 0, this.letter, {
-            fontSize: this.r.getFontSize(64) + 'px',
+            fontSize: this.r.getFontSize(52) + 'px',
             fontFamily: 'Fredoka One, Arial',
             color: '#ffffff',
             fontStyle: 'bold',
@@ -93,15 +95,7 @@ class Bubble extends Phaser.GameObjects.Container {
         });
 
         // Center the text horizontally and vertically
-        // For lowercase letters with descenders (j, g, p, q, y), shift up slightly
         letterText.setOrigin(0.5, 0.5);
-
-        // Check if letter has descender and adjust Y position
-        const descenderLetters = ['j', 'g', 'p', 'q', 'y'];
-        if (descenderLetters.includes(this.letter.toLowerCase())) {
-            // Shift text up by 10% of bubble radius to accommodate descender
-            letterText.y = -this.radius * 0.1;
-        }
 
         // Add text to this container
         this.add(letterText);
