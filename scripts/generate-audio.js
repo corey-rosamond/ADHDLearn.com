@@ -44,11 +44,11 @@ if (!fs.existsSync(lettersDir)) {
 /**
  * Generate audio using ElevenLabs API
  */
-function generateAudio(text, outputPath) {
+function generateAudio(text, outputPath, useSSML = false) {
     return new Promise((resolve, reject) => {
         const data = JSON.stringify({
             text: text,
-            model_id: 'eleven_monolingual_v1',
+            model_id: 'eleven_turbo_v2',  // Supports SSML phoneme tags
             voice_settings: {
                 stability: 0.5,
                 similarity_boost: 0.75
@@ -150,15 +150,36 @@ async function generateAllAudio() {
     // Spell out letter names phonetically to ensure correct pronunciation
     console.log('🔤 Generating individual letter names...');
 
-    // Map letters to their phonetic pronunciations
-    // Using standard TTS respelling guide for alphabet letter names
-    // Source: TTS best practices for acronyms/initialisms
+    // Map letters to their phonetic pronunciations using SSML phoneme tags
+    // Using CMU Arpabet phonetic notation for precise pronunciation control
+    // Supported by Eleven Turbo v2 model
     const letterPronunciations = {
-        'A': 'ay', 'B': 'bee', 'C': 'see', 'D': 'dee', 'E': 'ee', 'F': 'ehf',
-        'G': 'jee', 'H': 'aych', 'I': 'eye', 'J': 'jay', 'K': 'kay', 'L': 'ehl',
-        'M': 'ehm', 'N': 'enn', 'O': 'oh', 'P': 'pee', 'Q': 'kyoo', 'R': 'ar',
-        'S': 'ehs', 'T': 'tee', 'U': 'yoo', 'V': 'vee', 'W': 'DUH-buhl-yoo',
-        'X': 'ehks', 'Y': 'wy', 'Z': 'ZEE'
+        'A': '<phoneme alphabet="cmu-arpabet" ph="EY">A</phoneme>',
+        'B': '<phoneme alphabet="cmu-arpabet" ph="B IY">B</phoneme>',
+        'C': '<phoneme alphabet="cmu-arpabet" ph="S IY">C</phoneme>',
+        'D': '<phoneme alphabet="cmu-arpabet" ph="D IY">D</phoneme>',
+        'E': '<phoneme alphabet="cmu-arpabet" ph="IY">E</phoneme>',
+        'F': '<phoneme alphabet="cmu-arpabet" ph="EH F">F</phoneme>',
+        'G': '<phoneme alphabet="cmu-arpabet" ph="JH IY">G</phoneme>',
+        'H': '<phoneme alphabet="cmu-arpabet" ph="EY CH">H</phoneme>',
+        'I': '<phoneme alphabet="cmu-arpabet" ph="AY">I</phoneme>',
+        'J': '<phoneme alphabet="cmu-arpabet" ph="JH EY">J</phoneme>',
+        'K': '<phoneme alphabet="cmu-arpabet" ph="K EY">K</phoneme>',
+        'L': '<phoneme alphabet="cmu-arpabet" ph="EH L">L</phoneme>',
+        'M': '<phoneme alphabet="cmu-arpabet" ph="EH M">M</phoneme>',
+        'N': '<phoneme alphabet="cmu-arpabet" ph="EH N">N</phoneme>',
+        'O': '<phoneme alphabet="cmu-arpabet" ph="OW">O</phoneme>',
+        'P': '<phoneme alphabet="cmu-arpabet" ph="P IY">P</phoneme>',
+        'Q': '<phoneme alphabet="cmu-arpabet" ph="K Y UW">Q</phoneme>',
+        'R': '<phoneme alphabet="cmu-arpabet" ph="AA R">R</phoneme>',
+        'S': '<phoneme alphabet="cmu-arpabet" ph="EH S">S</phoneme>',
+        'T': '<phoneme alphabet="cmu-arpabet" ph="T IY">T</phoneme>',
+        'U': '<phoneme alphabet="cmu-arpabet" ph="Y UW">U</phoneme>',
+        'V': '<phoneme alphabet="cmu-arpabet" ph="V IY">V</phoneme>',
+        'W': '<phoneme alphabet="cmu-arpabet" ph="D AH B AH L Y UW">W</phoneme>',
+        'X': '<phoneme alphabet="cmu-arpabet" ph="EH K S">X</phoneme>',
+        'Y': '<phoneme alphabet="cmu-arpabet" ph="W AY">Y</phoneme>',
+        'Z': '<phoneme alphabet="cmu-arpabet" ph="Z IY">Z</phoneme>'
     };
 
     for (const letter of letters) {
