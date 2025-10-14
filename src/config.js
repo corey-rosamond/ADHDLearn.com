@@ -13,12 +13,14 @@ const config = {
             width: 2560,
             height: 1600
         },
-        autoCenter: Phaser.Scale.CENTER_BOTH
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        resolution: window.devicePixelRatio || 1  // Use device pixel ratio for sharper rendering
     },
     render: {
-        antialias: false,        // Disable anti-aliasing for sharper pixels
-        roundPixels: true,       // Snap to pixel boundaries
-        pixelArt: false          // Not pixel art, but helps with crisp rendering
+        antialias: true,         // Enable anti-aliasing for smooth text
+        roundPixels: false,      // Allow sub-pixel rendering for smoother text
+        pixelArt: false,         // Not pixel art
+        mipmapFilter: 'LINEAR_MIPMAP_LINEAR'  // High quality texture filtering
     },
     physics: {
         default: 'arcade',

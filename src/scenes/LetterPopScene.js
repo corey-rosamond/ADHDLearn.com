@@ -259,7 +259,7 @@ class LetterPopScene extends Phaser.Scene {
 
         // Reset timer bar to full
         if (this.timerBarFg) {
-            this.timerBarFg.setScale(this.timerBarMaxWidth, this.r.scaleY(0.038));
+            this.updateTimerBarGraphics(1.0);
         }
 
         // Clear any existing countdown timer
@@ -302,8 +302,8 @@ class LetterPopScene extends Phaser.Scene {
     updateProgressDisplay() {
         // Update bookmark to show current round progress
         if (this.roundText) {
-            // Format the round number with proper line break
-            this.roundText.setText(`ROUND\n${this.currentLetterIndex + 1}`);
+            // Format the round number on single line
+            this.roundText.setText(`ROUND ${this.currentLetterIndex + 1}`);
         }
     }
 
@@ -342,8 +342,7 @@ class LetterPopScene extends Phaser.Scene {
         // Update timer bar (shrink from right to left as time decreases)
         if (this.timerBarFg) {
             const progress = this.letterTimeRemaining / this.letterTimeLimit;
-            // Since origin is (0, 0.5), scaling X will shrink from the right
-            this.timerBarFg.setScale(this.timerBarMaxWidth * progress, this.r.scaleY(0.038));
+            this.updateTimerBarGraphics(progress);
         }
 
         // Update countdown number display (if exists)
@@ -406,19 +405,18 @@ class LetterPopScene extends Phaser.Scene {
         this.headerBarHeight = menuBarHeight;
 
         // LEFT: Round text inside the built-in orange bookmark
-        const bookmarkX = this.r.getX(8.5);  // Moved right to center inside orange bookmark
-        const bookmarkY = this.r.getY(5);    // Vertically centered in bookmark
+        const bookmarkX = this.r.getX(13.2);  // Centered inside orange bookmark
+        const bookmarkY = this.r.getY(4.5);    // Vertically centered in bookmark
 
         // Round text inside bookmark (Top_Bar has bookmark built-in)
-        this.roundText = this.add.text(bookmarkX, bookmarkY, 'ROUND\n1', {
-            fontSize: this.r.getFontSize(16) + 'px',
+        this.roundText = this.add.text(bookmarkX, bookmarkY, 'ROUND 1', {
+            fontSize: this.r.getFontSize(24) + 'px',  // Larger for better readability
             fontFamily: 'Fredoka One, Arial',
             color: '#ffffff',
             fontStyle: 'bold',
-            stroke: '#8B4513',
-            strokeThickness: 3,  // Fixed thickness
-            align: 'center',
-            lineSpacing: -3
+            stroke: '#5D3A1A',  // Darker brown for better contrast
+            strokeThickness: 5,  // Thicker for clarity
+            align: 'center'
         }).setOrigin(0.5);
         this.roundText.setDepth(1001);
 
@@ -472,8 +470,8 @@ class LetterPopScene extends Phaser.Scene {
     }
 
     createHomeButton() {
-        const btnX = this.r.getX(93);   // Right side, inside top bar
-        const btnY = this.r.getY(5);    // Centered in the peach area
+        const btnX = this.r.getX(95);   // Right side, inside top bar
+        const btnY = this.r.getY(5.6);    // Centered in the peach area
 
         // Create home button sprite (using btnHome instead of btnPause)
         const button = this.add.image(btnX, btnY, 'btnHome').setInteractive({ useHandCursor: true });
@@ -522,37 +520,60 @@ class LetterPopScene extends Phaser.Scene {
 
     createTimerBar() {
         // Position inside the dark purple bar area at the bottom of Top_Bar
-        const barY = this.r.getY(10.2);  // Moved down to be inside the purple section
+        const barY = this.r.getY(9.8);  // Adjusted to be inside dark purple section
 
-        // Clock icon on the left
+        // Clock icon on the left (already has white background in the image)
         const clockIcon = this.add.image(this.r.getX(7), barY, 'clockIcon').setOrigin(0.5);
-        const clockScale = this.r.scaleX(0.08);  // Made larger to be visible
+        const clockIconSize = this.r.scaleY(25);  // Target size in pixels
+        const clockScale = clockIconSize / 64;     // Clock_Icon.png is 64x64
         clockIcon.setScale(clockScale);
-        clockIcon.setDepth(1001);
+        clockIcon.setDepth(1002);  // Above everything else
 
         // Calculate bar position and size (leaving room for clock icon on left)
-        const barStartX = this.r.getX(11);
-        const barEndX = this.r.getX(93);
+        const barStartX = this.r.getX(7.5);  // Moved 75px to the right
+        const barEndX = this.r.getX(93.35);  // 5px longer
         const barWidth = barEndX - barStartX;
-        const barX = barStartX + (barWidth / 2);
+        const barHeight = this.r.scaleY(12);  // Bar height in pixels (1/4 of original)
 
-        // Timer bar background (purple) - just for visual reference, Top_Bar already has it
-        this.timerBarBg = this.add.image(barX, barY, 'timerBarBg').setOrigin(0.5);
-        const bgScale = barWidth / this.timerBarBg.width;
-        this.timerBarBg.setScale(bgScale, this.r.scaleY(0.038));
+        // Timer bar background (dark purple) - using graphics
+        this.timerBarBg = this.add.graphics();
+        this.timerBarBg.fillStyle(0x5A2E5A, 1);  // Dark purple
+        this.timerBarBg.fillRoundedRect(barStartX, barY - (barHeight / 2), barWidth, barHeight, 8);
         this.timerBarBg.setDepth(999);
 
-        // Timer bar foreground (yellow/orange) - shrinks from right to left
-        this.timerBarFg = this.add.image(barStartX, barY, 'timerBarFg').setOrigin(0, 0.5);  // Left origin
-        this.timerBarFgScale = bgScale;
-        this.timerBarFg.setScale(bgScale, this.r.scaleY(0.038));
+        // Timer bar foreground (yellow/orange gradient) - using graphics
+        this.timerBarFg = this.add.graphics();
         this.timerBarFg.setDepth(1000);
 
-        // Store initial width for scaling
-        this.timerBarMaxWidth = bgScale;
+        // Store initial values
         this.timerBarStartX = barStartX;
+        this.timerBarStartY = barY - (barHeight / 2);
+        this.timerBarMaxWidth = barWidth;
+        this.timerBarHeight = barHeight;
+
+        // Draw initial full bar
+        this.updateTimerBarGraphics(1.0);
     }
 
+
+    updateTimerBarGraphics(progress) {
+        // Redraw the yellow/orange gradient bar
+        this.timerBarFg.clear();
+
+        const currentWidth = this.timerBarMaxWidth * progress;
+
+        if (currentWidth > 0) {
+            // Draw gradient from yellow to orange
+            this.timerBarFg.fillGradientStyle(0xFFEB3B, 0xFFEB3B, 0xFF9800, 0xFF9800, 1);
+            this.timerBarFg.fillRoundedRect(
+                this.timerBarStartX,
+                this.timerBarStartY,
+                currentWidth,
+                this.timerBarHeight,
+                8
+            );
+        }
+    }
 
     createTitle() {
         // Main title - centered on screen
