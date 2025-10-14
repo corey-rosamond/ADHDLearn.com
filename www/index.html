@@ -8,7 +8,7 @@
     <!-- PWA Meta Tags -->
     <meta name="description" content="A colorful, engaging letter learning game for kids">
     <meta name="theme-color" content="#00BCD4">
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="manifest.json">
 
     <!-- PWA Support -->
     <meta name="mobile-web-app-capable" content="yes">
@@ -17,9 +17,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen">
     <meta name="apple-mobile-web-app-title" content="Aurora's Reading">
-    <link rel="apple-touch-icon" href="/assets/images/icon-192.png">
-    <link rel="apple-touch-icon" sizes="192x192" href="/assets/images/icon-192.png">
-    <link rel="apple-touch-icon" sizes="512x512" href="/assets/images/icon-512.png">
+    <link rel="apple-touch-icon" href="assets/images/icon-192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="assets/images/icon-192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="assets/images/icon-512.png">
 
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
@@ -126,7 +126,7 @@
         }
 
         function downloadAPK() {
-            window.location.href = '/auroras-reading-adventure.apk';
+            window.location.href = 'auroras-reading-adventure.apk';
         }
 
         function closeBanner() {
@@ -146,9 +146,9 @@
 
     <!-- PWA Service Worker Registration -->
     <script>
-        if ('serviceWorker' in navigator) {
+        if ('serviceWorker' in navigator && !window.Capacitor) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
+                navigator.serviceWorker.register('service-worker.js')
                     .then(reg => console.log('[PWA] Service Worker registered:', reg))
                     .catch(err => console.log('[PWA] Service Worker registration failed:', err));
             });
