@@ -151,12 +151,14 @@ async function generateAllAudio() {
     console.log('🔤 Generating individual letter names...');
 
     // Map letters to their phonetic pronunciations
+    // Using standard TTS respelling guide for alphabet letter names
+    // Source: TTS best practices for acronyms/initialisms
     const letterPronunciations = {
-        'A': 'ay', 'B': 'bee', 'C': 'see', 'D': 'dee', 'E': 'ee', 'F': 'eff',
-        'G': 'jee', 'H': 'aitch', 'I': 'aye', 'J': 'jay', 'K': 'kay', 'L': 'ell',
-        'M': 'em', 'N': 'en', 'O': 'oh', 'P': 'pee', 'Q': 'cue', 'R': 'are',
-        'S': 'ess', 'T': 'tee', 'U': 'you', 'V': 'vee', 'W': 'double you',
-        'X': 'ex', 'Y': 'why', 'Z': 'zee'
+        'A': 'ay', 'B': 'bee', 'C': 'see', 'D': 'dee', 'E': 'ee', 'F': 'ehf',
+        'G': 'jee', 'H': 'aych', 'I': 'eye', 'J': 'jay', 'K': 'kay', 'L': 'ehl',
+        'M': 'ehm', 'N': 'ehn', 'O': 'oh', 'P': 'pee', 'Q': 'kyoo', 'R': 'ar',
+        'S': 'ehs', 'T': 'tee', 'U': 'yoo', 'V': 'vee', 'W': 'DUH-buhl-yoo',
+        'X': 'ehks', 'Y': 'wy', 'Z': 'ZEE'
     };
 
     for (const letter of letters) {
