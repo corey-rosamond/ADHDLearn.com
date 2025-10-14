@@ -27,23 +27,14 @@ class LetterPopScene extends Phaser.Scene {
     }
 
     preload() {
+        // NOTE: Letter audio is now loaded globally in PreloadScene
         // Load success sound
         this.load.audio('success', 'assets/audio/success.mp3');
 
         // Load bubble pop sound
         this.load.audio('pop', 'assets/audio/pop.mp3');
 
-        // Load all letter audio (A-Z)
-        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-        letters.forEach(letter => {
-            // Load individual letter sounds
-            this.load.audio(`letter_${letter}`, `assets/audio/letters/${letter}.mp3`);
-
-            // Load "Find the letter X!" instructions
-            this.load.audio(`find_letter_${letter}`, `assets/audio/find_letter_${letter}.mp3`);
-        });
-
-        console.log('[LetterPopScene] Preloading audio for all 26 letters');
+        console.log('[LetterPopScene] Scene-specific audio preloaded');
     }
 
     create() {
@@ -51,6 +42,12 @@ class LetterPopScene extends Phaser.Scene {
 
         // Initialize responsive utilities
         this.r = new ResponsiveUtils(this);
+
+        // Load game settings from localStorage
+        const timePerRound = parseInt(localStorage.getItem('letterPop_timePerRound') || '10');
+        this.letterTimeLimit = timePerRound;
+        this.letterTimeRemaining = timePerRound;
+        console.log(`[LetterPopScene] Time per round set to: ${timePerRound} seconds`);
 
         // Enable physics for this scene
         if (!this.physics.world) {
@@ -257,6 +254,11 @@ class LetterPopScene extends Phaser.Scene {
         // Reset countdown timer for this letter
         this.letterTimeRemaining = this.letterTimeLimit;
 
+        // Reset timer bar to full
+        if (this.timerBarFg) {
+            this.updateTimerBarGraphics(1.0);
+        }
+
         // Clear any existing countdown timer
         if (this.countdownTimer) {
             this.countdownTimer.remove();
@@ -273,8 +275,8 @@ class LetterPopScene extends Phaser.Scene {
         // Update progress display
         this.updateProgressDisplay();
 
-        // Create/update countdown display
-        this.createCountdownDisplay();
+        // Create/update countdown display (if you want to keep the number display)
+        // this.createCountdownDisplay();
 
         // Play audio instruction (if available)
         this.playTargetLetterAudio();
@@ -283,21 +285,40 @@ class LetterPopScene extends Phaser.Scene {
         this.createBubbles();
     }
 
+    applyLetterCase(letter) {
+        // Load letter case setting from localStorage
+        const letterCase = localStorage.getItem('letterPop_letterCase') || 'uppercase';
+
+        switch (letterCase) {
+            case 'uppercase':
+                return letter.toUpperCase();
+            case 'lowercase':
+                return letter.toLowerCase();
+            case 'mixed':
+                // 50% chance of uppercase or lowercase
+                return Math.random() < 0.5 ? letter.toUpperCase() : letter.toLowerCase();
+            default:
+                return letter.toUpperCase();
+        }
+    }
+
     generateLetterSequence() {
         // Generate 10 random letters for the round
         const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
         const letters = [];
         for (let i = 0; i < 10; i++) {
             const randomLetter = Phaser.Utils.Array.GetRandom(alphabet);
-            letters.push(randomLetter);
+            // Apply letter case setting
+            letters.push(this.applyLetterCase(randomLetter));
         }
         return letters;
     }
 
     updateProgressDisplay() {
-        // Update existing progress text instead of destroying/recreating
-        if (this.progressText) {
-            this.progressText.setText(`Letter ${this.currentLetterIndex + 1} of 10`);
+        // Update bookmark to show current round progress
+        if (this.roundText) {
+            // Format the round number on single line
+            this.roundText.setText(`ROUND ${this.currentLetterIndex + 1}`);
         }
     }
 
@@ -333,7 +354,13 @@ class LetterPopScene extends Phaser.Scene {
     updateCountdown() {
         this.letterTimeRemaining--;
 
-        // Update display
+        // Update timer bar (shrink from right to left as time decreases)
+        if (this.timerBarFg) {
+            const progress = this.letterTimeRemaining / this.letterTimeLimit;
+            this.updateTimerBarGraphics(progress);
+        }
+
+        // Update countdown number display (if exists)
         if (this.countdownText) {
             this.countdownText.setText(`${this.letterTimeRemaining}`);
             this.countdownText.setColor(this.getCountdownColor());
@@ -347,7 +374,8 @@ class LetterPopScene extends Phaser.Scene {
 
     playTargetLetterAudio() {
         // Play audio instruction like "Find the letter B!"
-        const audioKey = `find_letter_${this.targetLetter}`;
+        // Always use uppercase for audio key since files are named A.mp3, B.mp3, etc.
+        const audioKey = `find_letter_${this.targetLetter.toUpperCase()}`;
         if (this.cache.audio.exists(audioKey)) {
             console.log(`[LetterPopScene] Playing: ${audioKey}`);
             this.sound.play(audioKey);
@@ -377,122 +405,95 @@ class LetterPopScene extends Phaser.Scene {
     }
 
     createMenuBar() {
-        const menuBarHeight = this.r.scaleY(120); // Taller to fit countdown
-        const topRowY = this.r.getY(2.5);
-        const bottomRowY = this.r.getY(6);
+        const menuBarHeight = this.r.scaleY(150); // Taller to fit timer bar
+        const topRowY = this.r.getY(4);
 
-        // Create header bar background using ONET asset
+        // Create header bar background using ONET Top_Bar (has bookmark built-in)
         const headerBar = this.add.image(0, 0, 'topBar').setOrigin(0, 0);
 
-        // Flip vertically so purple is at top
-        headerBar.setFlipY(true);
-
-        // Scale to fit screen width
+        // Scale to fit screen width and desired height
         const scaleX = this.cameras.main.width / headerBar.width;
         const scaleY = menuBarHeight / headerBar.height;
         headerBar.setScale(scaleX, scaleY);
-
         headerBar.setDepth(998);
 
         // Store header height for physics bounds
         this.headerBarHeight = menuBarHeight;
 
-        // LEFT: Back button (arrow icon)
-        this.createBackButton();
+        // LEFT: Round text inside the built-in orange bookmark
+        const bookmarkX = this.r.getX(13.2);  // Centered inside orange bookmark
+        const bookmarkY = this.r.getY(4.5);    // Vertically centered in bookmark
 
-        // LEFT-CENTER: Score display (positioned inside the orange score box)
-        const scoreX = this.r.getX(13.5);  // Move right to center in orange box
-        const scoreY = this.r.getY(5.5);   // Move down more to center vertically in box
-        this.scoreText = this.add.text(scoreX, scoreY, 'Score: 0', {
-            fontSize: this.r.getFontSize(28) + 'px',
+        // Round text inside bookmark (Top_Bar has bookmark built-in)
+        this.roundText = this.add.text(bookmarkX, bookmarkY, 'ROUND 1', {
+            fontSize: this.r.getFontSize(24) + 'px',  // Larger for better readability
             fontFamily: 'Fredoka One, Arial',
             color: '#ffffff',
             fontStyle: 'bold',
+            stroke: '#5D3A1A',  // Darker brown for better contrast
+            strokeThickness: 5,  // Thicker for clarity
+            align: 'center'
+        }).setOrigin(0.5);
+        this.roundText.setDepth(1001);
+
+        // CENTER: Score display with Score_Box background
+        const scoreX = this.r.centerX;
+        const scoreY = this.r.getY(4);
+
+        // Score box background
+        const scoreBox = this.add.image(scoreX, scoreY, 'scoreBox').setOrigin(0.5);
+        const scoreBoxScale = this.r.scaleX(0.35);
+        scoreBox.setScale(scoreBoxScale);
+        scoreBox.setDepth(999);
+
+        // "SCORE" label
+        const scoreLabel = this.add.text(scoreX, scoreY - this.r.scaleY(22), 'SCORE', {
+            fontSize: this.r.getFontSize(24) + 'px',
+            fontFamily: 'Fredoka One, Arial',
+            color: '#FFEB3B',
+            fontStyle: 'bold',
             stroke: '#000000',
-            strokeThickness: this.r.scaleX(3)
+            strokeThickness: 4  // Fixed thickness
+        }).setOrigin(0.5);
+        scoreLabel.setDepth(1000);
+
+        // Score number
+        this.scoreText = this.add.text(scoreX, scoreY + this.r.scaleY(12), '0', {
+            fontSize: this.r.getFontSize(52) + 'px',
+            fontFamily: 'Fredoka One, Arial',
+            color: '#ffffff',
+            fontStyle: 'bold',
+            stroke: '#9C27B0',
+            strokeThickness: 6  // Fixed thickness
         }).setOrigin(0.5);
         this.scoreText.setDepth(1000);
 
-        // CENTER TOP: Progress text
-        this.progressText = this.add.text(this.r.centerX, topRowY, 'Letter 1 of 10', {
-            fontSize: this.r.getFontSize(28) + 'px',
-            fontFamily: 'Fredoka One, Arial',
-            color: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: this.r.scaleX(3),
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-        this.progressText.setDepth(1000);
+        // RIGHT: Home button (pause button position)
+        this.createHomeButton();
 
-        // CENTER BOTTOM: Countdown (will be created when round starts)
-        this.countdownText = null;
-        this.countdownY = bottomRowY; // Store Y position for countdown
-
-        // RIGHT: Total time - create orange box to match the one on the left
-        const timeX = this.r.getX(87);
-        const timeY = this.r.getY(5.5);
-
-        // Draw orange box - matching the EXACT orange from the left side of Top_Bar
-        const boxGraphics = this.add.graphics();
-        boxGraphics.fillStyle(0xFF9C27, 1);  // Bright orange to match left side
-
-        const w = this.r.scaleX(170);
-        const h = this.r.scaleY(42);
-        const x = timeX - w/2;
-        const y = timeY - h/2;
-        const radius = this.r.scaleX(20);
-
-        boxGraphics.fillRoundedRect(x, y, w, h, radius);
-
-        // White border at bottom
-        boxGraphics.lineStyle(this.r.scaleX(4), 0xFFFFFF, 0.5);
-        boxGraphics.strokeRoundedRect(x, y, w, h, radius);
-
-        boxGraphics.setDepth(999);
-
-        // Time text
-        this.timeText = this.add.text(timeX, timeY, 'Time: 0:00', {
-            fontSize: this.r.getFontSize(28) + 'px',
-            fontFamily: 'Fredoka One, Arial',
-            color: '#ffffff',
-            fontStyle: 'bold',
-            stroke: '#000000',
-            strokeThickness: this.r.scaleX(3)
-        }).setOrigin(0.5);
-        this.timeText.setDepth(1000);
-
-        // Start total time tracking
-        this.startTime = this.time.now;
-        this.time.addEvent({
-            delay: 1000,
-            callback: this.updateTimeDisplay,
-            callbackScope: this,
-            loop: true
-        });
+        // BOTTOM: Timer progress bar
+        this.createTimerBar();
 
         // Set physics world bounds to keep bubbles in play area
-        // Now that collision circles are properly centered, bounds should go to screen edges
-        // The bubble center can go right up to the edge, and the circle will touch the edge
-        const bubbleRadius = this.r.scaleX(80);
         this.physics.world.setBounds(
-            0,                                          // x - left edge of screen
-            this.headerBarHeight,                       // y - below header bar
-            this.cameras.main.width,                    // width - full screen width
-            this.cameras.main.height - this.headerBarHeight  // height - to bottom of screen
+            0,
+            this.headerBarHeight,
+            this.cameras.main.width,
+            this.cameras.main.height - this.headerBarHeight
         );
 
-        console.log('[LetterPopScene] Menu bar created');
+        console.log('[LetterPopScene] Menu bar created with Gameplay_1 layout');
     }
 
-    createBackButton() {
-        const btnX = this.r.getX(5);    // Move more to the right
-        const btnY = this.r.getY(4.5);  // Move down into the header
+    createHomeButton() {
+        const btnX = this.r.getX(95);   // Right side, inside top bar
+        const btnY = this.r.getY(5.6);    // Centered in the peach area
 
-        // Create home button sprite
+        // Create home button sprite (using btnHome instead of btnPause)
         const button = this.add.image(btnX, btnY, 'btnHome').setInteractive({ useHandCursor: true });
 
-        // Scale button smaller so it doesn't overlap
-        const targetSize = this.r.scaleX(55);  // Even smaller
+        // Scale button to appropriate size
+        const targetSize = this.r.scaleX(55);
         const scale = targetSize / button.width;
         button.setScale(scale);
         button.setDepth(1000);
@@ -518,7 +519,7 @@ class LetterPopScene extends Phaser.Scene {
             });
         });
 
-        // Click handler
+        // Click handler - goes back to main menu
         button.on('pointerdown', () => {
             this.tweens.add({
                 targets: button,
@@ -533,6 +534,62 @@ class LetterPopScene extends Phaser.Scene {
         });
     }
 
+    createTimerBar() {
+        // Position inside the dark purple bar area at the bottom of Top_Bar
+        const barY = this.r.getY(9.8);  // Adjusted to be inside dark purple section
+
+        // Clock icon on the left (already has white background in the image)
+        const clockIcon = this.add.image(this.r.getX(7), barY, 'clockIcon').setOrigin(0.5);
+        const clockIconSize = this.r.scaleY(25);  // Target size in pixels
+        const clockScale = clockIconSize / 64;     // Clock_Icon.png is 64x64
+        clockIcon.setScale(clockScale);
+        clockIcon.setDepth(1002);  // Above everything else
+
+        // Calculate bar position and size (leaving room for clock icon on left)
+        const barStartX = this.r.getX(7.5);  // Moved 75px to the right
+        const barEndX = this.r.getX(93.35);  // 5px longer
+        const barWidth = barEndX - barStartX;
+        const barHeight = this.r.scaleY(12);  // Bar height in pixels (1/4 of original)
+
+        // Timer bar background (dark purple) - using graphics
+        this.timerBarBg = this.add.graphics();
+        this.timerBarBg.fillStyle(0x5A2E5A, 1);  // Dark purple
+        this.timerBarBg.fillRoundedRect(barStartX, barY - (barHeight / 2), barWidth, barHeight, 8);
+        this.timerBarBg.setDepth(999);
+
+        // Timer bar foreground (yellow/orange gradient) - using graphics
+        this.timerBarFg = this.add.graphics();
+        this.timerBarFg.setDepth(1000);
+
+        // Store initial values
+        this.timerBarStartX = barStartX;
+        this.timerBarStartY = barY - (barHeight / 2);
+        this.timerBarMaxWidth = barWidth;
+        this.timerBarHeight = barHeight;
+
+        // Draw initial full bar
+        this.updateTimerBarGraphics(1.0);
+    }
+
+
+    updateTimerBarGraphics(progress) {
+        // Redraw the yellow/orange gradient bar
+        this.timerBarFg.clear();
+
+        const currentWidth = this.timerBarMaxWidth * progress;
+
+        if (currentWidth > 0) {
+            // Draw gradient from yellow to orange
+            this.timerBarFg.fillGradientStyle(0xFFEB3B, 0xFFEB3B, 0xFF9800, 0xFF9800, 1);
+            this.timerBarFg.fillRoundedRect(
+                this.timerBarStartX,
+                this.timerBarStartY,
+                currentWidth,
+                this.timerBarHeight,
+                8
+            );
+        }
+    }
 
     createTitle() {
         // Main title - centered on screen
@@ -585,6 +642,24 @@ class LetterPopScene extends Phaser.Scene {
     }
 
     createBubbles() {
+        // Clean up any existing bubbles and collider first
+        if (this.bubbleCollider) {
+            this.bubbleCollider.destroy();
+            this.bubbleCollider = null;
+        }
+
+        // Clear existing bubbles array
+        if (this.bubbles && this.bubbles.length > 0) {
+            console.log(`[LetterPopScene] WARNING: Cleaning up ${this.bubbles.length} existing bubbles`);
+            this.bubbles.forEach(bubble => {
+                if (bubble && bubble.active) {
+                    this.tweens.killTweensOf(bubble);
+                    bubble.destroy();
+                }
+            });
+            this.bubbles = [];
+        }
+
         // Generate spawn positions for 6 bubbles with 180px minimum spacing
         const bubbleCount = 6;
         const positions = this.generateSpawnPositions(bubbleCount, 180);
@@ -599,9 +674,13 @@ class LetterPopScene extends Phaser.Scene {
         // Add random different letters for the rest
         while (letters.length < bubbleCount) {
             const randomLetter = Phaser.Utils.Array.GetRandom(alphabet);
-            // Avoid duplicates
-            if (!letters.includes(randomLetter)) {
-                letters.push(randomLetter);
+            const casedLetter = this.applyLetterCase(randomLetter);
+            // Avoid duplicates (check both cases since we might have A and a in mixed mode)
+            const uppercaseCheck = casedLetter.toUpperCase();
+            const hasUppercase = letters.some(l => l.toUpperCase() === uppercaseCheck);
+
+            if (!hasUppercase) {
+                letters.push(casedLetter);
             }
         }
 
@@ -651,10 +730,13 @@ class LetterPopScene extends Phaser.Scene {
         });
 
         // Enable collision between all bubbles with physics
-        this.physics.add.collider(this.bubbles, this.bubbles, (bubbleA, bubbleB) => {
+        // Store the collider reference so we can destroy it later
+        this.bubbleCollider = this.physics.add.collider(this.bubbles, this.bubbles, (bubbleA, bubbleB) => {
             // Visual squish effect only - physics handles the actual bounce
             this.smooshBubbles(bubbleA, bubbleB);
         });
+
+        console.log(`[LetterPopScene] Created ${this.bubbles.length} bubbles for letter: ${this.targetLetter}`);
     }
 
 
@@ -765,6 +847,12 @@ class LetterPopScene extends Phaser.Scene {
         });
         this.bubbles = [];
 
+        // Destroy the physics collider for the previous round
+        if (this.bubbleCollider) {
+            this.bubbleCollider.destroy();
+            this.bubbleCollider = null;
+        }
+
         // Wait a moment, then start next letter
         this.time.delayedCall(1000, () => {
             this.startRound(); // This will select the next target letter
@@ -794,9 +882,14 @@ class LetterPopScene extends Phaser.Scene {
     handleIncorrectClick(bubble) {
         console.log('[LetterPopScene] Incorrect click - wobble');
 
-        // Play wrong answer sound
-        if (this.cache.audio.exists('wrongAnswer')) {
-            this.sound.play('wrongAnswer', { volume: 0.4 });
+        // Play the letter's audio (e.g., "B", "C", "D") instead of wrong answer sound
+        // Always use uppercase for audio key since files are named A.mp3, B.mp3, etc.
+        const letterAudioKey = `letter_${bubble.letter.toUpperCase()}`;
+        if (this.cache.audio.exists(letterAudioKey)) {
+            this.sound.play(letterAudioKey, { volume: 0.6 });
+            console.log(`[LetterPopScene] Playing letter audio: ${letterAudioKey}`);
+        } else {
+            console.warn(`[LetterPopScene] Letter audio not found: ${letterAudioKey}`);
         }
 
         // Wobble animation - gentle side-to-side
@@ -854,7 +947,7 @@ class LetterPopScene extends Phaser.Scene {
     }
 
     updateScoreDisplay() {
-        this.scoreText.setText(`Score: ${this.score}`);
+        this.scoreText.setText(`${this.score}`);
     }
 
     updateTimeDisplay() {

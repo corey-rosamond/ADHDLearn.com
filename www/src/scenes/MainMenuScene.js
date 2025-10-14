@@ -21,11 +21,17 @@ class MainMenuScene extends Phaser.Scene {
         // Add colorful title with 3D effect
         this.createColorfulTitle();
 
-        // Add floating letters
-        this.createFloatingLetters();
+        // Add floating letters (disabled - using floating stars instead to match Results screen)
+        // this.createFloatingLetters();
 
-        // Create START button
-        this.createStartButton();
+        // Create settings button (top-right corner)
+        this.createSettingsButton();
+
+        // Create debug button (top-left corner)
+        this.createDebugButton();
+
+        // Create game selection tiles
+        this.createGameTiles();
 
         // Play welcome message when menu loads
         this.playWelcomeMessage();
@@ -86,48 +92,68 @@ class MainMenuScene extends Phaser.Scene {
     }
 
     createColorfulTitle() {
-        // Create bold, colorful title similar to ONET CLASSIC style
-        // "Aurora's" on line 1, "Reading Adventure" on line 2
+        // Simple title - matches Results screen (3 text objects, NO shadows, NO layers)
 
         const line1Y = this.r.getY(18);
-        const line2Y = this.r.getY(30);
-
-        // Define colors for each letter (vibrant, bold colors)
-        const colors = [
-            '#FF6B35', // Orange
-            '#FF3D68', // Pink
-            '#FFD23F', // Yellow
-            '#4ECDC4', // Teal
-            '#95E1D3', // Light Teal
-            '#F38181', // Coral
-            '#AA96DA'  // Purple
-        ];
+        const line2Y = this.r.getY(28);
+        const line3Y = this.r.getY(38);
 
         // Line 1: "AURORA'S"
-        const line1Text = "AURORA'S";
-        const line1Container = this.createStyledWord(line1Text, this.r.centerX, line1Y, colors, this.r.getFontSize(80));
+        const line1Text = this.add.text(this.r.centerX, line1Y, "AURORA'S", {
+            fontSize: this.r.getFontSize(64) + 'px',
+            fontFamily: 'Fredoka One, Arial',
+            color: '#FFEB3B',
+            fontStyle: 'bold',
+            stroke: '#9C27B0',
+            strokeThickness: this.r.scaleX(8)
+        }).setOrigin(0.5);
 
         // Line 2: "READING"
-        const line2Text = "READING";
-        const line2Container = this.createStyledWord(line2Text, this.r.centerX, line2Y, colors, this.r.getFontSize(70));
+        const line2Text = this.add.text(this.r.centerX, line2Y, 'READING', {
+            fontSize: this.r.getFontSize(64) + 'px',
+            fontFamily: 'Fredoka One, Arial',
+            color: '#FFEB3B',
+            fontStyle: 'bold',
+            stroke: '#9C27B0',
+            strokeThickness: this.r.scaleX(8)
+        }).setOrigin(0.5);
 
-        // Line 3: "ADVENTURE" in a banner style
-        const line3Y = this.r.getY(40);
-        const line3Text = "ADVENTURE";
-        const line3Container = this.createStyledWord(line3Text, this.r.centerX, line3Y, ['#4ECDC4'], this.r.getFontSize(55));
+        // Line 3: "ADVENTURE"
+        const line3Text = this.add.text(this.r.centerX, line3Y, 'ADVENTURE', {
+            fontSize: this.r.getFontSize(64) + 'px',
+            fontFamily: 'Fredoka One, Arial',
+            color: '#FFEB3B',
+            fontStyle: 'bold',
+            stroke: '#9C27B0',
+            strokeThickness: this.r.scaleX(8)
+        }).setOrigin(0.5);
 
-        // Pulsing animation for all titles
-        [line1Container, line2Container, line3Container].forEach((container, index) => {
+        // Bounce-in animation
+        [line1Text, line2Text, line3Text].forEach((text, index) => {
+            text.setScale(0);
             this.tweens.add({
-                targets: container,
-                scaleX: 1.03,
-                scaleY: 1.03,
-                duration: 1500 + (index * 200),
-                ease: 'Sine.easeInOut',
-                yoyo: true,
-                repeat: -1
+                targets: text,
+                scaleX: 1,
+                scaleY: 1,
+                duration: 600,
+                delay: index * 200,
+                ease: 'Back.easeOut',
+                onComplete: () => {
+                    this.tweens.add({
+                        targets: text,
+                        scaleX: 1.05,
+                        scaleY: 1.05,
+                        duration: 1000,
+                        ease: 'Sine.easeInOut',
+                        yoyo: true,
+                        repeat: -1
+                    });
+                }
             });
         });
+
+        // Add floating stars decoration
+        this.createFloatingStars();
     }
 
     createStyledWord(text, centerX, y, colors, fontSize) {
@@ -197,50 +223,69 @@ class MainMenuScene extends Phaser.Scene {
     }
 
     createBackground() {
+        // Match Results screen gradient: Orange Pop → Bubble Pink → Purple Magic
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
 
-        // Add background image and scale to fit screen
-        const bg = this.add.image(0, 0, 'mainMenuBg').setOrigin(0, 0);
+        // Check if gradient texture already exists (cached)
+        if (!this.textures.exists('menuGradient')) {
+            const graphics = this.add.graphics();
 
-        // Scale to cover entire screen
-        const scaleX = width / bg.width;
-        const scaleY = height / bg.height;
-        const scale = Math.max(scaleX, scaleY);
-        bg.setScale(scale);
+            const colorTop = Phaser.Display.Color.ValueToColor(0xFF6B6B);    // Orange Pop
+            const colorMid = Phaser.Display.Color.ValueToColor(0xFF4081);    // Bubble Pink
+            const colorBottom = Phaser.Display.Color.ValueToColor(0x9C27B0); // Purple Magic
 
-        // Center if needed
-        bg.x = (width - bg.width * scale) / 2;
-        bg.y = (height - bg.height * scale) / 2;
+            const bandHeight = 10;
+
+            for (let i = 0; i < height; i += bandHeight) {
+                const progress = i / height;
+                let color;
+
+                if (progress < 0.5) {
+                    color = Phaser.Display.Color.Interpolate.ColorWithColor(
+                        colorTop,
+                        colorMid,
+                        100,
+                        (progress / 0.5) * 100
+                    );
+                } else {
+                    color = Phaser.Display.Color.Interpolate.ColorWithColor(
+                        colorMid,
+                        colorBottom,
+                        100,
+                        ((progress - 0.5) / 0.5) * 100
+                    );
+                }
+
+                graphics.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b));
+                graphics.fillRect(0, i, width, bandHeight);
+            }
+
+            graphics.generateTexture('menuGradient', width, height);
+            graphics.destroy();
+        }
+
+        this.add.image(0, 0, 'menuGradient').setOrigin(0, 0);
     }
 
-    createStartButton() {
-        const btnX = this.r.centerX;
-        const btnY = this.r.getY(70);
+    createSettingsButton() {
+        // Position in top-right corner
+        const btnX = this.r.getX(92);
+        const btnY = this.r.getY(8);
 
-        // Create button sprite
-        const button = this.add.image(btnX, btnY, 'btnGreen').setInteractive({ useHandCursor: true });
+        // Create button using settings button asset
+        const button = this.add.image(btnX, btnY, 'btnSetting').setInteractive({ useHandCursor: true });
 
         // Scale button to appropriate size
-        const targetWidth = this.r.scaleX(450);
-        const scale = targetWidth / button.width;
+        const targetSize = this.r.scaleX(80);
+        const scale = targetSize / button.width;
         button.setScale(scale);
-
-        // Create button text
-        const buttonText = this.add.text(btnX, btnY, 'PLAY GAME', {
-            fontSize: this.r.getFontSize(48) + 'px',
-            fontFamily: 'Fredoka One, Arial',
-            color: '#ffffff',
-            stroke: '#2C5F2D',
-            strokeThickness: this.r.scaleX(6),
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
 
         // Idle bounce animation
         this.tweens.add({
-            targets: [button, buttonText],
-            y: btnY - this.r.scaleY(15),
-            duration: 1000,
+            targets: button,
+            y: btnY - this.r.scaleY(8),
+            duration: 1200,
             ease: 'Sine.easeInOut',
             yoyo: true,
             repeat: -1
@@ -249,9 +294,9 @@ class MainMenuScene extends Phaser.Scene {
         // Hover effect
         button.on('pointerover', () => {
             this.tweens.add({
-                targets: [button, buttonText],
-                scaleX: scale * 1.1,
-                scaleY: scale * 1.1,
+                targets: button,
+                scaleX: scale * 1.15,
+                scaleY: scale * 1.15,
                 duration: 200,
                 ease: 'Back.easeOut'
             });
@@ -260,7 +305,7 @@ class MainMenuScene extends Phaser.Scene {
         // Hover out
         button.on('pointerout', () => {
             this.tweens.add({
-                targets: [button, buttonText],
+                targets: button,
                 scaleX: scale,
                 scaleY: scale,
                 duration: 200,
@@ -270,27 +315,189 @@ class MainMenuScene extends Phaser.Scene {
 
         // Click handler
         button.on('pointerdown', () => {
-            console.log('[MainMenuScene] START button clicked');
-
             // Change to pressed texture
-            button.setTexture('btnGreenPressed');
+            button.setTexture('btnSettingPressed');
 
-            // Play sound if available
-            if (this.cache.audio.exists('testSound')) {
-                this.sound.play('testSound');
-            }
-
-            // Scale down animation with yoyo
             this.tweens.add({
-                targets: [button, buttonText],
+                targets: button,
                 scaleX: scale * 0.95,
                 scaleY: scale * 0.95,
                 duration: 100,
                 yoyo: true,
                 onComplete: () => {
-                    button.setTexture('btnGreen');
-                    // Transition to LetterPopScene
-                    this.scene.start('LetterPop');
+                    button.setTexture('btnSetting');
+                    this.scene.start('Settings');
+                }
+            });
+        });
+    }
+
+    createDebugButton() {
+        // Position in top-left corner
+        const btnX = this.r.getX(8);
+        const btnY = this.r.getY(8);
+
+        // Create circular background for bug emoji
+        const circle = this.add.graphics();
+        circle.fillStyle(0xFF6B6B, 1); // Orange Pop color
+        circle.fillCircle(btnX, btnY, this.r.scaleX(40));
+        circle.setInteractive(
+            new Phaser.Geom.Circle(btnX, btnY, this.r.scaleX(40)),
+            Phaser.Geom.Circle.Contains
+        );
+
+        // Create bug emoji text
+        const bugText = this.add.text(btnX, btnY, '🐛', {
+            fontSize: this.r.getFontSize(48) + 'px'
+        }).setOrigin(0.5);
+
+        // Idle bounce animation
+        this.tweens.add({
+            targets: [circle, bugText],
+            y: btnY - this.r.scaleY(8),
+            duration: 1200,
+            ease: 'Sine.easeInOut',
+            yoyo: true,
+            repeat: -1
+        });
+
+        // Hover effect
+        circle.on('pointerover', () => {
+            this.tweens.add({
+                targets: [bugText],
+                scale: 1.15,
+                duration: 200,
+                ease: 'Back.easeOut'
+            });
+        });
+
+        circle.on('pointerout', () => {
+            this.tweens.add({
+                targets: [bugText],
+                scale: 1,
+                duration: 200,
+                ease: 'Back.easeIn'
+            });
+        });
+
+        // Click handler
+        circle.on('pointerdown', () => {
+            console.log('[MainMenuScene] Debug button clicked');
+            this.tweens.add({
+                targets: [circle, bugText],
+                scale: 0.9,
+                duration: 100,
+                yoyo: true,
+                onComplete: () => {
+                    this.scene.start('LetterTest');
+                }
+            });
+        });
+    }
+
+    createGameTiles() {
+        // Create a tile for Letter Pop game
+        const tileX = this.r.centerX;
+        const tileY = this.r.getY(60);
+
+        this.createGameTile({
+            x: tileX,
+            y: tileY,
+            title: 'Letter Pop',
+            icon: '🎈',
+            description: 'Pop bubbles and learn letters!',
+            sceneKey: 'LetterPopMenu'
+        });
+    }
+
+    createGameTile(config) {
+        const { x, y, title, icon, description, sceneKey } = config;
+
+        // Create square tile background using Box_Bg as frame
+        const tile = this.add.image(x, y, 'boxBg').setInteractive({ useHandCursor: true });
+
+        // Make it square - use smaller dimension
+        const targetSize = this.r.scaleX(300);
+        const scale = targetSize / tile.width;
+        tile.setScale(scale);
+
+        // Icon emoji - positioned to be fully visible within tile
+        const iconText = this.add.text(x, y - this.r.scaleY(20), icon, {
+            fontSize: this.r.getFontSize(64) + 'px'
+        }).setOrigin(0.5);
+
+        // Game title - below the icon
+        const titleText = this.add.text(x, y + this.r.scaleY(45), title, {
+            fontSize: this.r.getFontSize(36) + 'px',
+            fontFamily: 'Fredoka One, Arial',
+            color: '#FFEB3B',
+            fontStyle: 'bold',
+            stroke: '#9C27B0',
+            strokeThickness: this.r.scaleX(6)
+        }).setOrigin(0.5);
+
+        // Idle float animation
+        this.tweens.add({
+            targets: [tile, iconText, titleText],
+            y: y - this.r.scaleY(10),
+            duration: 1500,
+            ease: 'Sine.easeInOut',
+            yoyo: true,
+            repeat: -1
+        });
+
+        // Hover effect
+        tile.on('pointerover', () => {
+            this.tweens.add({
+                targets: tile,
+                scaleX: scale * 1.1,
+                scaleY: scale * 1.1,
+                duration: 200,
+                ease: 'Back.easeOut'
+            });
+            this.tweens.add({
+                targets: [iconText, titleText],
+                scale: 1.1,
+                duration: 200,
+                ease: 'Back.easeOut'
+            });
+        });
+
+        // Hover out
+        tile.on('pointerout', () => {
+            this.tweens.add({
+                targets: tile,
+                scaleX: scale,
+                scaleY: scale,
+                duration: 200,
+                ease: 'Back.easeIn'
+            });
+            this.tweens.add({
+                targets: [iconText, titleText],
+                scale: 1,
+                duration: 200,
+                ease: 'Back.easeIn'
+            });
+        });
+
+        // Click handler
+        tile.on('pointerdown', () => {
+            console.log(`[MainMenuScene] ${title} tile clicked`);
+
+            this.tweens.add({
+                targets: tile,
+                scaleX: scale * 0.95,
+                scaleY: scale * 0.95,
+                duration: 100,
+                yoyo: true
+            });
+            this.tweens.add({
+                targets: [iconText, titleText],
+                scale: 0.95,
+                duration: 100,
+                yoyo: true,
+                onComplete: () => {
+                    this.scene.start(sceneKey);
                 }
             });
         });
@@ -410,5 +617,42 @@ class MainMenuScene extends Phaser.Scene {
                 repeat: -1
             });
         });
+    }
+
+    createFloatingStars() {
+        // Create floating stars decoration (matches Results screen)
+        const starChars = ['⭐', '✨', '💫'];
+
+        for (let i = 0; i < 10; i++) {
+            const x = this.r.getX(10 + (i * 9));
+            const y = this.r.getY(20 + ((i % 3) * 20));
+            const starChar = Phaser.Utils.Array.GetRandom(starChars);
+
+            const star = this.add.text(x, y, starChar, {
+                fontSize: this.r.getFontSize(32 + (i % 3) * 8) + 'px'
+            }).setOrigin(0.5);
+
+            star.setAlpha(0.8);
+
+            // Floating animation
+            this.tweens.add({
+                targets: star,
+                y: y + this.r.scaleY(25),
+                duration: 2500 + (i * 200),
+                ease: 'Sine.easeInOut',
+                yoyo: true,
+                repeat: -1,
+                delay: i * 100
+            });
+
+            // Rotation
+            this.tweens.add({
+                targets: star,
+                angle: i % 2 === 0 ? 360 : -360,
+                duration: 3000 + (i * 300),
+                ease: 'Linear',
+                repeat: -1
+            });
+        }
     }
 }

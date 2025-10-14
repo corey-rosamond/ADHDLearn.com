@@ -61,43 +61,17 @@ class Bubble extends Phaser.GameObjects.Container {
         // Create graphics object for bubble
         const graphics = this.scene.add.graphics();
 
-        // Create lighter and darker variations of the bubble color
-        const baseColor = Phaser.Display.Color.ValueToColor(this.bubbleColor);
-        const lighterColor = Phaser.Display.Color.Interpolate.ColorWithColor(
-            baseColor,
-            { r: 255, g: 255, b: 255 },
-            100,
-            40 // 40% toward white
-        );
-        const darkerColor = Phaser.Display.Color.Interpolate.ColorWithColor(
-            baseColor,
-            { r: 0, g: 0, b: 0 },
-            100,
-            20 // 20% toward black
-        );
-
-        // Layer 1: Shadow (outer glow for depth)
-        graphics.fillStyle(0xcccccc, 0.3);
-        graphics.fillCircle(0, 0, this.radius + this.r.scaleX(5));
-
-        // Layer 2: Outer gradient (lightest)
-        graphics.fillStyle(Phaser.Display.Color.GetColor(lighterColor.r, lighterColor.g, lighterColor.b), 0.95);
+        // Simplified rendering - just 3 layers for better performance
+        // Layer 1: Main bubble (base color)
+        graphics.fillStyle(this.bubbleColor, 0.9);
         graphics.fillCircle(0, 0, this.radius);
 
-        // Layer 3: Middle gradient (base color)
-        graphics.fillStyle(this.bubbleColor, 0.9);
-        graphics.fillCircle(0, 0, this.radius - this.r.scaleX(10));
+        // Layer 2: Glossy highlight (top-left for shine effect)
+        graphics.fillStyle(0xffffff, 0.5);
+        graphics.fillCircle(-this.r.scaleX(12), -this.r.scaleY(12), this.r.scaleX(18));
 
-        // Layer 4: Inner gradient (darker)
-        graphics.fillStyle(Phaser.Display.Color.GetColor(darkerColor.r, darkerColor.g, darkerColor.b), 0.8);
-        graphics.fillCircle(0, 0, this.radius - this.r.scaleX(20));
-
-        // Layer 5: Glossy highlight (top-left for shine effect)
-        graphics.fillStyle(0xffffff, 0.6);
-        graphics.fillCircle(-this.r.scaleX(15), -this.r.scaleY(15), this.r.scaleX(20));
-
-        // Layer 6: Border/outline for definition
-        graphics.lineStyle(this.r.scaleX(4), this.bubbleColor, 1.0);
+        // Layer 3: Border/outline for definition
+        graphics.lineStyle(this.r.scaleX(3), 0xffffff, 0.8);
         graphics.strokeCircle(0, 0, this.radius);
 
         // Add graphics to this container
@@ -115,11 +89,15 @@ class Bubble extends Phaser.GameObjects.Container {
             color: '#ffffff',
             fontStyle: 'bold',
             stroke: '#000000',
-            strokeThickness: this.r.scaleX(3)
+            strokeThickness: 4  // Fixed thickness instead of responsive
         });
 
-        // Center the text (origin 0.5, 0.5 = center)
+        // Center the text horizontally and vertically
         letterText.setOrigin(0.5, 0.5);
+
+        // Force text bounds to be larger to prevent clipping
+        // This ensures letters with descenders or wide glyphs aren't cut off
+        letterText.setPadding(10, 10, 10, 10);
 
         // Add text to this container
         this.add(letterText);
