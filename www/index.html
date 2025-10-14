@@ -8,7 +8,7 @@
     <!-- PWA Meta Tags -->
     <meta name="description" content="A colorful, engaging letter learning game for kids">
     <meta name="theme-color" content="#00BCD4">
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="/manifest.json">
 
     <!-- PWA Support -->
     <meta name="mobile-web-app-capable" content="yes">
@@ -17,9 +17,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen">
     <meta name="apple-mobile-web-app-title" content="Aurora's Reading">
-    <link rel="apple-touch-icon" href="assets/images/icon-192.png">
-    <link rel="apple-touch-icon" sizes="192x192" href="assets/images/icon-192.png">
-    <link rel="apple-touch-icon" sizes="512x512" href="assets/images/icon-512.png">
+    <link rel="apple-touch-icon" href="/assets/images/icon-192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="/assets/images/icon-192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="/assets/images/icon-512.png">
 
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
@@ -87,7 +87,36 @@
         <button class="close-btn" onclick="closeBanner()">Maybe Later</button>
     </div>
 
+    <!-- Debug overlay for errors -->
+    <div id="debug-overlay" style="position: fixed; top: 0; left: 0; right: 0; background: rgba(0,0,0,0.9); color: #0f0; padding: 10px; font-family: monospace; font-size: 12px; max-height: 50vh; overflow-y: auto; z-index: 999999; display: none;"></div>
+
     <div id="game-container"></div>
+
+    <!-- Error capture script -->
+    <script>
+        const debugEl = document.getElementById('debug-overlay');
+        debugEl.style.display = 'block';
+        debugEl.innerHTML = 'Debug Mode Active<br>';
+
+        window.onerror = function(msg, url, line, col, error) {
+            debugEl.innerHTML += `ERROR: ${msg}<br>File: ${url}<br>Line: ${line}:${col}<br>${error}<br><br>`;
+            return false;
+        };
+
+        console.log = (function(oldLog) {
+            return function() {
+                debugEl.innerHTML += 'LOG: ' + Array.from(arguments).join(' ') + '<br>';
+                oldLog.apply(console, arguments);
+            };
+        })(console.log);
+
+        console.error = (function(oldError) {
+            return function() {
+                debugEl.innerHTML += '<span style="color:#f00">ERROR: ' + Array.from(arguments).join(' ') + '</span><br>';
+                oldError.apply(console, arguments);
+            };
+        })(console.error);
+    </script>
 
     <!-- Phaser library -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.js"></script>
@@ -126,7 +155,7 @@
         }
 
         function downloadAPK() {
-            window.location.href = 'auroras-reading-adventure.apk';
+            window.location.href = '/auroras-reading-adventure.apk';
         }
 
         function closeBanner() {
@@ -146,9 +175,9 @@
 
     <!-- PWA Service Worker Registration -->
     <script>
-        if ('serviceWorker' in navigator && !window.Capacitor) {
+        if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('service-worker.js')
+                navigator.serviceWorker.register('/service-worker.js')
                     .then(reg => console.log('[PWA] Service Worker registered:', reg))
                     .catch(err => console.log('[PWA] Service Worker registration failed:', err));
             });
