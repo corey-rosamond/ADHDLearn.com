@@ -288,13 +288,31 @@ class LetterPopScene extends Phaser.Scene {
         this.createBubbles();
     }
 
+    applyLetterCase(letter) {
+        // Load letter case setting from localStorage
+        const letterCase = localStorage.getItem('letterPop_letterCase') || 'uppercase';
+
+        switch (letterCase) {
+            case 'uppercase':
+                return letter.toUpperCase();
+            case 'lowercase':
+                return letter.toLowerCase();
+            case 'mixed':
+                // 50% chance of uppercase or lowercase
+                return Math.random() < 0.5 ? letter.toUpperCase() : letter.toLowerCase();
+            default:
+                return letter.toUpperCase();
+        }
+    }
+
     generateLetterSequence() {
         // Generate 10 random letters for the round
         const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
         const letters = [];
         for (let i = 0; i < 10; i++) {
             const randomLetter = Phaser.Utils.Array.GetRandom(alphabet);
-            letters.push(randomLetter);
+            // Apply letter case setting
+            letters.push(this.applyLetterCase(randomLetter));
         }
         return letters;
     }
@@ -359,7 +377,8 @@ class LetterPopScene extends Phaser.Scene {
 
     playTargetLetterAudio() {
         // Play audio instruction like "Find the letter B!"
-        const audioKey = `find_letter_${this.targetLetter}`;
+        // Always use uppercase for audio key since files are named A.mp3, B.mp3, etc.
+        const audioKey = `find_letter_${this.targetLetter.toUpperCase()}`;
         if (this.cache.audio.exists(audioKey)) {
             console.log(`[LetterPopScene] Playing: ${audioKey}`);
             this.sound.play(audioKey);
@@ -640,9 +659,13 @@ class LetterPopScene extends Phaser.Scene {
         // Add random different letters for the rest
         while (letters.length < bubbleCount) {
             const randomLetter = Phaser.Utils.Array.GetRandom(alphabet);
-            // Avoid duplicates
-            if (!letters.includes(randomLetter)) {
-                letters.push(randomLetter);
+            const casedLetter = this.applyLetterCase(randomLetter);
+            // Avoid duplicates (check both cases since we might have A and a in mixed mode)
+            const uppercaseCheck = casedLetter.toUpperCase();
+            const hasUppercase = letters.some(l => l.toUpperCase() === uppercaseCheck);
+
+            if (!hasUppercase) {
+                letters.push(casedLetter);
             }
         }
 

@@ -316,7 +316,11 @@ class LetterPopMenuScene extends Phaser.Scene {
         const startX = this.r.getX(20);
         const btnY = y + this.r.scaleY(45);
         const btnWidth = this.r.scaleX(200);
+        const btnHeight = this.r.scaleY(70);
         const btnSpacing = this.r.scaleX(20);
+
+        // Store button references for radio button behavior
+        const buttons = [];
 
         options.forEach((option, index) => {
             const btnX = startX + (index * (btnWidth + btnSpacing));
@@ -326,8 +330,16 @@ class LetterPopMenuScene extends Phaser.Scene {
             const button = this.add.graphics();
             const btnColor = isSelected ? 0x4CAF50 : 0x5A2E5A;
             button.fillStyle(btnColor, 1);
-            button.fillRoundedRect(btnX, btnY, btnWidth, this.r.scaleY(70), 10);
-            button.setInteractive(new Phaser.Geom.Rectangle(btnX, btnY, btnWidth, this.r.scaleY(70)), Phaser.Geom.Rectangle.Contains);
+            button.fillRoundedRect(btnX, btnY, btnWidth, btnHeight, 10);
+            button.setInteractive(new Phaser.Geom.Rectangle(btnX, btnY, btnWidth, btnHeight), Phaser.Geom.Rectangle.Contains);
+
+            // Store button data for later access
+            button.setData('btnX', btnX);
+            button.setData('btnY', btnY);
+            button.setData('btnWidth', btnWidth);
+            button.setData('btnHeight', btnHeight);
+            button.setData('value', option.value);
+            buttons.push(button);
 
             // Label
             const labelText = this.add.text(btnX + btnWidth/2, btnY + this.r.scaleY(25), option.label, {
@@ -346,21 +358,28 @@ class LetterPopMenuScene extends Phaser.Scene {
 
             // Click handler
             button.on('pointerdown', () => {
-                // Deselect all
-                options.forEach((opt, idx) => {
-                    const otherBtnX = startX + (idx * (btnWidth + btnSpacing));
-                    button.clear();
-                    button.fillStyle(0x5A2E5A, 1);
-                    button.fillRoundedRect(otherBtnX, btnY, btnWidth, this.r.scaleY(70), 10);
+                // Deselect all buttons
+                buttons.forEach((btn) => {
+                    btn.clear();
+                    btn.fillStyle(0x5A2E5A, 1);
+                    btn.fillRoundedRect(
+                        btn.getData('btnX'),
+                        btn.getData('btnY'),
+                        btn.getData('btnWidth'),
+                        btn.getData('btnHeight'),
+                        10
+                    );
                 });
 
-                // Select this one
+                // Select this button
                 button.clear();
                 button.fillStyle(0x4CAF50, 1);
-                button.fillRoundedRect(btnX, btnY, btnWidth, this.r.scaleY(70), 10);
+                button.fillRoundedRect(btnX, btnY, btnWidth, btnHeight, 10);
 
                 // Save to localStorage
                 localStorage.setItem('letterPop_letterCase', option.value);
+
+                console.log(`Letter case set to: ${option.value}`);
             });
 
             // Hover effect
