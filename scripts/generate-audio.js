@@ -146,10 +146,11 @@ async function generateAllAudio() {
 
     console.log('');
 
-    // 2. Generate individual letter sounds ("A", "B", "C", etc.)
-    console.log('🔤 Generating individual letter sounds...');
+    // 2. Generate individual letter names ("A", "B", "C", etc.)
+    // Use "The letter X" format to ensure TTS pronounces letter NAMES, not phonetic sounds
+    console.log('🔤 Generating individual letter names...');
     for (const letter of letters) {
-        const text = letter;
+        const text = `The letter ${letter}`;
         const filename = `${letter}.mp3`;
         const filepath = path.join(lettersDir, filename);
 
