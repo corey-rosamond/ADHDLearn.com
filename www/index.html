@@ -88,14 +88,13 @@
     </div>
 
     <!-- Debug overlay for errors -->
-    <div id="debug-overlay" style="position: fixed; top: 0; left: 0; right: 0; background: rgba(0,0,0,0.9); color: #0f0; padding: 10px; font-family: monospace; font-size: 12px; max-height: 50vh; overflow-y: auto; z-index: 999999; display: none;"></div>
+    <div id="debug-overlay" style="position: fixed; top: 0; left: 0; right: 0; background: rgba(0,0,0,0.9); color: #0f0; padding: 10px; font-family: monospace; font-size: 12px; max-height: 50vh; overflow-y: auto; z-index: 999999; display: block;">HTML LOADED - Waiting for JavaScript...</div>
 
     <div id="game-container"></div>
 
     <!-- Error capture script -->
     <script>
         const debugEl = document.getElementById('debug-overlay');
-        debugEl.style.display = 'block';
         debugEl.innerHTML = 'Debug Mode Active<br>';
 
         window.onerror = function(msg, url, line, col, error) {
@@ -116,10 +115,20 @@
                 oldError.apply(console, arguments);
             };
         })(console.error);
+
+        debugEl.innerHTML += 'Capacitor: ' + (window.Capacitor ? 'YES' : 'NO') + '<br>';
+        debugEl.innerHTML += 'Location: ' + window.location.href + '<br>';
     </script>
 
     <!-- Phaser library -->
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.js" onerror="document.getElementById('debug-overlay').innerHTML += 'PHASER FAILED TO LOAD<br>';"></script>
+    <script>
+        if (typeof Phaser !== 'undefined') {
+            document.getElementById('debug-overlay').innerHTML += 'Phaser v' + Phaser.VERSION + ' loaded<br>';
+        } else {
+            document.getElementById('debug-overlay').innerHTML += '<span style=color:red>PHASER NOT LOADED</span><br>';
+        }
+    </script>
 
     <!-- Utilities (load before scenes) -->
     <script src="src/utils/ResponsiveUtils.js"></script>
