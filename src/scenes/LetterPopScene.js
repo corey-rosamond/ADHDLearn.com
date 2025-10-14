@@ -27,23 +27,14 @@ class LetterPopScene extends Phaser.Scene {
     }
 
     preload() {
+        // NOTE: Letter audio is now loaded globally in PreloadScene
         // Load success sound
         this.load.audio('success', 'assets/audio/success.mp3');
 
         // Load bubble pop sound
         this.load.audio('pop', 'assets/audio/pop.mp3');
 
-        // Load all letter audio (A-Z)
-        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-        letters.forEach(letter => {
-            // Load individual letter sounds
-            this.load.audio(`letter_${letter}`, `assets/audio/letters/${letter}.mp3`);
-
-            // Load "Find the letter X!" instructions
-            this.load.audio(`find_letter_${letter}`, `assets/audio/find_letter_${letter}.mp3`);
-        });
-
-        console.log('[LetterPopScene] Preloading audio for all 26 letters');
+        console.log('[LetterPopScene] Scene-specific audio preloaded');
     }
 
     create() {

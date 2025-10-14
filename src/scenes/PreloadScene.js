@@ -31,6 +31,16 @@ class PreloadScene extends Phaser.Scene {
         this.load.audio('correctAnswer', 'assets/audio/correct-answer.mp3');
         this.load.audio('gameComplete', 'assets/audio/game-complete.mp3');
 
+        // Load all letter audio (A-Z)
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+        letters.forEach(letter => {
+            // Load individual letter sounds
+            this.load.audio(`letter_${letter}`, `assets/audio/letters/${letter}.mp3`);
+
+            // Load "Find the letter X!" instructions
+            this.load.audio(`find_letter_${letter}`, `assets/audio/find_letter_${letter}.mp3`);
+        });
+
         // Load ONET UI assets
         this.load.image('mainMenuBg', 'assets/ui/MainMenu_Bg.png');
         this.load.image('btnGreen', 'assets/ui/Btn_Green.png');
