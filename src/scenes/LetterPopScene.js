@@ -651,6 +651,24 @@ class LetterPopScene extends Phaser.Scene {
     }
 
     createBubbles() {
+        // Clean up any existing bubbles and collider first
+        if (this.bubbleCollider) {
+            this.bubbleCollider.destroy();
+            this.bubbleCollider = null;
+        }
+
+        // Clear existing bubbles array
+        if (this.bubbles && this.bubbles.length > 0) {
+            console.log(`[LetterPopScene] WARNING: Cleaning up ${this.bubbles.length} existing bubbles`);
+            this.bubbles.forEach(bubble => {
+                if (bubble && bubble.active) {
+                    this.tweens.killTweensOf(bubble);
+                    bubble.destroy();
+                }
+            });
+            this.bubbles = [];
+        }
+
         // Generate spawn positions for 6 bubbles with 180px minimum spacing
         const bubbleCount = 6;
         const positions = this.generateSpawnPositions(bubbleCount, 180);
@@ -721,10 +739,13 @@ class LetterPopScene extends Phaser.Scene {
         });
 
         // Enable collision between all bubbles with physics
-        this.physics.add.collider(this.bubbles, this.bubbles, (bubbleA, bubbleB) => {
+        // Store the collider reference so we can destroy it later
+        this.bubbleCollider = this.physics.add.collider(this.bubbles, this.bubbles, (bubbleA, bubbleB) => {
             // Visual squish effect only - physics handles the actual bounce
             this.smooshBubbles(bubbleA, bubbleB);
         });
+
+        console.log(`[LetterPopScene] Created ${this.bubbles.length} bubbles for letter: ${this.targetLetter}`);
     }
 
 
@@ -834,6 +855,12 @@ class LetterPopScene extends Phaser.Scene {
             bubble.destroy();
         });
         this.bubbles = [];
+
+        // Destroy the physics collider for the previous round
+        if (this.bubbleCollider) {
+            this.bubbleCollider.destroy();
+            this.bubbleCollider = null;
+        }
 
         // Wait a moment, then start next letter
         this.time.delayedCall(1000, () => {
