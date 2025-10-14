@@ -92,8 +92,16 @@ class Bubble extends Phaser.GameObjects.Container {
             strokeThickness: 4  // Fixed thickness instead of responsive
         });
 
-        // Center the text (origin 0.5, 0.5 = center)
+        // Center the text horizontally and vertically
+        // For lowercase letters with descenders (j, g, p, q, y), shift up slightly
         letterText.setOrigin(0.5, 0.5);
+
+        // Check if letter has descender and adjust Y position
+        const descenderLetters = ['j', 'g', 'p', 'q', 'y'];
+        if (descenderLetters.includes(this.letter.toLowerCase())) {
+            // Shift text up by 10% of bubble radius to accommodate descender
+            letterText.y = -this.radius * 0.1;
+        }
 
         // Add text to this container
         this.add(letterText);
