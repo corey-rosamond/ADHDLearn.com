@@ -89,8 +89,8 @@
 
     <div id="game-container"></div>
 
-    <!-- Phaser library -->
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.js"></script>
+    <!-- Phaser library (bundled locally for offline use) -->
+    <script src="lib/phaser.min.js"></script>
 
     <!-- Utilities (load before scenes) -->
     <script src="src/utils/ResponsiveUtils.js"></script>
@@ -126,7 +126,7 @@
         }
 
         function downloadAPK() {
-            window.location.href = '/auroras-reading-adventure.apk';
+            window.location.href = '/ReadingAdventure.apk';
         }
 
         function closeBanner() {
