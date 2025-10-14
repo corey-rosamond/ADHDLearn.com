@@ -30,7 +30,7 @@ const config = {
         }
     },
     backgroundColor: '#00BCD4',  // Sky Blue from Aurora's Rainbow palette
-    scene: [BootScene, PreloadScene, MainMenuScene, LetterPopScene, ResultsScene]
+    scene: [BootScene, PreloadScene, MainMenuScene, LetterPopScene, ResultsScene, SettingsScene]
 };
 
 const game = new Phaser.Game(config);

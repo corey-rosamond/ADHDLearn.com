@@ -6,6 +6,12 @@ class PreloadScene extends Phaser.Scene {
     preload() {
         console.log('PreloadScene started');
 
+        // Initialize responsive utilities
+        this.r = new ResponsiveUtils(this);
+
+        // Create gradient background
+        this.createBackground();
+
         // Create progress bar graphics
         this.createProgressBar();
 
@@ -58,55 +64,158 @@ class PreloadScene extends Phaser.Scene {
         });
     }
 
+    createBackground() {
+        // Match Results screen gradient: Orange Pop → Bubble Pink → Purple Magic
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
+
+        const graphics = this.add.graphics();
+
+        const colorTop = Phaser.Display.Color.ValueToColor(0xFF6B6B);    // Orange Pop
+        const colorMid = Phaser.Display.Color.ValueToColor(0xFF4081);    // Bubble Pink
+        const colorBottom = Phaser.Display.Color.ValueToColor(0x9C27B0); // Purple Magic
+
+        const bandHeight = 10;
+
+        for (let i = 0; i < height; i += bandHeight) {
+            const progress = i / height;
+            let color;
+
+            if (progress < 0.5) {
+                color = Phaser.Display.Color.Interpolate.ColorWithColor(
+                    colorTop,
+                    colorMid,
+                    100,
+                    (progress / 0.5) * 100
+                );
+            } else {
+                color = Phaser.Display.Color.Interpolate.ColorWithColor(
+                    colorMid,
+                    colorBottom,
+                    100,
+                    ((progress - 0.5) / 0.5) * 100
+                );
+            }
+
+            graphics.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b));
+            graphics.fillRect(0, i, width, bandHeight);
+        }
+    }
+
     createProgressBar() {
-        // Progress bar dimensions and position
-        const width = 400;
-        const height = 30;
-        const x = (this.cameras.main.width - width) / 2;
-        const y = this.cameras.main.height / 2;
-
-        // Graphics for progress bar
-        this.progressBar = this.add.graphics();
-        this.progressBox = this.add.graphics();
-
-        // Draw progress box (border)
-        this.progressBox.fillStyle(0x222222, 0.8);
-        this.progressBox.fillRect(x, y, width, height);
+        // Title text
+        const titleY = this.r.getY(35);
+        this.loadingTitle = this.add.text(this.r.centerX, titleY, "AURORA'S READING ADVENTURE", {
+            fontSize: this.r.getFontSize(48) + 'px',
+            fontFamily: 'Fredoka One, Arial',
+            color: '#FFEB3B',
+            fontStyle: 'bold',
+            stroke: '#9C27B0',
+            strokeThickness: this.r.scaleX(6)
+        }).setOrigin(0.5);
 
         // Loading text
-        this.loadingText = this.add.text(
-            this.cameras.main.width / 2,
-            y - 50,
-            'Loading...',
-            { fontSize: '24px', color: '#ffffff' }
-        ).setOrigin(0.5);
+        const loadingY = this.r.getY(55);
+        this.loadingText = this.add.text(this.r.centerX, loadingY, 'Loading...', {
+            fontSize: this.r.getFontSize(32) + 'px',
+            fontFamily: 'Fredoka One, Arial',
+            color: '#ffffff',
+            stroke: '#FF6B6B',
+            strokeThickness: this.r.scaleX(4)
+        }).setOrigin(0.5);
+
+        // Progress bar background (dark purple)
+        const barY = this.r.getY(65);
+        const barWidth = this.r.scaleX(600);
+        const barHeight = this.r.scaleY(20);
+        const barX = this.r.centerX - (barWidth / 2);
+
+        this.progressBarBg = this.add.graphics();
+        this.progressBarBg.fillStyle(0x5A2E5A, 1);
+        this.progressBarBg.fillRoundedRect(barX, barY, barWidth, barHeight, 10);
+
+        // Progress bar foreground (yellow/orange gradient)
+        this.progressBarFg = this.add.graphics();
+        this.progressBarX = barX;
+        this.progressBarY = barY;
+        this.progressBarWidth = barWidth;
+        this.progressBarHeight = barHeight;
 
         // Percentage text
-        this.percentText = this.add.text(
-            this.cameras.main.width / 2,
-            y + 50,
-            '0%',
-            { fontSize: '18px', color: '#ffffff' }
-        ).setOrigin(0.5);
+        const percentY = this.r.getY(72);
+        this.percentText = this.add.text(this.r.centerX, percentY, '0%', {
+            fontSize: this.r.getFontSize(24) + 'px',
+            fontFamily: 'Fredoka One, Arial',
+            color: '#ffffff',
+            stroke: '#9C27B0',
+            strokeThickness: this.r.scaleX(3)
+        }).setOrigin(0.5);
+
+        // Add floating stars
+        this.createLoadingStars();
     }
 
     updateProgressBar(value) {
-        // Update progress bar fill
-        const width = 400;
-        const height = 30;
-        const x = (this.cameras.main.width - width) / 2;
-        const y = this.cameras.main.height / 2;
+        // Redraw the yellow/orange gradient bar
+        this.progressBarFg.clear();
 
-        this.progressBar.clear();
-        this.progressBar.fillStyle(0x00ff00, 1);
-        this.progressBar.fillRect(x, y, width * value, height);
+        const currentWidth = this.progressBarWidth * value;
+
+        if (currentWidth > 0) {
+            // Draw gradient from yellow to orange
+            this.progressBarFg.fillGradientStyle(0xFFEB3B, 0xFFEB3B, 0xFF9800, 0xFF9800, 1);
+            this.progressBarFg.fillRoundedRect(
+                this.progressBarX,
+                this.progressBarY,
+                currentWidth,
+                this.progressBarHeight,
+                10
+            );
+        }
 
         // Update percentage text
         this.percentText.setText(Math.floor(value * 100) + '%');
     }
 
     loadComplete() {
-        this.loadingText.setText('Complete!');
+        this.loadingText.setText('Ready!');
         console.log('Assets loaded successfully');
+    }
+
+    createLoadingStars() {
+        // Create floating stars decoration (matches other screens)
+        const starChars = ['⭐', '✨', '💫'];
+
+        for (let i = 0; i < 8; i++) {
+            const x = this.r.getX(15 + (i * 10));
+            const y = this.r.getY(15 + ((i % 3) * 15));
+            const starChar = Phaser.Utils.Array.GetRandom(starChars);
+
+            const star = this.add.text(x, y, starChar, {
+                fontSize: this.r.getFontSize(28 + (i % 3) * 6) + 'px'
+            }).setOrigin(0.5);
+
+            star.setAlpha(0.7);
+
+            // Floating animation
+            this.tweens.add({
+                targets: star,
+                y: y + this.r.scaleY(20),
+                duration: 2000 + (i * 200),
+                ease: 'Sine.easeInOut',
+                yoyo: true,
+                repeat: -1,
+                delay: i * 100
+            });
+
+            // Rotation
+            this.tweens.add({
+                targets: star,
+                angle: i % 2 === 0 ? 360 : -360,
+                duration: 3000 + (i * 250),
+                ease: 'Linear',
+                repeat: -1
+            });
+        }
     }
 }

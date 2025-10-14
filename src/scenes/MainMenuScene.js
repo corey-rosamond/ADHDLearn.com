@@ -24,6 +24,9 @@ class MainMenuScene extends Phaser.Scene {
         // Add floating letters (disabled - using floating stars instead to match Results screen)
         // this.createFloatingLetters();
 
+        // Create settings button (top-right corner)
+        this.createSettingsButton();
+
         // Create START button
         this.createStartButton();
 
@@ -260,6 +263,70 @@ class MainMenuScene extends Phaser.Scene {
         }
 
         this.add.image(0, 0, 'menuGradient').setOrigin(0, 0);
+    }
+
+    createSettingsButton() {
+        // Position in top-right corner
+        const btnX = this.r.getX(92);
+        const btnY = this.r.getY(8);
+
+        // Create button using brown button asset
+        const button = this.add.image(btnX, btnY, 'btnBrown').setInteractive({ useHandCursor: true });
+
+        // Scale button to appropriate size
+        const targetSize = this.r.scaleX(80);
+        const scale = targetSize / button.width;
+        button.setScale(scale);
+
+        // Create gear/settings icon using text emoji
+        const iconText = this.add.text(btnX, btnY, '⚙️', {
+            fontSize: this.r.getFontSize(40) + 'px'
+        }).setOrigin(0.5);
+
+        // Idle spin animation
+        this.tweens.add({
+            targets: iconText,
+            angle: 360,
+            duration: 4000,
+            ease: 'Linear',
+            repeat: -1
+        });
+
+        // Hover effect
+        button.on('pointerover', () => {
+            this.tweens.add({
+                targets: [button, iconText],
+                scaleX: scale * 1.1,
+                scaleY: scale * 1.1,
+                duration: 200,
+                ease: 'Back.easeOut'
+            });
+        });
+
+        // Hover out
+        button.on('pointerout', () => {
+            this.tweens.add({
+                targets: [button, iconText],
+                scaleX: scale,
+                scaleY: scale,
+                duration: 200,
+                ease: 'Back.easeIn'
+            });
+        });
+
+        // Click handler
+        button.on('pointerdown', () => {
+            this.tweens.add({
+                targets: [button, iconText],
+                scaleX: scale * 0.95,
+                scaleY: scale * 0.95,
+                duration: 100,
+                yoyo: true,
+                onComplete: () => {
+                    this.scene.start('Settings');
+                }
+            });
+        });
     }
 
     createStartButton() {
