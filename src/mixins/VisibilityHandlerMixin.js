@@ -16,31 +16,50 @@ class VisibilityHandlerMixin {
      * VisibilityHandlerMixin.setup(this, 'MainMenu');
      */
     static setup(scene, sceneKey) {
+        // Check if scene has custom pause/resume methods (like LetterPopScene)
+        const hasCustomMethods = typeof scene.pauseGame === 'function' && typeof scene.resumeGame === 'function';
+
         scene.visibilityChangeHandler = () => {
             if (document.hidden) {
-                scene.audioManager.pauseAll();
-                if (scene.scene.isActive(sceneKey)) {
-                    scene.scene.pause(sceneKey);
+                if (hasCustomMethods) {
+                    scene.pauseGame();
+                } else {
+                    scene.audioManager.pauseAll();
+                    if (scene.scene.isActive(sceneKey)) {
+                        scene.scene.pause(sceneKey);
+                    }
                 }
             } else {
-                if (scene.scene.isPaused(sceneKey)) {
-                    scene.scene.resume(sceneKey);
-                    scene.audioManager.resumeAll();
+                if (hasCustomMethods) {
+                    scene.resumeGame();
+                } else {
+                    if (scene.scene.isPaused(sceneKey)) {
+                        scene.scene.resume(sceneKey);
+                        scene.audioManager.resumeAll();
+                    }
                 }
             }
         };
 
         scene.blurHandler = () => {
-            scene.audioManager.pauseAll();
-            if (scene.scene.isActive(sceneKey)) {
-                scene.scene.pause(sceneKey);
+            if (hasCustomMethods) {
+                scene.pauseGame();
+            } else {
+                scene.audioManager.pauseAll();
+                if (scene.scene.isActive(sceneKey)) {
+                    scene.scene.pause(sceneKey);
+                }
             }
         };
 
         scene.focusHandler = () => {
-            if (scene.scene.isPaused(sceneKey)) {
-                scene.scene.resume(sceneKey);
-                scene.audioManager.resumeAll();
+            if (hasCustomMethods) {
+                scene.resumeGame();
+            } else {
+                if (scene.scene.isPaused(sceneKey)) {
+                    scene.scene.resume(sceneKey);
+                    scene.audioManager.resumeAll();
+                }
             }
         };
 

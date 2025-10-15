@@ -8,21 +8,21 @@ class ResultsScene extends Phaser.Scene {
         this.score = data.score || 0;
         this.totalLetters = data.totalLetters || 10;
         this.timeSeconds = data.timeSeconds || 0;
-
-        console.log(`[ResultsScene] Received data - Score: ${this.score}/${this.totalLetters}, Time: ${this.timeSeconds}s`);
     }
 
     create() {
         // Initialize responsive utilities
         this.r = new ResponsiveUtils(this);
 
+        // Initialize AudioManager
+        this.audioManager = AudioManager.getInstance();
+        this.audioManager.init(this);
+
         // Handle page visibility to prevent audio issues
         this.setupVisibilityHandling();
 
-        // Play game complete sound
-        if (this.cache.audio.exists('gameComplete')) {
-            this.sound.play('gameComplete', { volume: 0.5 });
-        }
+        // Play game complete sound via AudioManager
+        this.audioManager.playSound('gameComplete', { volume: 0.5 });
 
         // Background gradient
         this.createBackground();
@@ -136,83 +136,15 @@ class ResultsScene extends Phaser.Scene {
     }
 
     setupVisibilityHandling() {
-        // Handle both tab switching AND window focus loss
-        this.visibilityChangeHandler = () => {
-            if (document.hidden) {
-                console.log('[ResultsScene] Tab hidden - pausing');
-                this.sound.pauseAll();
-                this.scene.pause('Results');
-            } else {
-                console.log('[ResultsScene] Tab visible - resuming');
-                this.scene.resume('Results');
-            }
-        };
-
-        this.blurHandler = () => {
-            console.log('[ResultsScene] Window blur - pausing');
-            this.sound.pauseAll();
-            this.scene.pause('Results');
-        };
-
-        this.focusHandler = () => {
-            console.log('[ResultsScene] Window focus - resuming');
-            this.scene.resume('Results');
-        };
-
-        document.addEventListener('visibilitychange', this.visibilityChangeHandler);
-        window.addEventListener('blur', this.blurHandler);
-        window.addEventListener('focus', this.focusHandler);
-        console.log('[ResultsScene] All pause handlers attached');
+        VisibilityHandlerMixin.setup(this, 'Results');
     }
 
     shutdown() {
-        // Clean up all event handlers
-        if (this.visibilityChangeHandler) {
-            document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
-        }
-        if (this.blurHandler) {
-            window.removeEventListener('blur', this.blurHandler);
-        }
-        if (this.focusHandler) {
-            window.removeEventListener('focus', this.focusHandler);
-        }
+        VisibilityHandlerMixin.cleanup(this);
     }
 
     createBackground() {
-        // Aurora's Rainbow gradient: Orange Pop → Bubble Pink → Purple Magic
-        const graphics = this.add.graphics();
-        const height = this.cameras.main.height;
-        const width = this.cameras.main.width;
-
-        const colorTop = Phaser.Display.Color.ValueToColor(0xFF6B6B);    // Orange Pop
-        const colorMid = Phaser.Display.Color.ValueToColor(0xFF4081);    // Bubble Pink
-        const colorBottom = Phaser.Display.Color.ValueToColor(0x9C27B0); // Purple Magic
-
-        for (let i = 0; i < height; i++) {
-            const progress = i / height;
-            let color;
-
-            if (progress < 0.5) {
-                // Orange Pop to Bubble Pink (first half)
-                color = Phaser.Display.Color.Interpolate.ColorWithColor(
-                    colorTop,
-                    colorMid,
-                    100,
-                    (progress / 0.5) * 100
-                );
-            } else {
-                // Bubble Pink to Purple Magic (second half)
-                color = Phaser.Display.Color.Interpolate.ColorWithColor(
-                    colorMid,
-                    colorBottom,
-                    100,
-                    ((progress - 0.5) / 0.5) * 100
-                );
-            }
-
-            graphics.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b));
-            graphics.fillRect(0, i, width, 1);
-        }
+        BackgroundComponent.createGradient(this, 'resultsBg');
     }
 
     displayPerformanceMessage() {
@@ -310,10 +242,8 @@ class ResultsScene extends Phaser.Scene {
             // Change to pressed texture
             button.setTexture('btnBluePressed');
 
-            // Play sound if available
-            if (this.cache.audio.exists('testSound')) {
-                this.sound.play('testSound');
-            }
+            // Play sound via AudioManager
+            this.audioManager.playSound('testSound');
 
             this.tweens.add({
                 targets: [button, buttonText],
@@ -331,49 +261,7 @@ class ResultsScene extends Phaser.Scene {
     }
 
     createFloatingStars() {
-        // Create 10 floating stars around the screen
-        const starChars = ['⭐', '✨', '💫'];
-
-        for (let i = 0; i < 10; i++) {
-            const x = this.r.getX(10 + (i * 9));
-            const y = this.r.getY(20 + ((i % 3) * 20));
-            const starChar = Phaser.Utils.Array.GetRandom(starChars);
-
-            const star = this.add.text(x, y, starChar, {
-                fontSize: this.r.getFontSize(32 + (i % 3) * 8) + 'px'
-            }).setOrigin(0.5);
-
-            star.setAlpha(0.8);
-
-            // Floating animation
-            this.tweens.add({
-                targets: star,
-                y: y + this.r.scaleY(25),
-                duration: 2500 + (i * 200),
-                ease: 'Sine.easeInOut',
-                yoyo: true,
-                repeat: -1,
-                delay: i * 100
-            });
-
-            // Rotation
-            this.tweens.add({
-                targets: star,
-                angle: i % 2 === 0 ? 360 : -360,
-                duration: 3000 + (i * 300),
-                repeat: -1
-            });
-
-            // Twinkle
-            this.tweens.add({
-                targets: star,
-                alpha: 0.3,
-                duration: 1000 + (i * 150),
-                ease: 'Sine.easeInOut',
-                yoyo: true,
-                repeat: -1
-            });
-        }
+        DecorationsComponent.createTwinklingStars(this);
     }
 
     showCelebration() {
@@ -394,7 +282,5 @@ class ResultsScene extends Phaser.Scene {
                 onComplete: () => star.destroy()
             });
         }
-
-        console.log('[ResultsScene] Perfect score celebration!');
     }
 }

@@ -4,10 +4,12 @@ class MainMenuScene extends Phaser.Scene {
     }
 
     create() {
-        console.log('MainMenuScene started');
-
         // Initialize responsive utilities
         this.r = new ResponsiveUtils(this);
+
+        // Initialize AudioManager
+        this.audioManager = AudioManager.getInstance();
+        this.audioManager.init(this);
 
         // Handle page visibility to prevent audio issues
         this.setupVisibilityHandling();
@@ -38,118 +40,23 @@ class MainMenuScene extends Phaser.Scene {
     }
 
     setupVisibilityHandling() {
-        // Handle both tab switching AND window focus loss
-        this.visibilityChangeHandler = () => {
-            if (document.hidden) {
-                console.log('[MainMenuScene] Tab hidden - pausing');
-                this.sound.pauseAll();
-                this.scene.pause('MainMenu');
-            } else {
-                console.log('[MainMenuScene] Tab visible - resuming');
-                this.scene.resume('MainMenu');
-            }
-        };
-
-        this.blurHandler = () => {
-            console.log('[MainMenuScene] Window blur - pausing');
-            this.sound.pauseAll();
-            this.scene.pause('MainMenu');
-        };
-
-        this.focusHandler = () => {
-            console.log('[MainMenuScene] Window focus - resuming');
-            this.scene.resume('MainMenu');
-        };
-
-        document.addEventListener('visibilitychange', this.visibilityChangeHandler);
-        window.addEventListener('blur', this.blurHandler);
-        window.addEventListener('focus', this.focusHandler);
-        console.log('[MainMenuScene] All pause handlers attached');
+        VisibilityHandlerMixin.setup(this, 'MainMenu');
     }
 
     shutdown() {
-        // Clean up all event handlers
-        if (this.visibilityChangeHandler) {
-            document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
-        }
-        if (this.blurHandler) {
-            window.removeEventListener('blur', this.blurHandler);
-        }
-        if (this.focusHandler) {
-            window.removeEventListener('focus', this.focusHandler);
-        }
+        VisibilityHandlerMixin.cleanup(this);
     }
 
     playWelcomeMessage() {
-        // Play welcome message every time the menu loads
-        if (this.cache.audio.exists('welcome')) {
-            console.log('[MainMenuScene] Playing welcome message: "Welcome to Aurora\'s Reading Adventure"');
-            this.sound.play('welcome');
-        } else {
-            console.error('[MainMenuScene] Welcome audio not found in cache!');
-            console.log('[MainMenuScene] Available audio keys:', this.cache.audio.getKeys());
-        }
+        // Play welcome message every time the menu loads using AudioManager
+        // AudioManager will handle the volume settings and error checking
+        this.audioManager.playVoice('welcome');
     }
 
     createColorfulTitle() {
-        // Simple title - matches Results screen (3 text objects, NO shadows, NO layers)
-
-        const line1Y = this.r.getY(18);
-        const line2Y = this.r.getY(28);
-        const line3Y = this.r.getY(38);
-
-        // Line 1: "AURORA'S"
-        const line1Text = this.add.text(this.r.centerX, line1Y, "AURORA'S", {
-            fontSize: this.r.getFontSize(64) + 'px',
-            fontFamily: 'Fredoka One, Arial',
-            color: '#FFEB3B',
-            fontStyle: 'bold',
-            stroke: '#9C27B0',
-            strokeThickness: this.r.scaleX(8)
-        }).setOrigin(0.5);
-
-        // Line 2: "READING"
-        const line2Text = this.add.text(this.r.centerX, line2Y, 'READING', {
-            fontSize: this.r.getFontSize(64) + 'px',
-            fontFamily: 'Fredoka One, Arial',
-            color: '#FFEB3B',
-            fontStyle: 'bold',
-            stroke: '#9C27B0',
-            strokeThickness: this.r.scaleX(8)
-        }).setOrigin(0.5);
-
-        // Line 3: "ADVENTURE"
-        const line3Text = this.add.text(this.r.centerX, line3Y, 'ADVENTURE', {
-            fontSize: this.r.getFontSize(64) + 'px',
-            fontFamily: 'Fredoka One, Arial',
-            color: '#FFEB3B',
-            fontStyle: 'bold',
-            stroke: '#9C27B0',
-            strokeThickness: this.r.scaleX(8)
-        }).setOrigin(0.5);
-
-        // Bounce-in animation
-        [line1Text, line2Text, line3Text].forEach((text, index) => {
-            text.setScale(0);
-            this.tweens.add({
-                targets: text,
-                scaleX: 1,
-                scaleY: 1,
-                duration: 600,
-                delay: index * 200,
-                ease: 'Back.easeOut',
-                onComplete: () => {
-                    this.tweens.add({
-                        targets: text,
-                        scaleX: 1.05,
-                        scaleY: 1.05,
-                        duration: 1000,
-                        ease: 'Sine.easeInOut',
-                        yoyo: true,
-                        repeat: -1
-                    });
-                }
-            });
+        TitleComponent.createMultiLine(this, ["AURORA'S", "READING", "ADVENTURE"], {
+            startY: this.r.getY(18),
+            lineSpacing: this.r.scaleY(100)
         });
 
         // Add floating stars decoration
@@ -223,49 +130,7 @@ class MainMenuScene extends Phaser.Scene {
     }
 
     createBackground() {
-        // Match Results screen gradient: Orange Pop → Bubble Pink → Purple Magic
-        const width = this.cameras.main.width;
-        const height = this.cameras.main.height;
-
-        // Check if gradient texture already exists (cached)
-        if (!this.textures.exists('menuGradient')) {
-            const graphics = this.add.graphics();
-
-            const colorTop = Phaser.Display.Color.ValueToColor(0xFF6B6B);    // Orange Pop
-            const colorMid = Phaser.Display.Color.ValueToColor(0xFF4081);    // Bubble Pink
-            const colorBottom = Phaser.Display.Color.ValueToColor(0x9C27B0); // Purple Magic
-
-            const bandHeight = 10;
-
-            for (let i = 0; i < height; i += bandHeight) {
-                const progress = i / height;
-                let color;
-
-                if (progress < 0.5) {
-                    color = Phaser.Display.Color.Interpolate.ColorWithColor(
-                        colorTop,
-                        colorMid,
-                        100,
-                        (progress / 0.5) * 100
-                    );
-                } else {
-                    color = Phaser.Display.Color.Interpolate.ColorWithColor(
-                        colorMid,
-                        colorBottom,
-                        100,
-                        ((progress - 0.5) / 0.5) * 100
-                    );
-                }
-
-                graphics.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b));
-                graphics.fillRect(0, i, width, bandHeight);
-            }
-
-            graphics.generateTexture('menuGradient', width, height);
-            graphics.destroy();
-        }
-
-        this.add.image(0, 0, 'menuGradient').setOrigin(0, 0);
+        BackgroundComponent.createGradient(this, 'menuGradient');
     }
 
     createSettingsButton() {
@@ -348,7 +213,8 @@ class MainMenuScene extends Phaser.Scene {
 
         // Create bug emoji text
         const bugText = this.add.text(btnX, btnY, '🐛', {
-            fontSize: this.r.getFontSize(48) + 'px'
+            fontSize: this.r.getFontSize(48) + 'px',
+            padding: { top: 20, bottom: 20, left: 10, right: 10 }
         }).setOrigin(0.5);
 
         // Idle bounce animation
@@ -365,7 +231,6 @@ class MainMenuScene extends Phaser.Scene {
 
         // Click handler
         circle.on('pointerdown', () => {
-            console.log('[MainMenuScene] Debug button clicked');
             this.tweens.add({
                 targets: [circle, bugText],
                 scale: 0.9,
@@ -406,7 +271,8 @@ class MainMenuScene extends Phaser.Scene {
 
         // Icon emoji - positioned to be fully visible within tile
         const iconText = this.add.text(x, y - this.r.scaleY(20), icon, {
-            fontSize: this.r.getFontSize(64) + 'px'
+            fontSize: this.r.getFontSize(64) + 'px',
+            padding: { top: 20, bottom: 20, left: 10, right: 10 }
         }).setOrigin(0.5);
 
         // Game title - below the icon
@@ -465,8 +331,6 @@ class MainMenuScene extends Phaser.Scene {
 
         // Click handler
         tile.on('pointerdown', () => {
-            console.log(`[MainMenuScene] ${title} tile clicked`);
-
             this.tweens.add({
                 targets: tile,
                 scaleX: scale * 0.95,
@@ -603,39 +467,6 @@ class MainMenuScene extends Phaser.Scene {
     }
 
     createFloatingStars() {
-        // Create floating stars decoration (matches Results screen)
-        const starChars = ['⭐', '✨', '💫'];
-
-        for (let i = 0; i < 10; i++) {
-            const x = this.r.getX(10 + (i * 9));
-            const y = this.r.getY(20 + ((i % 3) * 20));
-            const starChar = Phaser.Utils.Array.GetRandom(starChars);
-
-            const star = this.add.text(x, y, starChar, {
-                fontSize: this.r.getFontSize(32 + (i % 3) * 8) + 'px'
-            }).setOrigin(0.5);
-
-            star.setAlpha(0.8);
-
-            // Floating animation
-            this.tweens.add({
-                targets: star,
-                y: y + this.r.scaleY(25),
-                duration: 2500 + (i * 200),
-                ease: 'Sine.easeInOut',
-                yoyo: true,
-                repeat: -1,
-                delay: i * 100
-            });
-
-            // Rotation
-            this.tweens.add({
-                targets: star,
-                angle: i % 2 === 0 ? 360 : -360,
-                duration: 3000 + (i * 300),
-                ease: 'Linear',
-                repeat: -1
-            });
-        }
+        DecorationsComponent.createFloatingStars(this);
     }
 }

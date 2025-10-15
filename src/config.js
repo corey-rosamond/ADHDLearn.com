@@ -34,3 +34,17 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
+
+// Debug canvas rendering to diagnose blurriness
+game.events.once('ready', () => {
+    const canvas = game.canvas;
+    const canvasStyle = window.getComputedStyle(canvas);
+    console.log('=== CANVAS DEBUG INFO ===');
+    console.log('devicePixelRatio:', window.devicePixelRatio);
+    console.log('Canvas actual size:', canvas.width, 'x', canvas.height);
+    console.log('Canvas CSS size:', canvasStyle.width, 'x', canvasStyle.height);
+    console.log('Canvas CSS size (parsed):', parseInt(canvasStyle.width), 'x', parseInt(canvasStyle.height));
+    console.log('Resolution config:', config.scale.resolution);
+    console.log('Game scale:', game.scale.displayScale.x, 'x', game.scale.displayScale.y);
+    console.log('========================');
+});

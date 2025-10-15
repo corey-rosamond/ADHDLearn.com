@@ -4,8 +4,6 @@ class PreloadScene extends Phaser.Scene {
     }
 
     preload() {
-        console.log('PreloadScene started');
-
         // Initialize responsive utilities
         this.r = new ResponsiveUtils(this);
 
@@ -197,7 +195,6 @@ class PreloadScene extends Phaser.Scene {
 
     loadComplete() {
         this.loadingText.setText('Ready!');
-        console.log('Assets loaded successfully');
     }
 
     createLoadingStars() {

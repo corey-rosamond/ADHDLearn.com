@@ -4,8 +4,6 @@ class LetterPopMenuScene extends Phaser.Scene {
     }
 
     create() {
-        console.log('LetterPopMenuScene started');
-
         // Initialize responsive utilities
         this.r = new ResponsiveUtils(this);
 
@@ -26,83 +24,44 @@ class LetterPopMenuScene extends Phaser.Scene {
     }
 
     createBackground() {
-        // Match Results screen gradient: Orange Pop → Bubble Pink → Purple Magic
-        const width = this.cameras.main.width;
-        const height = this.cameras.main.height;
-
-        const graphics = this.add.graphics();
-
-        const colorTop = Phaser.Display.Color.ValueToColor(0xFF6B6B);    // Orange Pop
-        const colorMid = Phaser.Display.Color.ValueToColor(0xFF4081);    // Bubble Pink
-        const colorBottom = Phaser.Display.Color.ValueToColor(0x9C27B0); // Purple Magic
-
-        const bandHeight = 10;
-
-        for (let i = 0; i < height; i += bandHeight) {
-            const progress = i / height;
-            let color;
-
-            if (progress < 0.5) {
-                color = Phaser.Display.Color.Interpolate.ColorWithColor(
-                    colorTop,
-                    colorMid,
-                    100,
-                    (progress / 0.5) * 100
-                );
-            } else {
-                color = Phaser.Display.Color.Interpolate.ColorWithColor(
-                    colorMid,
-                    colorBottom,
-                    100,
-                    ((progress - 0.5) / 0.5) * 100
-                );
-            }
-
-            graphics.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b));
-            graphics.fillRect(0, i, width, bandHeight);
-        }
+        BackgroundComponent.createGradient(this, 'letterPopMenuBg');
     }
 
     createTitle() {
-        const titleY = this.r.getY(12);
+        const titleY = this.r.getY(10);
 
-        // Icon
+        // Icon - with padding to prevent emoji clipping
         const iconText = this.add.text(this.r.centerX, titleY, '🎈', {
-            fontSize: this.r.getFontSize(64) + 'px'
+            fontSize: this.r.getFontSize(64) + 'px',
+            padding: { top: 20, bottom: 20, left: 10, right: 10 }
         }).setOrigin(0.5);
 
-        // Title
-        const titleText = this.add.text(this.r.centerX, titleY + this.r.scaleY(60), 'LETTER POP', {
-            fontSize: this.r.getFontSize(56) + 'px',
-            fontFamily: 'Fredoka One, Arial',
-            color: '#FFEB3B',
-            fontStyle: 'bold',
-            stroke: '#9C27B0',
-            strokeThickness: this.r.scaleX(8)
-        }).setOrigin(0.5);
+        // Animate icon
+        iconText.setScale(0);
+        this.tweens.add({
+            targets: iconText,
+            scaleX: 1,
+            scaleY: 1,
+            duration: 600,
+            ease: 'Back.easeOut',
+            onComplete: () => {
+                this.tweens.add({
+                    targets: iconText,
+                    scaleX: 1.05,
+                    scaleY: 1.05,
+                    duration: 1000,
+                    ease: 'Sine.easeInOut',
+                    yoyo: true,
+                    repeat: -1
+                });
+            }
+        });
 
-        // Bounce-in animation
-        [iconText, titleText].forEach((text, index) => {
-            text.setScale(0);
-            this.tweens.add({
-                targets: text,
-                scaleX: 1,
-                scaleY: 1,
-                duration: 600,
-                delay: index * 100,
-                ease: 'Back.easeOut',
-                onComplete: () => {
-                    this.tweens.add({
-                        targets: text,
-                        scaleX: 1.05,
-                        scaleY: 1.05,
-                        duration: 1000,
-                        ease: 'Sine.easeInOut',
-                        yoyo: true,
-                        repeat: -1
-                    });
-                }
-            });
+        // Title using TitleComponent
+        TitleComponent.create(this, {
+            y: titleY + this.r.scaleY(60),
+            text: 'LETTER POP',
+            fontSize: 56
         });
     }
 
@@ -378,8 +337,6 @@ class LetterPopMenuScene extends Phaser.Scene {
 
                 // Save to localStorage
                 localStorage.setItem('letterPop_letterCase', option.value);
-
-                console.log(`Letter case set to: ${option.value}`);
             });
 
             // Hover effect
@@ -531,39 +488,6 @@ class LetterPopMenuScene extends Phaser.Scene {
     }
 
     createFloatingStars() {
-        // Create floating stars decoration (matches Results screen)
-        const starChars = ['⭐', '✨', '💫'];
-
-        for (let i = 0; i < 10; i++) {
-            const x = this.r.getX(10 + (i * 9));
-            const y = this.r.getY(20 + ((i % 3) * 20));
-            const starChar = Phaser.Utils.Array.GetRandom(starChars);
-
-            const star = this.add.text(x, y, starChar, {
-                fontSize: this.r.getFontSize(32 + (i % 3) * 8) + 'px'
-            }).setOrigin(0.5);
-
-            star.setAlpha(0.8);
-
-            // Floating animation
-            this.tweens.add({
-                targets: star,
-                y: y + this.r.scaleY(25),
-                duration: 2500 + (i * 200),
-                ease: 'Sine.easeInOut',
-                yoyo: true,
-                repeat: -1,
-                delay: i * 100
-            });
-
-            // Rotation
-            this.tweens.add({
-                targets: star,
-                angle: i % 2 === 0 ? 360 : -360,
-                duration: 3000 + (i * 300),
-                ease: 'Linear',
-                repeat: -1
-            });
-        }
+        DecorationsComponent.createFloatingStars(this);
     }
 }

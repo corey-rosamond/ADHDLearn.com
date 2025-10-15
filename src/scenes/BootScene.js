@@ -4,8 +4,6 @@ class BootScene extends Phaser.Scene {
     }
 
     create() {
-        console.log('BootScene started');
-
         // Display boot message
         this.add.text(400, 300, 'Initializing...', {
             fontSize: '24px',
