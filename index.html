@@ -2,8 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Aurora's Reading Adventure</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/assets/images/icon-512.png">
 
     <!-- PWA Meta Tags -->
     <meta name="description" content="A colorful, engaging letter learning game for kids">
@@ -25,21 +30,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
 
     <style>
-        body {
+        html, body {
+            width: 100%;
+            height: 100%;
             margin: 0;
             padding: 0;
+            overflow: hidden;
+        }
+        body {
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
             background: #00BCD4; /* Sky Blue from Aurora's Rainbow */
-            overflow: hidden; /* Prevent scrolling on tablet */
             touch-action: none; /* Prevent pull-to-refresh */
         }
         #game-container {
-            box-shadow: 0 0 30px rgba(0,0,0,0.3);
-            max-width: 100vw;
-            max-height: 100vh;
+            width: 100%;
+            height: 100%;
+            display: block;
         }
         #android-install-banner {
             display: none;
@@ -95,6 +103,19 @@
     <!-- Utilities (load before scenes) -->
     <script src="src/utils/ResponsiveUtils.js"></script>
 
+    <!-- Configuration -->
+    <script src="src/config/ThemeConfig.js"></script>
+
+    <!-- Mixins -->
+    <script src="src/mixins/VisibilityHandlerMixin.js"></script>
+
+    <!-- Components -->
+    <script src="src/components/BackgroundComponent.js"></script>
+    <script src="src/components/TitleComponent.js"></script>
+    <script src="src/components/ButtonComponent.js"></script>
+    <script src="src/components/DecorationsComponent.js"></script>
+    <script src="src/components/SliderComponent.js"></script>
+
     <!-- Services (load before scenes) -->
     <script src="src/services/AudioManager.js"></script>
 
@@ -146,11 +167,52 @@
 
     <!-- PWA Service Worker Registration -->
     <script>
+        // Check if we're in development mode
+        function isDevelopmentMode() {
+            const hostname = window.location.hostname;
+            const protocol = window.location.protocol;
+
+            // Development indicators: localhost, 127.0.0.1, file protocol, or common dev ports
+            return hostname === 'localhost' ||
+                   hostname === '127.0.0.1' ||
+                   hostname === '' ||
+                   protocol === 'file:' ||
+                   window.location.port === '5500' ||  // Live Server
+                   window.location.port === '8000' ||  // Python SimpleHTTPServer
+                   window.location.port === '3000';    // Common dev port
+        }
+
         if ('serviceWorker' in navigator && !window.Capacitor) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(reg => console.log('[PWA] Service Worker registered:', reg))
-                    .catch(err => console.log('[PWA] Service Worker registration failed:', err));
+                if (isDevelopmentMode()) {
+                    // DEVELOPMENT MODE: Unregister service worker and clear caches
+                    console.log('[DEV] Development mode detected - disabling service worker');
+
+                    navigator.serviceWorker.getRegistrations().then(registrations => {
+                        for (let registration of registrations) {
+                            registration.unregister();
+                            console.log('[DEV] Service worker unregistered:', registration);
+                        }
+                    });
+
+                    // Clear all caches
+                    if ('caches' in window) {
+                        caches.keys().then(cacheNames => {
+                            return Promise.all(
+                                cacheNames.map(cacheName => {
+                                    console.log('[DEV] Clearing cache:', cacheName);
+                                    return caches.delete(cacheName);
+                                })
+                            );
+                        });
+                    }
+                } else {
+                    // PRODUCTION MODE: Register service worker for PWA
+                    console.log('[PWA] Production mode - registering service worker');
+                    navigator.serviceWorker.register('/service-worker.js')
+                        .then(reg => console.log('[PWA] Service Worker registered:', reg))
+                        .catch(err => console.log('[PWA] Service Worker registration failed:', err));
+                }
             });
         }
     </script>
