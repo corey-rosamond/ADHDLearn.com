@@ -4,10 +4,12 @@ class MainMenuScene extends Phaser.Scene {
     }
 
     create() {
-        console.log('MainMenuScene started');
-
         // Initialize responsive utilities
         this.r = new ResponsiveUtils(this);
+
+        // Initialize AudioManager
+        this.audioManager = AudioManager.getInstance();
+        this.audioManager.init(this);
 
         // Handle page visibility to prevent audio issues
         this.setupVisibilityHandling();
@@ -41,30 +43,37 @@ class MainMenuScene extends Phaser.Scene {
         // Handle both tab switching AND window focus loss
         this.visibilityChangeHandler = () => {
             if (document.hidden) {
-                console.log('[MainMenuScene] Tab hidden - pausing');
-                this.sound.pauseAll();
-                this.scene.pause('MainMenu');
+                this.audioManager.pauseAll();
+                // Only pause if this scene is actually running
+                if (this.scene.isActive('MainMenu')) {
+                    this.scene.pause('MainMenu');
+                }
             } else {
-                console.log('[MainMenuScene] Tab visible - resuming');
-                this.scene.resume('MainMenu');
+                // Only resume if this scene is paused (not stopped)
+                if (this.scene.isPaused('MainMenu')) {
+                    this.scene.resume('MainMenu');
+                    this.audioManager.resumeAll();
+                }
             }
         };
 
         this.blurHandler = () => {
-            console.log('[MainMenuScene] Window blur - pausing');
-            this.sound.pauseAll();
-            this.scene.pause('MainMenu');
+            this.audioManager.pauseAll();
+            if (this.scene.isActive('MainMenu')) {
+                this.scene.pause('MainMenu');
+            }
         };
 
         this.focusHandler = () => {
-            console.log('[MainMenuScene] Window focus - resuming');
-            this.scene.resume('MainMenu');
+            if (this.scene.isPaused('MainMenu')) {
+                this.scene.resume('MainMenu');
+                this.audioManager.resumeAll();
+            }
         };
 
         document.addEventListener('visibilitychange', this.visibilityChangeHandler);
         window.addEventListener('blur', this.blurHandler);
         window.addEventListener('focus', this.focusHandler);
-        console.log('[MainMenuScene] All pause handlers attached');
     }
 
     shutdown() {
@@ -81,14 +90,9 @@ class MainMenuScene extends Phaser.Scene {
     }
 
     playWelcomeMessage() {
-        // Play welcome message every time the menu loads
-        if (this.cache.audio.exists('welcome')) {
-            console.log('[MainMenuScene] Playing welcome message: "Welcome to Aurora\'s Reading Adventure"');
-            this.sound.play('welcome');
-        } else {
-            console.error('[MainMenuScene] Welcome audio not found in cache!');
-            console.log('[MainMenuScene] Available audio keys:', this.cache.audio.getKeys());
-        }
+        // Play welcome message every time the menu loads using AudioManager
+        // AudioManager will handle the volume settings and error checking
+        this.audioManager.playVoice('welcome');
     }
 
     createColorfulTitle() {
@@ -348,7 +352,8 @@ class MainMenuScene extends Phaser.Scene {
 
         // Create bug emoji text
         const bugText = this.add.text(btnX, btnY, '🐛', {
-            fontSize: this.r.getFontSize(48) + 'px'
+            fontSize: this.r.getFontSize(48) + 'px',
+            padding: { top: 20, bottom: 20, left: 10, right: 10 }
         }).setOrigin(0.5);
 
         // Idle bounce animation
@@ -361,28 +366,10 @@ class MainMenuScene extends Phaser.Scene {
             repeat: -1
         });
 
-        // Hover effect
-        circle.on('pointerover', () => {
-            this.tweens.add({
-                targets: [bugText],
-                scale: 1.15,
-                duration: 200,
-                ease: 'Back.easeOut'
-            });
-        });
-
-        circle.on('pointerout', () => {
-            this.tweens.add({
-                targets: [bugText],
-                scale: 1,
-                duration: 200,
-                ease: 'Back.easeIn'
-            });
-        });
+        // No hover effect - keep button subtle/hidden
 
         // Click handler
         circle.on('pointerdown', () => {
-            console.log('[MainMenuScene] Debug button clicked');
             this.tweens.add({
                 targets: [circle, bugText],
                 scale: 0.9,
@@ -423,7 +410,8 @@ class MainMenuScene extends Phaser.Scene {
 
         // Icon emoji - positioned to be fully visible within tile
         const iconText = this.add.text(x, y - this.r.scaleY(20), icon, {
-            fontSize: this.r.getFontSize(64) + 'px'
+            fontSize: this.r.getFontSize(64) + 'px',
+            padding: { top: 20, bottom: 20, left: 10, right: 10 }
         }).setOrigin(0.5);
 
         // Game title - below the icon
@@ -482,8 +470,6 @@ class MainMenuScene extends Phaser.Scene {
 
         // Click handler
         tile.on('pointerdown', () => {
-            console.log(`[MainMenuScene] ${title} tile clicked`);
-
             this.tweens.add({
                 targets: tile,
                 scaleX: scale * 0.95,
@@ -629,7 +615,8 @@ class MainMenuScene extends Phaser.Scene {
             const starChar = Phaser.Utils.Array.GetRandom(starChars);
 
             const star = this.add.text(x, y, starChar, {
-                fontSize: this.r.getFontSize(32 + (i % 3) * 8) + 'px'
+                fontSize: this.r.getFontSize(32 + (i % 3) * 8) + 'px',
+                padding: { top: 20, bottom: 20, left: 10, right: 10 }
             }).setOrigin(0.5);
 
             star.setAlpha(0.8);

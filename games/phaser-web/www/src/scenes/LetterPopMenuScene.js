@@ -4,8 +4,6 @@ class LetterPopMenuScene extends Phaser.Scene {
     }
 
     create() {
-        console.log('LetterPopMenuScene started');
-
         // Initialize responsive utilities
         this.r = new ResponsiveUtils(this);
 
@@ -64,11 +62,12 @@ class LetterPopMenuScene extends Phaser.Scene {
     }
 
     createTitle() {
-        const titleY = this.r.getY(12);
+        const titleY = this.r.getY(10);
 
-        // Icon
+        // Icon - with padding to prevent emoji clipping
         const iconText = this.add.text(this.r.centerX, titleY, '🎈', {
-            fontSize: this.r.getFontSize(64) + 'px'
+            fontSize: this.r.getFontSize(64) + 'px',
+            padding: { top: 20, bottom: 20, left: 10, right: 10 }
         }).setOrigin(0.5);
 
         // Title
@@ -112,17 +111,13 @@ class LetterPopMenuScene extends Phaser.Scene {
 
         // Load saved settings or use defaults
         const timePerRound = localStorage.getItem('letterPop_timePerRound') || '10';
-        const enableChances = localStorage.getItem('letterPop_enableChances') || 'false';
         const letterCase = localStorage.getItem('letterPop_letterCase') || 'uppercase';
 
         // Time Per Round Slider
         this.createTimeSlider(timePerRound, startY);
 
-        // Enable 3 Chances Toggle
-        this.createChancesToggle(enableChances, startY + spacing);
-
         // Letter Case Mode Selector
-        this.createCaseSelector(letterCase, startY + (spacing * 2));
+        this.createCaseSelector(letterCase, startY + spacing);
     }
 
     createTimeSlider(initialValue, y) {
@@ -225,6 +220,9 @@ class LetterPopMenuScene extends Phaser.Scene {
         });
     }
 
+    // REMOVED: 3 Chances mode toggle
+    // This feature has been disabled for now
+    /*
     createChancesToggle(initialValue, y) {
         const isEnabled = initialValue === 'true';
 
@@ -294,6 +292,7 @@ class LetterPopMenuScene extends Phaser.Scene {
             isEnabled = newState;
         });
     }
+    */
 
     createCaseSelector(initialValue, y) {
         // Label
@@ -378,8 +377,6 @@ class LetterPopMenuScene extends Phaser.Scene {
 
                 // Save to localStorage
                 localStorage.setItem('letterPop_letterCase', option.value);
-
-                console.log(`Letter case set to: ${option.value}`);
             });
 
             // Hover effect

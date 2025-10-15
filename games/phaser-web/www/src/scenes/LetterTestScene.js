@@ -4,10 +4,12 @@ class LetterTestScene extends Phaser.Scene {
     }
 
     create() {
-        console.log('LetterTestScene started');
-
         // Initialize responsive utilities
         this.r = new ResponsiveUtils(this);
+
+        // Initialize AudioManager
+        this.audioManager = AudioManager.getInstance();
+        this.audioManager.init(this);
 
         // Create gradient background
         this.createBackground();
@@ -152,15 +154,9 @@ class LetterTestScene extends Phaser.Scene {
 
         // Click handler - play letter sound
         button.on('pointerdown', () => {
-            console.log(`[LetterTestScene] Playing letter: ${letter}`);
-
             // Play the letter audio
             const audioKey = `letter_${letter}`;
-            if (this.cache.audio.exists(audioKey)) {
-                this.sound.play(audioKey, { volume: 0.8 });
-            } else {
-                console.warn(`[LetterTestScene] Audio not found: ${audioKey}`);
-            }
+            this.audioManager.playVoice(audioKey, { volume: 0.8 });
 
             // Visual feedback - pulse animation
             this.tweens.add({

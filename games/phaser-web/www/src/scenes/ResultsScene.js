@@ -8,21 +8,21 @@ class ResultsScene extends Phaser.Scene {
         this.score = data.score || 0;
         this.totalLetters = data.totalLetters || 10;
         this.timeSeconds = data.timeSeconds || 0;
-
-        console.log(`[ResultsScene] Received data - Score: ${this.score}/${this.totalLetters}, Time: ${this.timeSeconds}s`);
     }
 
     create() {
         // Initialize responsive utilities
         this.r = new ResponsiveUtils(this);
 
+        // Initialize AudioManager
+        this.audioManager = AudioManager.getInstance();
+        this.audioManager.init(this);
+
         // Handle page visibility to prevent audio issues
         this.setupVisibilityHandling();
 
-        // Play game complete sound
-        if (this.cache.audio.exists('gameComplete')) {
-            this.sound.play('gameComplete', { volume: 0.5 });
-        }
+        // Play game complete sound via AudioManager
+        this.audioManager.playSound('gameComplete', { volume: 0.5 });
 
         // Background gradient
         this.createBackground();
@@ -139,30 +139,35 @@ class ResultsScene extends Phaser.Scene {
         // Handle both tab switching AND window focus loss
         this.visibilityChangeHandler = () => {
             if (document.hidden) {
-                console.log('[ResultsScene] Tab hidden - pausing');
-                this.sound.pauseAll();
-                this.scene.pause('Results');
+                this.audioManager.pauseAll();
+                if (this.scene.isActive('Results')) {
+                    this.scene.pause('Results');
+                }
             } else {
-                console.log('[ResultsScene] Tab visible - resuming');
-                this.scene.resume('Results');
+                if (this.scene.isPaused('Results')) {
+                    this.scene.resume('Results');
+                    this.audioManager.resumeAll();
+                }
             }
         };
 
         this.blurHandler = () => {
-            console.log('[ResultsScene] Window blur - pausing');
-            this.sound.pauseAll();
-            this.scene.pause('Results');
+            this.audioManager.pauseAll();
+            if (this.scene.isActive('Results')) {
+                this.scene.pause('Results');
+            }
         };
 
         this.focusHandler = () => {
-            console.log('[ResultsScene] Window focus - resuming');
-            this.scene.resume('Results');
+            if (this.scene.isPaused('Results')) {
+                this.scene.resume('Results');
+                this.audioManager.resumeAll();
+            }
         };
 
         document.addEventListener('visibilitychange', this.visibilityChangeHandler);
         window.addEventListener('blur', this.blurHandler);
         window.addEventListener('focus', this.focusHandler);
-        console.log('[ResultsScene] All pause handlers attached');
     }
 
     shutdown() {
@@ -310,10 +315,8 @@ class ResultsScene extends Phaser.Scene {
             // Change to pressed texture
             button.setTexture('btnBluePressed');
 
-            // Play sound if available
-            if (this.cache.audio.exists('testSound')) {
-                this.sound.play('testSound');
-            }
+            // Play sound via AudioManager
+            this.audioManager.playSound('testSound');
 
             this.tweens.add({
                 targets: [button, buttonText],
@@ -394,7 +397,5 @@ class ResultsScene extends Phaser.Scene {
                 onComplete: () => star.destroy()
             });
         }
-
-        console.log('[ResultsScene] Perfect score celebration!');
     }
 }

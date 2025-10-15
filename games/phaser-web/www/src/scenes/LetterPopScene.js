@@ -33,21 +33,20 @@ class LetterPopScene extends Phaser.Scene {
 
         // Load bubble pop sound
         this.load.audio('pop', 'assets/audio/pop.mp3');
-
-        console.log('[LetterPopScene] Scene-specific audio preloaded');
     }
 
     create() {
-        console.log('LetterPopScene started');
-
         // Initialize responsive utilities
         this.r = new ResponsiveUtils(this);
+
+        // Initialize AudioManager
+        this.audioManager = AudioManager.getInstance();
+        this.audioManager.init(this);
 
         // Load game settings from localStorage
         const timePerRound = parseInt(localStorage.getItem('letterPop_timePerRound') || '10');
         this.letterTimeLimit = timePerRound;
         this.letterTimeRemaining = timePerRound;
-        console.log(`[LetterPopScene] Time per round set to: ${timePerRound} seconds`);
 
         // Enable physics for this scene
         if (!this.physics.world) {
@@ -85,26 +84,18 @@ class LetterPopScene extends Phaser.Scene {
         // Tab visibility change (switching tabs)
         this.visibilityChangeHandler = () => {
             if (document.hidden) {
-                console.log('[LetterPopScene] ========== TAB HIDDEN - PAUSING EVERYTHING ==========');
-                console.log('[LetterPopScene] Countdown before pause:', this.letterTimeRemaining);
                 this.pauseGame();
             } else {
-                console.log('[LetterPopScene] ========== TAB VISIBLE - RESUMING ==========');
-                console.log('[LetterPopScene] Countdown after resume:', this.letterTimeRemaining);
                 this.resumeGame();
             }
         };
 
         // Window focus loss (clicking outside, switching windows)
         this.blurHandler = () => {
-            console.log('[LetterPopScene] ========== WINDOW BLUR - PAUSING EVERYTHING ==========');
-            console.log('[LetterPopScene] Countdown before pause:', this.letterTimeRemaining);
             this.pauseGame();
         };
 
         this.focusHandler = () => {
-            console.log('[LetterPopScene] ========== WINDOW FOCUS - RESUMING ==========');
-            console.log('[LetterPopScene] Countdown after resume:', this.letterTimeRemaining);
             this.resumeGame();
         };
 
@@ -112,8 +103,6 @@ class LetterPopScene extends Phaser.Scene {
         document.addEventListener('visibilitychange', this.visibilityChangeHandler);
         window.addEventListener('blur', this.blurHandler);
         window.addEventListener('focus', this.focusHandler);
-
-        console.log('[LetterPopScene] All pause handlers attached (visibility + focus/blur)');
     }
 
     pauseGame() {
@@ -121,13 +110,11 @@ class LetterPopScene extends Phaser.Scene {
         if (this.isPaused) return;
         this.isPaused = true;
 
-        // Pause all sounds
-        this.sound.pauseAll();
+        // Pause all audio via AudioManager
+        this.audioManager.pauseAll();
 
         // Pause the scene (stops physics, timers, animations)
         this.scene.pause('LetterPop');
-
-        console.log('[LetterPopScene] Game paused');
     }
 
     resumeGame() {
@@ -138,7 +125,8 @@ class LetterPopScene extends Phaser.Scene {
         // Resume the scene
         this.scene.resume('LetterPop');
 
-        console.log('[LetterPopScene] Game resumed');
+        // Resume audio via AudioManager
+        this.audioManager.resumeAll();
     }
 
     shutdown() {
@@ -152,7 +140,6 @@ class LetterPopScene extends Phaser.Scene {
         if (this.focusHandler) {
             window.removeEventListener('focus', this.focusHandler);
         }
-        console.log('[LetterPopScene] All pause handlers removed');
     }
 
 
@@ -164,10 +151,8 @@ class LetterPopScene extends Phaser.Scene {
         bubbleA.isSmooshing = true;
         bubbleB.isSmooshing = true;
 
-        // Play bubble pop sound
-        if (this.cache.audio.exists('bubblePop')) {
-            this.sound.play('bubblePop', { volume: 0.3 });
-        }
+        // Play bubble pop sound via AudioManager
+        this.audioManager.playSound('bubblePop', { volume: 0.3 });
 
         // Quick squish effect on both bubbles
         this.tweens.add({
@@ -198,7 +183,6 @@ class LetterPopScene extends Phaser.Scene {
             }
         });
 
-        console.log(`[LetterPopScene] Smoosh! ${bubbleA.letter} <-> ${bubbleB.letter}`);
     }
 
     squeezeBubbleOnWall(bubble) {
@@ -207,10 +191,8 @@ class LetterPopScene extends Phaser.Scene {
 
         bubble.isSmooshing = true;
 
-        // Play bubble pop sound
-        if (this.cache.audio.exists('bubblePop')) {
-            this.sound.play('bubblePop', { volume: 0.3 });
-        }
+        // Play bubble pop sound via AudioManager
+        this.audioManager.playSound('bubblePop', { volume: 0.3 });
 
         // Quick squish effect
         this.tweens.add({
@@ -227,7 +209,6 @@ class LetterPopScene extends Phaser.Scene {
             }
         });
 
-        console.log(`[LetterPopScene] Squeeze! ${bubble.letter} hit wall`);
     }
 
     startRound() {
@@ -237,12 +218,10 @@ class LetterPopScene extends Phaser.Scene {
             this.currentLetterIndex = 0;
             this.roundStartTime = Date.now();
             this.score = 0; // Reset score for new round
-            console.log(`[LetterPopScene] New round started with letters: ${this.roundLetters.join(', ')}`);
         }
 
         // Select current target letter from sequence
         this.targetLetter = this.roundLetters[this.currentLetterIndex];
-        console.log(`[LetterPopScene] Letter ${this.currentLetterIndex + 1}/10: ${this.targetLetter}`);
 
         // Fade out title on first letter only
         if (this.currentLetterIndex === 0) {
@@ -373,15 +352,9 @@ class LetterPopScene extends Phaser.Scene {
     }
 
     playTargetLetterAudio() {
-        // Play audio instruction like "Find the letter B!"
-        // Always use uppercase for audio key since files are named A.mp3, B.mp3, etc.
+        // Play audio instruction via AudioManager (voice clip)
         const audioKey = `find_letter_${this.targetLetter.toUpperCase()}`;
-        if (this.cache.audio.exists(audioKey)) {
-            console.log(`[LetterPopScene] Playing: ${audioKey}`);
-            this.sound.play(audioKey);
-        } else {
-            console.warn(`[LetterPopScene] Audio not available: ${audioKey}`);
-        }
+        this.audioManager.playVoice(audioKey);
     }
 
     createBackground() {
@@ -481,8 +454,6 @@ class LetterPopScene extends Phaser.Scene {
             this.cameras.main.width,
             this.cameras.main.height - this.headerBarHeight
         );
-
-        console.log('[LetterPopScene] Menu bar created with Gameplay_1 layout');
     }
 
     createHomeButton() {
@@ -650,7 +621,6 @@ class LetterPopScene extends Phaser.Scene {
 
         // Clear existing bubbles array
         if (this.bubbles && this.bubbles.length > 0) {
-            console.log(`[LetterPopScene] WARNING: Cleaning up ${this.bubbles.length} existing bubbles`);
             this.bubbles.forEach(bubble => {
                 if (bubble && bubble.active) {
                     this.tweens.killTweensOf(bubble);
@@ -735,13 +705,10 @@ class LetterPopScene extends Phaser.Scene {
             // Visual squish effect only - physics handles the actual bounce
             this.smooshBubbles(bubbleA, bubbleB);
         });
-
-        console.log(`[LetterPopScene] Created ${this.bubbles.length} bubbles for letter: ${this.targetLetter}`);
     }
 
 
     handleBubbleClick(bubble, clickedLetter) {
-        console.log(`[LetterPopScene] Bubble clicked: ${clickedLetter}, Target: ${this.targetLetter}`);
 
         if (clickedLetter === this.targetLetter) {
             // CORRECT!
@@ -753,7 +720,6 @@ class LetterPopScene extends Phaser.Scene {
     }
 
     handleCorrectClick(bubble) {
-        console.log('[LetterPopScene] Correct click!');
 
         // Stop countdown timer
         if (this.countdownTimer) {
@@ -761,10 +727,8 @@ class LetterPopScene extends Phaser.Scene {
             this.countdownTimer = null;
         }
 
-        // Play correct answer sound
-        if (this.cache.audio.exists('correctAnswer')) {
-            this.sound.play('correctAnswer', { volume: 0.6 });
-        }
+        // Play correct answer sound via AudioManager
+        this.audioManager.playSound('correctAnswer', { volume: 0.6 });
 
         // Create celebration particles
         this.createCelebrationEffect(bubble.x, bubble.y);
@@ -798,7 +762,6 @@ class LetterPopScene extends Phaser.Scene {
     }
 
     handleLetterTimeout() {
-        console.log('[LetterPopScene] Time ran out for this letter - no score');
 
         // Stop countdown timer
         if (this.countdownTimer) {
@@ -806,12 +769,10 @@ class LetterPopScene extends Phaser.Scene {
             this.countdownTimer = null;
         }
 
-        // Play gentle encouragement audio
+        // Play gentle encouragement audio via AudioManager
         const encouragements = ['next-time', 'keep-trying', 'nice-try', 'almost'];
         const randomEncouragement = Phaser.Utils.Array.GetRandom(encouragements);
-        if (this.sound.get(randomEncouragement)) {
-            this.sound.play(randomEncouragement);
-        }
+        this.audioManager.playVoice(randomEncouragement);
 
         // Flash countdown red briefly
         if (this.countdownText) {
@@ -860,7 +821,6 @@ class LetterPopScene extends Phaser.Scene {
     }
 
     endRound() {
-        console.log('[LetterPopScene] Round complete!');
 
         // Calculate round time
         const roundEndTime = Date.now();
@@ -880,17 +840,11 @@ class LetterPopScene extends Phaser.Scene {
     }
 
     handleIncorrectClick(bubble) {
-        console.log('[LetterPopScene] Incorrect click - wobble');
 
         // Play the letter's audio (e.g., "B", "C", "D") instead of wrong answer sound
-        // Always use uppercase for audio key since files are named A.mp3, B.mp3, etc.
+        // Play letter pronunciation via AudioManager
         const letterAudioKey = `letter_${bubble.letter.toUpperCase()}`;
-        if (this.cache.audio.exists(letterAudioKey)) {
-            this.sound.play(letterAudioKey, { volume: 0.6 });
-            console.log(`[LetterPopScene] Playing letter audio: ${letterAudioKey}`);
-        } else {
-            console.warn(`[LetterPopScene] Letter audio not found: ${letterAudioKey}`);
-        }
+        this.audioManager.playVoice(letterAudioKey, { volume: 0.6 });
 
         // Wobble animation - gentle side-to-side
         this.tweens.add({
@@ -930,7 +884,6 @@ class LetterPopScene extends Phaser.Scene {
 
     incrementScore() {
         this.score++;
-        console.log(`[LetterPopScene] Score: ${this.score}`);
 
         // Update display
         this.updateScoreDisplay();

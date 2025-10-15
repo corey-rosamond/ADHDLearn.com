@@ -4,8 +4,6 @@ class SettingsScene extends Phaser.Scene {
     }
 
     create() {
-        console.log('SettingsScene started');
-
         // Initialize responsive utilities
         this.r = new ResponsiveUtils(this);
 
@@ -214,17 +212,9 @@ class SettingsScene extends Phaser.Scene {
     }
 
     applyVolumeSettings() {
-        // Get volume settings
-        const masterVolume = parseInt(localStorage.getItem('masterVolume') || '100') / 100;
-        const musicVolume = parseInt(localStorage.getItem('musicVolume') || '100') / 100;
-        const sfxVolume = parseInt(localStorage.getItem('sfxVolume') || '100') / 100;
-
-        // Apply master volume to all sounds
-        this.sound.volume = masterVolume;
-
-        // Store individual volumes for later use by game scenes
-        this.game.registry.set('musicVolume', musicVolume);
-        this.game.registry.set('sfxVolume', sfxVolume);
+        // Update AudioManager with new volume settings
+        const audioManager = AudioManager.getInstance();
+        audioManager.updateVolumes();
     }
 
     createBackButton() {
@@ -262,9 +252,16 @@ class SettingsScene extends Phaser.Scene {
         // Hover effect
         button.on('pointerover', () => {
             this.tweens.add({
-                targets: [button, buttonText],
+                targets: button,
                 scaleX: scale * 1.1,
                 scaleY: scale * 1.1,
+                duration: 200,
+                ease: 'Back.easeOut'
+            });
+            this.tweens.add({
+                targets: buttonText,
+                scaleX: 1.1,
+                scaleY: 1.1,
                 duration: 200,
                 ease: 'Back.easeOut'
             });
@@ -273,9 +270,16 @@ class SettingsScene extends Phaser.Scene {
         // Hover out
         button.on('pointerout', () => {
             this.tweens.add({
-                targets: [button, buttonText],
+                targets: button,
                 scaleX: scale,
                 scaleY: scale,
+                duration: 200,
+                ease: 'Back.easeIn'
+            });
+            this.tweens.add({
+                targets: buttonText,
+                scaleX: 1,
+                scaleY: 1,
                 duration: 200,
                 ease: 'Back.easeIn'
             });
@@ -286,7 +290,7 @@ class SettingsScene extends Phaser.Scene {
             button.setTexture('btnBluePressed');
 
             this.tweens.add({
-                targets: [button, buttonText],
+                targets: button,
                 scaleX: scale * 0.95,
                 scaleY: scale * 0.95,
                 duration: 100,
@@ -295,6 +299,13 @@ class SettingsScene extends Phaser.Scene {
                     button.setTexture('btnBlue');
                     this.scene.start('MainMenu');
                 }
+            });
+            this.tweens.add({
+                targets: buttonText,
+                scaleX: 0.95,
+                scaleY: 0.95,
+                duration: 100,
+                yoyo: true
             });
         });
     }
