@@ -361,24 +361,7 @@ class MainMenuScene extends Phaser.Scene {
             repeat: -1
         });
 
-        // Hover effect
-        circle.on('pointerover', () => {
-            this.tweens.add({
-                targets: [bugText],
-                scale: 1.15,
-                duration: 200,
-                ease: 'Back.easeOut'
-            });
-        });
-
-        circle.on('pointerout', () => {
-            this.tweens.add({
-                targets: [bugText],
-                scale: 1,
-                duration: 200,
-                ease: 'Back.easeIn'
-            });
-        });
+        // No hover effect - keep button subtle/hidden
 
         // Click handler
         circle.on('pointerdown', () => {
