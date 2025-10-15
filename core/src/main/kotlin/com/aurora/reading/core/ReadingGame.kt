@@ -4,12 +4,16 @@ import com.badlogic.gdx.Game
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Screen
 import com.badlogic.gdx.graphics.GL20
+import com.aurora.reading.core.assets.Assets
+import com.aurora.reading.core.screens.LoadingScreen
 
-class ReadingGame(private val initialScreen: Screen) : Game() {
+class ReadingGame(private val gameScreen: Screen) : Game() {
 
     override fun create() {
         Gdx.app.log("ReadingGame", "Game created!")
-        setScreen(initialScreen)
+
+        // Start with loading screen
+        setScreen(LoadingScreen(this, gameScreen))
     }
 
     override fun render() {
@@ -19,6 +23,7 @@ class ReadingGame(private val initialScreen: Screen) : Game() {
     }
 
     override fun dispose() {
+        Assets.dispose()
         super.dispose()
     }
 }

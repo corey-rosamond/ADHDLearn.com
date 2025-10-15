@@ -4,9 +4,11 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Screen
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.utils.viewport.FitViewport
+import com.aurora.reading.core.assets.Assets
 
 class BubblePopGame : Screen {
 
@@ -14,6 +16,10 @@ class BubblePopGame : Screen {
     private val viewport: FitViewport
     private val batch: SpriteBatch
     private val font: BitmapFont
+
+    // Test assets
+    private lateinit var backgroundTexture: Texture
+    private lateinit var icon: Texture
 
     init {
         // Target resolution: Samsung Galaxy Tab S7 FE (2560x1600 landscape)
@@ -29,7 +35,13 @@ class BubblePopGame : Screen {
     }
 
     override fun show() {
-        Gdx.app.log("BubblePopGame", "Screen shown")
+        Gdx.app.log("BubblePopGame", "Screen shown - loading assets")
+
+        // Load test assets
+        backgroundTexture = Assets.getTexture(Assets.Images.GAME_BACKGROUND)
+        icon = Assets.getTexture(Assets.Images.ICON_512)
+
+        Gdx.app.log("BubblePopGame", "Assets loaded successfully!")
     }
 
     override fun render(delta: Float) {
@@ -37,10 +49,19 @@ class BubblePopGame : Screen {
         batch.projectionMatrix = camera.combined
 
         batch.begin()
-        font.draw(batch, "Aurora's Reading Adventure", 100f, viewport.worldHeight - 100f)
-        font.draw(batch, "Bubble Pop - Letter Game", 100f, viewport.worldHeight - 200f)
-        font.draw(batch, "Kotlin + libGDX Ready!", 100f, viewport.worldHeight - 300f)
+
+        // Draw background
+        batch.draw(backgroundTexture, 0f, 0f, viewport.worldWidth, viewport.worldHeight)
+
+        // Draw icon
+        batch.draw(icon, 100f, viewport.worldHeight - 612f, 512f, 512f)
+
+        // Draw text
+        font.draw(batch, "Aurora's Reading Adventure", 700f, viewport.worldHeight - 100f)
+        font.draw(batch, "Bubble Pop - Kotlin + libGDX", 700f, viewport.worldHeight - 200f)
+        font.draw(batch, "Assets Loaded Successfully!", 700f, viewport.worldHeight - 300f)
         font.draw(batch, "FPS: ${Gdx.graphics.framesPerSecond}", 100f, 100f)
+
         batch.end()
     }
 

@@ -33,3 +33,10 @@ lwjgl3/
 # OS specific
 .DS_Store
 Thumbs.db
+
+# Node modules
+node_modules/
+.env
+
+# Native libraries (auto-generated)
+android/libs/
