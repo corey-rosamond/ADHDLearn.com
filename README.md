@@ -1,212 +1,202 @@
-# Aurora's Letter Adventure
+# Aurora's Reading Adventure - Kotlin Multiplatform
 
-A browser-based educational game designed specifically for children with ADHD to learn letters and sight words through engaging, multi-sensory mini-games.
-
-## Current Status
-
-**Active Phase:** Phase 13 - (TBD - Check .ai/phases for next phase)
-**Status:** Phase 12 complete
-**Last Updated:** October 13, 2025
-
-## Completed Phases
-
-### Phase 1: Project Bootstrap ✅
-- Created project folder structure
-- Set up Phaser 3 integration via CDN
-- Created basic HTML and config files
-- Verified Phaser rendering works
-- **Completed:** October 12, 2025
-
-### Phase 2: Basic Scene System ✅
-- Implemented BootScene, PreloadScene, and MainMenuScene
-- Set up automatic scene transitions
-- Added console logging for debugging
-- Established scene architecture pattern
-- **Completed:** October 12, 2025
-
-### Phase 3: Asset Loading Infrastructure ✅
-- Created test assets (image and audio)
-- Implemented progress bar in PreloadScene
-- Added asset loading with preload() method
-- Created MainScene to display and test loaded assets
-- Verified asset loading pipeline works
-- **Completed:** October 12, 2025
-
-### Phase 4: AudioManager Service ✅
-- Created AudioManager singleton service in src/services/
-- Implemented sound effect playback with overlap prevention
-- Implemented voice clip playback with interruption control
-- Added separate volume controls for sounds and voices
-- Integrated with MainScene for testing
-- Established audio management pattern for all scenes
-- **Completed:** October 12, 2025
-
-### Phase 5: Main Menu UI ✅
-- Created colorful gradient background (purple → pink → orange)
-- Implemented interactive START button with hover/click animations
-- Added audio feedback on button interactions
-- Created smooth scene transition to Letter Pop game
-- Implemented ADHD-friendly design (large buttons, immediate feedback)
-- Created LetterPopScene placeholder
-- **Completed:** October 12, 2025
-
-### Phase 6: Letter Pop Scene Setup ✅
-- Enhanced LetterPopScene with sky blue to turquoise gradient background
-- Added "Letter Pop!" title (64px) with blue stroke at top-center
-- Added subtitle "Pop the bubbles to learn letters!" below title
-- Implemented back button in top-left with red/coral color
-- Added hover/click animations matching MainMenuScene pattern
-- All 45 Gherkin acceptance criteria passed
-- Scene ready for bubble gameplay elements
-- **Completed:** October 12, 2025
-
-### Phase 7: First Bubble Display ✅
-- Created Bubble.js game object class extending Phaser.GameObjects.Container
-- Implemented 6-layer gradient rendering (shadow, outer/middle/inner gradients, highlight, border)
-- Added letter text display centered in bubble with 56px bold font
-- Bubble displays with professional gradient and glossy appearance
-- Positioned bubble at center (400, 300) with letter "A"
-- All 42 Gherkin acceptance criteria verified
-- Foundation established for animation and interaction
-- **Completed:** October 12, 2025
-
-### Phase 8: Bubble Interaction ✅
-- Made Bubble interactive with circular hit area (70px radius)
-- Added pointerdown event handler triggering onPop() method
-- Implemented pop sound playback with immediate feedback
-- Implemented letter audio playback with 100ms delay
-- Added pop animation: scale to 1.5x and fade to 0 over 300ms with Power2 easing
-- Added disableInteractive() to prevent multiple clicks
-- Proper cleanup with destroy() after animation completes
-- Graceful handling of missing audio files
-- All 31 Gherkin acceptance criteria verified
-- Core interaction mechanic complete
-- **Completed:** October 12, 2025
-
-### Phase 9: Multiple Bubbles ✅
-- Added bubbles array to LetterPopScene for tracking multiple instances
-- Preloaded audio for letters B and C
-- Implemented generateSpawnPositions() with collision avoidance algorithm
-- Spawns 3 bubbles with letters A, B, C at different X positions
-- Minimum 150px spacing prevents visual overlap
-- Fallback after 50 attempts prevents infinite loops
-- Each bubble independently clickable with correct letter audio
-- Dynamic audio key generation works automatically
-- All 35 Gherkin acceptance criteria verified
-- Multi-instance system complete
-- **Completed:** October 12, 2025
-
-### Phase 10: Target Letter Game Logic ✅
-- Implemented target letter selection system (random from A-Z)
-- Added audio instruction playback with graceful fallback
-- Implemented handleCorrectClick with 8-particle celebration effect
-- Correct clicks: success sound, scale to 1.5x, fade out, destroy (300ms)
-- Implemented handleIncorrectClick with gentle wobble (150ms)
-- Incorrect clicks: bubbles stay on screen (non-punitive)
-- Modified Bubble class to delegate click handling to scene
-- Ensures target letter is included in spawned bubbles
-- Added score tracking (display in Phase 11)
-- All 49 Gherkin acceptance criteria verified
-- ADHD-friendly design: immediate feedback, non-punitive errors
-- **Completed:** October 12, 2025
-
-### Phase 11: Score System ✅
-- Created score display UI (top-left, 28px bold white with stroke)
-- Created time display UI (top-right, 24px white with stroke)
-- Score increments only on correct clicks (non-punitive)
-- Score never decreases (positive reinforcement)
-- Display updates immediately with pulse animation (1.0 → 1.2 → 1.0)
-- Time tracks elapsed gameplay (M:SS format)
-- Updates every second via timer event
-- Both UI elements at depth 1000 (always visible)
-- Updated audio preload for all 26 letters A-Z
-- All 60+ Gherkin acceptance criteria verified
-- ADHD-friendly: clear, encouraging, immediate feedback
-- **Completed:** October 13, 2025
-
-### Phase 12: Round System & Complete Game Loop ✅
-- Implemented 10-letter rounds (complete start-to-finish gameplay)
-- Added round state tracking (letter sequence, current index)
-- Created generateLetterSequence() - 10 random letters per round
-- Added progress indicator "Letter X of 10" display
-- Implemented round completion detection (after 10th correct)
-- Created ResultsScene with score (X/10) and time display
-- Performance messages based on score percentage
-- Perfect score celebration with star particles
-- Play Again button with hover/click animations
-- Data passing between scenes via scene.start()
-- Complete game loop: Play → Results → Play Again
-- State resets properly for new rounds
-- Multiple rounds playable consecutively
-- All acceptance criteria verified
-- ADHD-friendly: Fixed endpoint, immediate replay, encouraging messages
-- **Completed:** October 13, 2025
-
-## Next Steps
-
-- Explore Phase 13+ in `.ai/phases/` directory
-- Potential features: Difficulty levels, high scores, additional mini-games
-- Continue ADHD-friendly design principles
-- Expand game content and replayability
+libGDX-based game written in Kotlin, compiling to multiple platforms from a single codebase.
 
 ## Project Structure
 
 ```
-/Alphabet & Sight Words Game
-├── index.html              # Main HTML entry point
-├── /assets                 # Game assets
-│   ├── /audio              # Sound effects and voice files
-│   ├── /images             # Sprites and backgrounds
-│   └── /data               # JSON data files
-├── /src                    # Source code
-│   ├── config.js           # Phaser game configuration
-│   └── /scenes             # Game scenes
-└── /.ai                    # Development documentation
-    ├── PERSONA.md          # Developer identity and methodology
-    ├── GUARDRAILS.md       # Code quality standards
-    ├── START.md            # Development entry point
-    └── /phases             # Phase-by-phase implementation docs
+project/
+├── core/                       # Shared Kotlin code (utilities, base framework)
+│   └── src/main/kotlin/
+│       └── com/aurora/reading/core/
+│           └── ReadingGame.kt
+├── games/
+│   └── bubble-pop/             # Letter Pop game logic
+│       └── src/main/kotlin/
+│           └── com/aurora/reading/bubblepop/
+│               └── BubblePopGame.kt
+├── android/                    # Android launcher app
+│   └── src/main/kotlin/
+│       └── com/aurora/reading/
+│           └── AndroidLauncher.kt
+├── assets/                     # Shared game assets (TODO: migrate from Phaser)
+└── archive/
+    └── phaser-web/             # Original Phaser.js version (reference)
 ```
 
 ## Technology Stack
 
-- **Phaser 3.80.1** - Game framework
-- **HTML5 Canvas** - Rendering
-- **Web Audio API** - Sound (via Phaser)
-- **LocalStorage** - Progress persistence
+- **Language:** Kotlin 1.9.23
+- **Framework:** libGDX 1.12.1
+- **Physics:** Box2D (native C++ engine)
+- **Build:** Gradle 8.4
+- **Target Platforms:**
+  - ✅ Android (native) - **WORKING**
+  - ⏳ Web (Kotlin/JS) - TODO
+  - ⏳ Desktop (JVM) - TODO
 
-## Development Approach
+## Development
 
-This project follows a strict **Behavior-Driven Development (BDD)** methodology with 44 planned phases. Each phase includes:
-- PLAN.md - Detailed implementation plan
-- UML.md - Architecture diagrams
-- GHERKIN.md - BDD acceptance criteria
+### Prerequisites
 
-## Getting Started
+- **JDK 17+** (currently using 21)
+- **Android SDK** (API 33)
+- **Gradle 8.4** (included via wrapper)
 
-1. Open `index.html` in a modern web browser
-2. No build process or server required
-3. All assets load from local files
+### Building
 
-## For Developers
+```bash
+# Build all modules
+./gradlew build
 
-Start here: `.ai/START.md`
+# Build and assemble Android debug APK
+./gradlew android:assembleDebug
 
-This file contains:
-- Current phase information
-- Required reading before development
-- Development workflow
-- End-of-phase checklist
+# Output: android/build/outputs/apk/debug/android-debug.apk
 
-## Target User
+# Install to connected device/emulator
+adb install -r android/build/outputs/apk/debug/android-debug.apk
+```
 
-**Aurora** - A young learner with ADHD who needs:
-- Immediate feedback on all interactions
-- Short activity cycles (2-3 minutes)
-- Non-punitive error handling
-- Clear progress visibility
-- Engaging multi-sensory experiences
+### Running on Device
+
+```bash
+# Start Android emulator (if you have one configured)
+emulator -avd <your_avd_name>
+
+# Or connect physical device via USB and enable USB debugging
+
+# Install and run
+./gradlew android:installDebug
+```
+
+## Project Modules
+
+### core/
+Shared utilities and base game framework
+- `ReadingGame.kt` - Main game class accepting an initial Screen
+- Platform-agnostic code
+- No dependencies on specific games
+
+### games/bubble-pop/
+Letter Pop game implementation (in progress)
+- `BubblePopGame.kt` - Demo screen with FPS counter
+- Game screens (Main Menu, Settings, Letter Pop, Results) - TODO
+- Bubble physics with Box2D - TODO
+- Letter recognition gameplay - TODO
+- Score tracking - TODO
+
+### android/
+Android launcher
+- `AndroidLauncher.kt` - Android activity
+- Android-specific configuration
+- Native library packaging (automatic)
+
+## Target Device
+
+- **Primary:** Samsung Galaxy Tab S7 FE
+- **Screen:** 12.4" (2560x1600)
+- **Orientation:** Landscape
+- **API Level:** 33 (Android 13)
+- **Min SDK:** 24 (Android 7.0)
+
+## Phase 2.7 Progress
+
+### Completed ✅
+1. ✅ Installed JDK, Gradle, Android SDK
+2. ✅ Set up Kotlin + libGDX project structure
+3. ✅ Created modular architecture (core, games/bubble-pop, android)
+4. ✅ **First successful Android build**
+5. ✅ Generated working APK (android-debug.apk)
+
+### Next Steps ⏳
+6. ⏳ Create Android emulator for Tab S7 FE
+7. ⏳ Test APK on emulator
+8. ⏳ Port Main Menu scene from Phaser
+9. ⏳ Port Settings scene
+10. ⏳ Port Letter Pop Menu scene
+11. ⏳ Port Letter Pop game with Box2D physics
+12. ⏳ Port Results scene
+13. ⏳ Migrate assets from archive/phaser-web/assets/
+14. ⏳ Build release APK
+
+## Architecture Benefits
+
+The game follows a modular architecture:
+- **Core module:** Platform-agnostic game logic
+- **Game modules:** Individual games (bubble-pop, future: sight-words, etc.)
+- **Platform modules:** Platform-specific launchers (android, web, desktop)
+
+This provides:
+- ✅ Code reuse across platforms
+- ✅ Easy addition of new games
+- ✅ Separation of concerns
+- ✅ Native performance on each platform
+- ✅ Single codebase for all platforms
+
+## Performance Goals
+
+| Metric | Phaser (WebView) | Kotlin (Native Target) |
+|--------|------------------|------------------------|
+| FPS | 55-60 (drops to 45) | Locked 60 |
+| Bubble Count | 10-12 max | 50+ |
+| Touch Latency | 50-80ms | 10-20ms |
+| Memory Usage | ~150MB | ~80MB |
+| Physics Steps | 30/sec | 60/sec |
+| APK Size | 30MB (WebView) | ~15MB (native) |
+
+## Migration from Phaser
+
+The original Phaser.js version is archived in `archive/phaser-web/` for reference.
+
+**Porting strategy:**
+1. Study Phaser scene structure
+2. Recreate as libGDX Screen classes
+3. Replace Phaser Arcade Physics with Box2D
+4. Migrate assets to `assets/` directory
+5. Port game logic to Kotlin
+
+## Development Commands
+
+```bash
+# Clean build
+./gradlew clean
+
+# Build all
+./gradlew build
+
+# Android debug APK
+./gradlew android:assembleDebug
+
+# Android release APK (requires signing config)
+./gradlew android:assembleRelease
+
+# Run tests
+./gradlew test
+
+# List all tasks
+./gradlew tasks
+```
+
+## Troubleshooting
+
+**Build fails with "Unknown Kotlin JVM target"**
+- Ensure Kotlin version matches JVM target in build.gradle.kts
+- Current: Kotlin 1.9.23 with JVM target 17
+
+**Android SDK not found**
+- Set `ANDROID_HOME` environment variable: `export ANDROID_HOME=$HOME/android/sdk`
+- Or create `local.properties` with: `sdk.dir=/path/to/android/sdk`
+
+**Gradle daemon issues**
+- Kill daemons: `./gradlew --stop`
+- Clean build: `./gradlew clean build`
 
 ## License
 
 Personal project for Aurora.
+
+---
+
+**Current Status:** Phase 2.7.1 complete - Project structure and first build successful ✅
+**Last Updated:** October 16, 2025

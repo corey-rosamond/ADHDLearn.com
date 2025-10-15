@@ -1,16 +1,35 @@
-# Environment variables (contains API keys and secrets)
-.env
+# Gradle
+.gradle/
+build/
+*.iml
+*.ipr
+*.iws
+.idea/
+out/
+local.properties
 
-# Node modules
-node_modules/
+# Android
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+gen/
+proguard/
+lint/
 
-# OS files
+# libGDX
+lwjgl3/
+
+# Java/Kotlin
+*.log
+*.tmp
+*.bak
+*.swp
+*~.nib
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# OS specific
 .DS_Store
 Thumbs.db
-
-# Editor files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
