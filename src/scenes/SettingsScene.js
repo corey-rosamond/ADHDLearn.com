@@ -262,9 +262,16 @@ class SettingsScene extends Phaser.Scene {
         // Hover effect
         button.on('pointerover', () => {
             this.tweens.add({
-                targets: [button, buttonText],
+                targets: button,
                 scaleX: scale * 1.1,
                 scaleY: scale * 1.1,
+                duration: 200,
+                ease: 'Back.easeOut'
+            });
+            this.tweens.add({
+                targets: buttonText,
+                scaleX: 1.1,
+                scaleY: 1.1,
                 duration: 200,
                 ease: 'Back.easeOut'
             });
@@ -273,9 +280,16 @@ class SettingsScene extends Phaser.Scene {
         // Hover out
         button.on('pointerout', () => {
             this.tweens.add({
-                targets: [button, buttonText],
+                targets: button,
                 scaleX: scale,
                 scaleY: scale,
+                duration: 200,
+                ease: 'Back.easeIn'
+            });
+            this.tweens.add({
+                targets: buttonText,
+                scaleX: 1,
+                scaleY: 1,
                 duration: 200,
                 ease: 'Back.easeIn'
             });
@@ -286,7 +300,7 @@ class SettingsScene extends Phaser.Scene {
             button.setTexture('btnBluePressed');
 
             this.tweens.add({
-                targets: [button, buttonText],
+                targets: button,
                 scaleX: scale * 0.95,
                 scaleY: scale * 0.95,
                 duration: 100,
@@ -295,6 +309,13 @@ class SettingsScene extends Phaser.Scene {
                     button.setTexture('btnBlue');
                     this.scene.start('MainMenu');
                 }
+            });
+            this.tweens.add({
+                targets: buttonText,
+                scaleX: 0.95,
+                scaleY: 0.95,
+                duration: 100,
+                yoyo: true
             });
         });
     }
