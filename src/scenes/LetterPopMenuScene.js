@@ -112,17 +112,13 @@ class LetterPopMenuScene extends Phaser.Scene {
 
         // Load saved settings or use defaults
         const timePerRound = localStorage.getItem('letterPop_timePerRound') || '10';
-        const enableChances = localStorage.getItem('letterPop_enableChances') || 'false';
         const letterCase = localStorage.getItem('letterPop_letterCase') || 'uppercase';
 
         // Time Per Round Slider
         this.createTimeSlider(timePerRound, startY);
 
-        // Enable 3 Chances Toggle
-        this.createChancesToggle(enableChances, startY + spacing);
-
         // Letter Case Mode Selector
-        this.createCaseSelector(letterCase, startY + (spacing * 2));
+        this.createCaseSelector(letterCase, startY + spacing);
     }
 
     createTimeSlider(initialValue, y) {
@@ -225,6 +221,9 @@ class LetterPopMenuScene extends Phaser.Scene {
         });
     }
 
+    // REMOVED: 3 Chances mode toggle
+    // This feature has been disabled for now
+    /*
     createChancesToggle(initialValue, y) {
         const isEnabled = initialValue === 'true';
 
@@ -294,6 +293,7 @@ class LetterPopMenuScene extends Phaser.Scene {
             isEnabled = newState;
         });
     }
+    */
 
     createCaseSelector(initialValue, y) {
         // Label
