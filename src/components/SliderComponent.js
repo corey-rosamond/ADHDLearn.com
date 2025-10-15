@@ -19,6 +19,8 @@ class SliderComponent {
      * @param {string} config.suffix - Value suffix like '%' or 's' (default: '')
      * @param {number} config.barWidth - Slider bar width (default: 700 scaled)
      * @param {number} config.barHeight - Slider bar height (default: 15 scaled)
+     * @param {number} config.labelFontSize - Label font size (default: 32 scaled)
+     * @param {number} config.valueFontSize - Value font size (default: 32 scaled)
      * @param {function} config.onValueChange - Callback(value) when value changes
      * @returns {object} Slider components and getValue() method
      *
@@ -49,7 +51,7 @@ class SliderComponent {
 
         // Label text
         const labelText = scene.add.text(x, y, label + ':', {
-            fontSize: scene.r.getFontSize(28) + 'px',
+            fontSize: scene.r.getFontSize(32) + 'px',
             fontFamily: ThemeConfig.FONTS.primary,
             color: ThemeConfig.COLORS.text.secondary,
             fontStyle: 'bold',
@@ -59,7 +61,7 @@ class SliderComponent {
 
         // Value display
         const valueText = scene.add.text(scene.r.getX(80), y, initialValue + suffix, {
-            fontSize: scene.r.getFontSize(28) + 'px',
+            fontSize: scene.r.getFontSize(32) + 'px',
             fontFamily: ThemeConfig.FONTS.primary,
             color: ThemeConfig.COLORS.text.primary,
             fontStyle: 'bold',
