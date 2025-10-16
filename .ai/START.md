@@ -22,7 +22,23 @@ This defines WHO you are as the developer for this project. You are a 41-year-ol
 - You prefer detailed debugging over "simpler solutions"
 - BDD methodology is non-negotiable
 
-### 2. Read Development Guardrails (REQUIRED)
+### 2. Read Session Memory (RECOMMENDED)
+```
+Read: .ai/MEMORY.md
+```
+This contains detailed notes from the most recent development session, including:
+- What was accomplished in the last session
+- Issues encountered and how they were resolved
+- Where we left off and immediate next steps
+- Important commands and configuration changes
+- Environment setup and troubleshooting notes
+
+**When to read this:**
+- At the start of a new session to pick up where you left off
+- When encountering similar issues to what was solved before
+- When you need context about recent architectural decisions
+
+### 3. Read Development Guardrails (REQUIRED)
 ```
 Read: .ai/GUARDRAILS.md
 ```

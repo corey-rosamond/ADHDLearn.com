@@ -29,6 +29,7 @@ object Assets {
         const val BTN_SETTING_PRESSED = "ui/Btn_Setting_Pressed.png"
         const val BTN_HOME = "ui/Btn_Home.png"
         const val BTN_PAUSE = "ui/Btn_Pause.png"
+        const val BOX_BG = "ui/Box_Bg.png"
     }
 
     object Audio {
@@ -68,6 +69,7 @@ object Assets {
         manager.load(UI.BTN_SETTING_PRESSED, Texture::class.java)
         manager.load(UI.BTN_HOME, Texture::class.java)
         manager.load(UI.BTN_PAUSE, Texture::class.java)
+        manager.load(UI.BOX_BG, Texture::class.java)
 
         // Load audio
         manager.load(Audio.BUBBLE_POP, Sound::class.java)
