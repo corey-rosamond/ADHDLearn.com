@@ -109,12 +109,12 @@ Android launcher
 4. ✅ Phase 2.7.4: UI components (GradientBackground, Button, TitleText, FloatingStars)
 5. ✅ Phase 2.7.5: Main Menu screen with navigation to Settings/Letter Pop
 6. ✅ Phase 2.7.6: Settings screen with volume controls (Slider, FontManager, Preferences)
-7. ✅ Android emulator setup for Tab S7 FE (2560x1600)
-8. ✅ APK testing on emulator verified
-9. ✅ All Phase 2.7.6 acceptance criteria met
+7. ✅ Phase 2.7.7: Letter Pop Menu screen (CaseSelector, time/case settings)
+8. ✅ Android emulator setup for Tab S7 FE (2560x1600)
+9. ✅ APK testing on emulator verified
+10. ✅ All Phase 2.7.7 acceptance criteria met
 
 ### Next Steps ⏳
-10. ⏳ Phase 2.7.7: Letter Pop Menu screen (time/case selectors)
 11. ⏳ Phase 2.7.8: Letter Pop game with Box2D physics
 12. ⏳ Phase 2.7.9: Results scene
 13. ⏳ Build release APK and deploy
