@@ -75,11 +75,11 @@ class BubblePopGame : Screen {
             y = r.getY(82f),
             fontSize = titleFontSize,
             textColor = Color(1.0f, 0.92f, 0.23f, 1f),  // #FFEB3B Yellow
-            strokeColor = Color(0.61f, 0.15f, 0.69f, 1f), // #9C27B0 Purple inner
-            strokeWidth = r.scaleX(0.31f),
+            borderColor = Color(0.61f, 0.15f, 0.69f, 1f), // #9C27B0 Purple inner
+            borderWidth = r.scaleX(0.31f),
             bounceIn = true,
-            outerStrokeColor = Color.WHITE,  // White outer stroke
-            outerStrokeWidth = r.scaleX(0.5f)
+            // outerStrokeColor = Color.WHITE,  // White outer stroke
+            // outerStrokeWidth = r.scaleX(0.5f)
         )
 
         // Line 2: "READING" at 28% from top = 72% from bottom
@@ -89,11 +89,11 @@ class BubblePopGame : Screen {
             y = r.getY(72f),
             fontSize = titleFontSize,
             textColor = Color(1.0f, 0.92f, 0.23f, 1f),  // #FFEB3B Yellow
-            strokeColor = Color(0.61f, 0.15f, 0.69f, 1f), // #9C27B0 Purple inner
-            strokeWidth = r.scaleX(0.31f),
+            borderColor = Color(0.61f, 0.15f, 0.69f, 1f), // #9C27B0 Purple inner
+            borderWidth = r.scaleX(0.31f),
             bounceIn = true,
-            outerStrokeColor = Color.WHITE,  // White outer stroke
-            outerStrokeWidth = r.scaleX(0.5f)
+            // outerStrokeColor = Color.WHITE,  // White outer stroke
+            // outerStrokeWidth = r.scaleX(0.5f)
         )
 
         // Line 3: "ADVENTURE" at 38% from top = 62% from bottom
@@ -103,11 +103,11 @@ class BubblePopGame : Screen {
             y = r.getY(62f),
             fontSize = titleFontSize,
             textColor = Color(1.0f, 0.92f, 0.23f, 1f),  // #FFEB3B Yellow
-            strokeColor = Color(0.61f, 0.15f, 0.69f, 1f), // #9C27B0 Purple inner
-            strokeWidth = r.scaleX(0.31f),
+            borderColor = Color(0.61f, 0.15f, 0.69f, 1f), // #9C27B0 Purple inner
+            borderWidth = r.scaleX(0.31f),
             bounceIn = true,
-            outerStrokeColor = Color.WHITE,  // White outer stroke
-            outerStrokeWidth = r.scaleX(0.5f)
+            // outerStrokeColor = Color.WHITE,  // White outer stroke
+            // outerStrokeWidth = r.scaleX(0.5f)
         )
 
         // Settings button - top-right corner (92% X, 8% from top = 92% from bottom)

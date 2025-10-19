@@ -1,5 +1,21 @@
 # Development Guide - Cache Management
 
+---
+## ⚠️ DEPRECATED - PHASER VERSION ONLY
+
+**This guide applies to the archived Phaser.js web version located in `archive/phaser-web/`.**
+
+**Current Project:** The active project is now **Kotlin + libGDX** (native Android).
+
+**For current development:**
+- See `.ai/START.md` for Kotlin/libGDX development workflow
+- See `.ai/MEMORY.md` for recent session notes
+- See `.ai/UBUNTU_SETUP.md` for Android development setup
+
+**This file is kept for reference only.** Service workers and PWA functionality are not applicable to the native Android version.
+
+---
+
 ## Problem: Service Worker Caching
 
 The game uses a **Service Worker** for PWA (Progressive Web App) functionality. This caches all assets for offline use, but during development, this means you can't see your changes without clearing the cache.

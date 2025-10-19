@@ -13,6 +13,7 @@ import com.aurora.reading.core.config.ThemeConfig
  */
 object AudioManager : Disposable {
 
+    private var masterVolume = 1f
     private var sfxVolume = ThemeConfig.Audio.DEFAULT_SFX_VOLUME
     private var voiceVolume = ThemeConfig.Audio.DEFAULT_VOICE_VOLUME
     private var musicVolume = ThemeConfig.Audio.DEFAULT_MUSIC_VOLUME
@@ -26,9 +27,10 @@ object AudioManager : Disposable {
     fun playSfx(path: String, volume: Float = sfxVolume) {
         try {
             val sound = Assets.getSound(path)
-            val soundId = sound.play(volume)
+            val finalVolume = volume * masterVolume
+            val soundId = sound.play(finalVolume)
             activeSounds.add(soundId)
-            Gdx.app.log("AudioManager", "Playing SFX: $path at volume $volume")
+            Gdx.app.log("AudioManager", "Playing SFX: $path at volume $finalVolume (base: $volume, master: $masterVolume)")
         } catch (e: Exception) {
             Gdx.app.error("AudioManager", "Failed to play SFX: $path", e)
         }
@@ -85,8 +87,9 @@ object AudioManager : Disposable {
 
         try {
             val sound = Assets.getSound(path)
-            currentVoice = sound.play(volume)
-            Gdx.app.log("AudioManager", "Playing voice: $path at volume $volume")
+            val finalVolume = volume * masterVolume
+            currentVoice = sound.play(finalVolume)
+            Gdx.app.log("AudioManager", "Playing voice: $path at volume $finalVolume (base: $volume, master: $masterVolume)")
         } catch (e: Exception) {
             Gdx.app.error("AudioManager", "Failed to play voice: $path", e)
         }
@@ -111,6 +114,23 @@ object AudioManager : Disposable {
      */
     fun playWelcome() {
         playVoice(Assets.Audio.WELCOME)
+    }
+
+    /**
+     * Set master volume (0.0 - 1.0)
+     * Affects all audio output
+     */
+    fun setMasterVolume(volume: Float) {
+        masterVolume = volume.coerceIn(0f, 1f)
+        Gdx.app.log("AudioManager", "Master volume set to: $masterVolume")
+    }
+
+    /**
+     * Set sound volume (0.0 - 1.0)
+     * Alias for setSfxVolume for Settings screen compatibility
+     */
+    fun setSoundVolume(volume: Float) {
+        setSfxVolume(volume)
     }
 
     /**

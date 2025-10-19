@@ -2,18 +2,22 @@ package com.aurora.reading.core
 
 import com.badlogic.gdx.Game
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.Screen
 import com.badlogic.gdx.graphics.GL20
 import com.aurora.reading.core.assets.Assets
 import com.aurora.reading.core.screens.LoadingScreen
+import com.aurora.reading.core.screens.MainMenuScreen
+import com.aurora.reading.core.services.FontManager
 
-class ReadingGame(private val gameScreen: Screen) : Game() {
+class ReadingGame : Game() {
 
     override fun create() {
         Gdx.app.log("ReadingGame", "Game created!")
 
-        // Start with loading screen
-        setScreen(LoadingScreen(this, gameScreen))
+        // Initialize FontManager for crisp text rendering
+        FontManager.init()
+
+        // Start with loading screen, which will transition to Main Menu
+        setScreen(LoadingScreen(this, MainMenuScreen(this)))
     }
 
     override fun render() {
@@ -23,6 +27,7 @@ class ReadingGame(private val gameScreen: Screen) : Game() {
     }
 
     override fun dispose() {
+        FontManager.dispose()
         Assets.dispose()
         super.dispose()
     }

@@ -1,5 +1,22 @@
 # AudioManager Integration Guide
 
+---
+## ⚠️ DEPRECATED - PHASER VERSION ONLY
+
+**This guide applies to the archived Phaser.js web version located in `archive/phaser-web/`.**
+
+**Current Project:** The active project is now **Kotlin + libGDX** (native Android).
+
+**For current audio implementation:**
+- See `core/src/main/kotlin/com/aurora/reading/core/services/AudioManager.kt`
+- Uses libGDX audio system (Sound and Music classes)
+- Different API and patterns than Phaser version
+- Singleton pattern with libGDX asset manager integration
+
+**This file is kept for reference only.** The Phaser patterns described here do not apply to the Kotlin/libGDX version.
+
+---
+
 ## Overview
 
 The `AudioManager` is a singleton service that provides centralized audio management for the entire game. It integrates seamlessly with the game's volume settings stored in localStorage.

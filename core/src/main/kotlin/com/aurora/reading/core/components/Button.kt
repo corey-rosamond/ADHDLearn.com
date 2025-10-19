@@ -6,14 +6,18 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.GlyphLayout
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.math.Rectangle
-import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.utils.Disposable
 import com.aurora.reading.core.assets.Assets
 import com.aurora.reading.core.config.ThemeConfig
+import com.aurora.reading.core.services.FontManager
 import kotlin.math.abs
 
 /**
- * Interactive button component with hover and click animations
+ * Interactive button component with crisp text rendering
+ *
+ * Uses FreeTypeFontGenerator for sharp, clear button labels.
+ * Supports hover and click animations.
+ * Can display an optional icon above the text.
  */
 class Button(
     private var x: Float,
@@ -24,6 +28,8 @@ class Button(
     private val text: String = "",
     private val fontSize: Int = ThemeConfig.Fonts.BUTTON_SIZE,
     private val textColor: Color = ThemeConfig.Colors.TEXT_WHITE,
+    private val iconTexture: Texture? = null,
+    private val iconSize: Float = 0f,
     private val onClick: () -> Unit = {}
 ) : Disposable {
 
@@ -46,10 +52,8 @@ class Button(
     private val bounds = Rectangle(x, y, width, height)
 
     init {
-        font = BitmapFont().apply {
-            data.setScale(fontSize / 40f)
-            color = textColor
-        }
+        // Generate crisp font at exact size
+        font = FontManager.getFont(fontSize, textColor)
 
         if (text.isNotEmpty()) {
             glyphLayout.setText(font, text)
@@ -89,6 +93,9 @@ class Button(
 
     /**
      * Handle touch up event
+     *
+     * Note: Supports "quick taps" where touch down might be missed (instant ADB touches, very fast taps).
+     * Any touch up within bounds will trigger onClick, regardless of whether we saw the touch down.
      */
     fun handleTouchUp(touchX: Float, touchY: Float): Boolean {
         if (!enabled) return false
@@ -96,8 +103,12 @@ class Button(
         val wasPressed = isPressed
         isPressed = false
 
-        if (wasPressed && bounds.contains(touchX, touchY)) {
+        com.badlogic.gdx.Gdx.app.log("Button", "handleTouchUp at ($touchX, $touchY), bounds=(${bounds.x}, ${bounds.y}, ${bounds.width}, ${bounds.height}), contains=${bounds.contains(touchX, touchY)}")
+
+        // Trigger onClick for any touch release within bounds, even if we missed the touch down
+        if (bounds.contains(touchX, touchY)) {
             targetScale = if (isHovered) 1.1f else 1f
+            com.badlogic.gdx.Gdx.app.log("Button", "onClick triggered!")
             onClick()
             return true
         }
@@ -150,14 +161,40 @@ class Button(
         batch.draw(texture, scaledX, scaledY, scaledWidth, scaledHeight)
         batch.color = prevColor
 
-        // Draw text if present
+        // Draw icon if present (positioned above text, scales with button)
+        if (iconTexture != null && iconSize > 0f) {
+            val scaledIconSize = iconSize * currentScale
+            val iconX = scaledX + scaledWidth / 2f - scaledIconSize / 2f
+            val iconY = scaledY + scaledHeight / 2f + scaledIconSize / 6f  // Position above center
+
+            batch.setColor(1f, 1f, 1f, alpha)
+            batch.draw(iconTexture, iconX, iconY, scaledIconSize, scaledIconSize)
+            batch.color = prevColor
+        }
+
+        // Draw text if present (positioned below icon if icon exists, scales with button)
         if (text.isNotEmpty()) {
-            val textX = x + width / 2f - glyphLayout.width / 2f
-            val textY = y + height / 2f + glyphLayout.height / 2f
+            val scaledTextX = scaledX + scaledWidth / 2f - (glyphLayout.width * currentScale) / 2f
+            val scaledTextY = if (iconTexture != null && iconSize > 0f) {
+                // Position text below icon
+                scaledY + scaledHeight / 2f - (glyphLayout.height * currentScale) * 0.5f
+            } else {
+                // Center text normally
+                scaledY + scaledHeight / 2f + (glyphLayout.height * currentScale) / 2f
+            }
 
             val prevFontColor = font.color.cpy()
             font.color = if (enabled) textColor else Color(textColor.r, textColor.g, textColor.b, 0.5f)
-            font.draw(batch, text, textX, textY)
+
+            // Scale font rendering
+            val prevScaleX = font.data.scaleX
+            val prevScaleY = font.data.scaleY
+            font.data.setScale(currentScale)
+
+            font.draw(batch, text, scaledTextX, scaledTextY)
+
+            // Restore font scale
+            font.data.setScale(prevScaleX, prevScaleY)
             font.color = prevFontColor
         }
     }
@@ -203,6 +240,6 @@ class Button(
     fun getBounds(): Rectangle = bounds
 
     override fun dispose() {
-        font.dispose()
+        // Font is managed by FontManager, don't dispose here
     }
 }

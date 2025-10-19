@@ -17,6 +17,18 @@ object Assets {
         const val GAME_BACKGROUND = "images/game-background.png"
         const val ICON_192 = "images/icon-192.png"
         const val ICON_512 = "images/icon-512.png"
+
+        // Fun decorative assets from Game Assets library
+        const val BUG_MONSTER = "images/onet26-bug.png"  // Purple 3-eyed monster
+        const val BUG_ALT = "images/onet08-bug-alt.png"  // Orange excited blob
+        const val ICECREAM = "images/onet17-icecream.png"
+        const val DONUT = "images/onet18-donut.png"
+        const val CUPCAKE = "images/onet19-cupcake.png"
+        const val FLOWER = "images/onet27-flower.png"
+        const val CROWN = "images/icon-crown.png"
+        const val ICON_HINTS = "images/icon-hints.png"  // Magnifying glass (debug/inspection)
+        const val HEART_RED = "images/heart-red.png"  // Red glossy heart decoration
+        const val HEART_GEM = "images/heart-gem.png"  // Pink gem heart decoration
     }
 
     object UI {
@@ -58,6 +70,18 @@ object Assets {
         manager.load(Images.GAME_BACKGROUND, Texture::class.java)
         manager.load(Images.ICON_192, Texture::class.java)
         manager.load(Images.ICON_512, Texture::class.java)
+
+        // Load decorative assets
+        manager.load(Images.BUG_MONSTER, Texture::class.java)
+        manager.load(Images.BUG_ALT, Texture::class.java)
+        manager.load(Images.ICECREAM, Texture::class.java)
+        manager.load(Images.DONUT, Texture::class.java)
+        manager.load(Images.CUPCAKE, Texture::class.java)
+        manager.load(Images.FLOWER, Texture::class.java)
+        manager.load(Images.CROWN, Texture::class.java)
+        manager.load(Images.ICON_HINTS, Texture::class.java)
+        manager.load(Images.HEART_RED, Texture::class.java)
+        manager.load(Images.HEART_GEM, Texture::class.java)
 
         // Load UI elements
         manager.load(UI.BTN_BLUE, Texture::class.java)

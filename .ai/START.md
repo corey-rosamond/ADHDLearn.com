@@ -1,8 +1,8 @@
 # START HERE - Development Entry Point
 
 ## Current Status
-**Active Phase:** Phase 2.7.6 - Settings Screen Implementation
-**Status:** Ready to implement (documentation required)
+**Active Phase:** Phase 2.7.7 - Letter Pop Menu Screen
+**Status:** Ready to plan (documentation required)
 **Estimated Time:** TBD
 **Technology:** Kotlin + libGDX (native Android)
 
@@ -59,30 +59,30 @@ This defines code quality standards, best practices, and common pitfalls to avoi
 
 ## Current Phase Documentation
 
-### Phase 2.7.6: Settings Screen Implementation
+### Phase 2.7.7: Letter Pop Menu Screen
 
 **Documentation Status:** ⚠️ NOT YET CREATED
 
-**Before implementing Phase 2.7.6, you MUST create:**
+**Before implementing Phase 2.7.7, you MUST create:**
 
 1. **PLAN.md** - Implementation plan with tasks and code examples
    ```
-   Create: .ai/phases/phase-2.7.6/PLAN.md
+   Create: .ai/phases/phase-2.7.7/PLAN.md
    ```
 
 2. **UML.md** - Architecture diagrams (Mermaid)
    ```
-   Create: .ai/phases/phase-2.7.6/UML.md
+   Create: .ai/phases/phase-2.7.7/UML.md
    ```
 
 3. **GHERKIN.md** - BDD acceptance criteria
    ```
-   Create: .ai/phases/phase-2.7.6/GHERKIN.md
+   Create: .ai/phases/phase-2.7.7/GHERKIN.md
    ```
 
 **After creating documentation, you should understand:**
-- What needs to be built (Settings screen with volume sliders and back button)
-- How it should be architected (libGDX Screen with slider components)
+- What needs to be built (Letter Pop menu with time slider, case selector, and start button)
+- How it should be architected (libGDX Screen with slider and selector components)
 - How to verify it's correct (BDD scenarios and manual tests)
 
 ---
@@ -107,8 +107,9 @@ This project is a **native port** of a Phaser.js web game. The original web vers
 - ✅ Phase 2.7.3: Core architecture complete
 - ✅ Phase 2.7.4: UI components translated (GradientBackground, Button, TitleText, FloatingStars)
 - ✅ Phase 2.7.5: Main Menu screen navigation complete
-- 🔄 Phase 2.7.6: Settings screen (current phase)
-- ⏳ Phase 2.7.7+: Additional screens and game logic
+- ✅ Phase 2.7.6: Settings screen complete (Slider, FontManager, volume controls)
+- 🔄 Phase 2.7.7: Letter Pop Menu screen (current phase)
+- ⏳ Phase 2.7.8+: Additional screens and game logic
 
 ---
 
@@ -117,9 +118,9 @@ This project is a **native port** of a Phaser.js web game. The original web vers
 ### Step 1: Read Documentation (DONE ABOVE)
 ✅ Read PERSONA.md
 ✅ Read GUARDRAILS.md
-✅ Read phase-2.7.5/PLAN.md
-✅ Read phase-2.7.5/UML.md
-✅ Read phase-2.7.5/GHERKIN.md
+✅ Read phase-2.7.6/PLAN.md
+✅ Read phase-2.7.6/UML.md
+✅ Read phase-2.7.6/GHERKIN.md
 
 ### Step 2: Implement Phase
 - Follow PLAN.md tasks sequentially
@@ -195,7 +196,7 @@ git commit -m "Complete Phase 2.7.5: Main Menu Screen
 - Manual testing complete
 - 60 FPS performance verified
 
-🤖 Generated with Claude Code"
+Authored-By: Corey Rosamond <rosamond.corey@gmail.com>"
 
 git push
 ```
@@ -259,34 +260,42 @@ Do not start Phase 2.7.6 until:
         │   ├── PLAN.md            # ✅ Complete
         │   ├── UML.md             # ✅ Complete
         │   └── GHERKIN.md         # ✅ Complete
-        └── phase-2.7.6/                # Settings Screen (current)
+        ├── phase-2.7.6/                # Settings Screen (complete)
+        │   ├── PLAN.md            # ✅ Complete
+        │   ├── UML.md             # ✅ Complete
+        │   └── GHERKIN.md         # ✅ Complete
+        └── phase-2.7.7/                # Letter Pop Menu (current)
             ├── PLAN.md            # ⏳ To be created
             ├── UML.md             # ⏳ To be created
             └── GHERKIN.md         # ⏳ To be created
 ```
 
 ### Current Phase Goals
-**Phase 2.7.6 Goal:** Implement Settings screen with volume controls and back navigation
+**Phase 2.7.7 Goal:** Implement Letter Pop Menu screen with game configuration
 
 **You will create:**
-- SettingsScreen class (replacing current stub)
-- Volume slider components for master/voice/sound
+- LetterPopMenuScreen class (replacing current stub)
+- Time limit slider (30 seconds to 5 minutes)
+- Letter case selector (Uppercase/Lowercase/Mixed)
+- Start Game button to launch Letter Pop
 - Back button to return to Main Menu
-- Volume persistence using Preferences
+- Game configuration persistence using Preferences
 - Animated transitions
 - Responsive layout for 2560x1600 (Tab S7 FE)
 
-**Reusing from Phase 2.7.4/2.7.5:**
-- GradientBackground (purple → pink gradient)
-- TitleText ("SETTINGS" title)
-- Button (back button component)
+**Reusing from Phase 2.7.4/2.7.5/2.7.6:**
+- GradientBackground (purple → orange gradient)
+- TitleText ("LETTER POP" title)
+- Button (start and back buttons)
+- Slider (time limit slider from Phase 2.7.6)
+- FloatingDecorations (visual polish)
 - ResponsiveUtils (percentage-based positioning)
 - ThemeConfig (color palette and fonts)
-- AudioManager (volume control integration)
+- FontManager (crisp text rendering)
 
 **Acceptance Criteria (TBD - create GHERKIN.md first):**
 - Documentation must be created before implementation
-- Phase 2.7.5 must be fully complete and committed
+- Phase 2.7.6 must be fully complete and committed
 - All prerequisites from PERSONA.md must be met
 
 **Time Estimate:** TBD (after documentation complete)
@@ -456,14 +465,14 @@ Check `archive/phaser-web/src/scenes/MainMenuScene.js` for the original Phaser i
 
 ## Ready?
 
-Before starting Phase 2.7.6, you must:
+Before starting Phase 2.7.7, you must:
 - ✅ PERSONA.md (your identity and methodology)
 - ✅ GUARDRAILS.md (code standards)
-- ⚠️ phase-2.7.6/PLAN.md (MUST CREATE FIRST)
-- ⚠️ phase-2.7.6/UML.md (MUST CREATE FIRST)
-- ⚠️ phase-2.7.6/GHERKIN.md (MUST CREATE FIRST)
+- ⚠️ phase-2.7.7/PLAN.md (MUST CREATE FIRST)
+- ⚠️ phase-2.7.7/UML.md (MUST CREATE FIRST)
+- ⚠️ phase-2.7.7/GHERKIN.md (MUST CREATE FIRST)
 
-**Phase 2.7.6 documentation must be created before implementation.**
+**Phase 2.7.7 documentation must be created before implementation.**
 
 Per PERSONA.md: "I ADAMANTLY REFUSE to begin development without proper documentation."
 
@@ -477,8 +486,8 @@ Let's build something great for Aurora.
 
 ---
 
-**Last Updated:** October 18, 2025
+**Last Updated:** October 19, 2025
 **Branch:** staging
 **Build:** android-debug.apk (13MB)
 **Target Device:** Samsung Galaxy Tab S7 FE (2560x1600)
-**Phase 2.7.5 Status:** ✅ Complete - Navigation working, screens created
+**Phase 2.7.6 Status:** ✅ Complete - Settings screen with volume controls working
