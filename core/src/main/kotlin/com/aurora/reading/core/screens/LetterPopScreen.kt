@@ -3,6 +3,7 @@ package com.aurora.reading.core.screens
 import com.aurora.reading.core.assets.Assets
 import com.aurora.reading.core.components.*
 import com.aurora.reading.core.config.ThemeConfig
+import com.aurora.reading.core.models.GameResult
 import com.aurora.reading.core.services.AudioManager
 import com.aurora.reading.core.services.FontManager
 import com.aurora.reading.core.utils.ResponsiveUtils
@@ -65,6 +66,7 @@ class LetterPopScreen(private val game: Game) : Screen {
 
     // Timer
     private var timeRemaining = 10f
+    private var totalTimeElapsed = 0f // Track total time for results screen (Phase 2.7.9)
 
     // Bubbles
     private val bubbles = mutableListOf<Bubble>()
@@ -383,13 +385,23 @@ class LetterPopScreen(private val game: Game) : Screen {
      */
     private fun handleRoundComplete() {
         Gdx.app.log("LetterPopScreen", "Round complete! Final score: $score/10")
+        Gdx.app.log("LetterPopScreen", "Total time elapsed: ${String.format("%.1f", totalTimeElapsed)}s")
 
         // Play success sound
         AudioManager.playSuccess()
 
-        // Show results screen (TODO: Phase 2.7.9)
-        // For now, return to main menu
-        navigateToMainMenu()
+        // Create game result (Phase 2.7.9)
+        val result = GameResult(
+            score = score,
+            totalQuestions = 10,
+            timeLimit = timePerLetter.toFloat(),
+            totalTimeElapsed = totalTimeElapsed,
+            letterCase = letterCase
+        )
+
+        // Navigate to results screen (Phase 2.7.9)
+        Gdx.app.log("LetterPopScreen", "Navigating to ResultsScreen")
+        game.screen = ResultsScreen(game, result)
     }
 
     /**
@@ -502,9 +514,10 @@ class LetterPopScreen(private val game: Game) : Screen {
     }
 
     override fun render(delta: Float) {
-        // Update timer
+        // Update timer and total time elapsed
         if (!isFadingOut && titleFadeDelay <= 0) {
             timeRemaining -= delta
+            totalTimeElapsed += delta // Track total time for results (Phase 2.7.9)
 
             if (timeRemaining <= 0) {
                 handleTimeExpired()
