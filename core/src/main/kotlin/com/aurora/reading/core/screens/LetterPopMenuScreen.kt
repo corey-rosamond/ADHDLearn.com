@@ -175,14 +175,11 @@ class LetterPopMenuScreen(private val game: Game) : Screen {
     private fun startGame() {
         if (transitioning) return
         Gdx.app.log("LetterPopMenuScreen", "Starting Letter Pop game...")
+        Gdx.app.log("LetterPopMenuScreen", "Game start - Time: ${timeSlider.getValue()}s, Case: ${caseSelector.getValue()}")
         AudioManager.playCorrect()
 
-        // TODO: Phase 2.7.8 - Navigate to actual game screen
-        // For now, just show a log message
-        Gdx.app.log("LetterPopMenuScreen", "Game start - Time: ${timeSlider.getValue()}s, Case: ${caseSelector.getValue()}")
-
-        // Placeholder: Navigate back to main menu for now
-        navigateToMainMenu()
+        // Navigate to Letter Pop game screen (Phase 2.7.8)
+        startFadeOut(LetterPopScreen(game))
     }
 
     private fun navigateToMainMenu() {
