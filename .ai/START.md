@@ -1,10 +1,10 @@
 # START HERE - Development Entry Point
 
 ## Current Status
-**Active Phase:** Phase 2.7.10+ - Next Feature (TBD)
-**Status:** Pending - Phase 2.7.9 complete, awaiting next requirements
-**Estimated Time:** TBD
-**Technology:** Kotlin + libGDX (native Android)
+**Active Phase:** Phase 2.7.10 - Web Version (HTML5/GWT)
+**Status:** Ready to begin - Phase 2.7.11 complete (McCabe refactoring)
+**Estimated Time:** 4-6 hours
+**Technology:** Kotlin + libGDX (GWT backend for HTML5)
 
 ---
 
@@ -80,31 +80,31 @@ Directory: .ai/reports/
 
 ## Current Phase Documentation
 
-### Phase 2.7.9: Results Screen Implementation
+### Phase 2.7.10: Web Version (HTML5/GWT)
 
-**Documentation Status:** ⚠️ NOT YET CREATED
+**Documentation Status:** ✅ COMPLETE
 
-**Before implementing Phase 2.7.9, you MUST create:**
+**Documentation location:**
 
 1. **PLAN.md** - Implementation plan with tasks and code examples
    ```
-   Create: .ai/phases/phase-2.7.9/PLAN.md
+   Read: .ai/phases/phase-2.7.10/PLAN.md
    ```
 
 2. **UML.md** - Architecture diagrams (Mermaid)
    ```
-   Create: .ai/phases/phase-2.7.9/UML.md
+   Read: .ai/phases/phase-2.7.10/UML.md
    ```
 
 3. **GHERKIN.md** - BDD acceptance criteria
    ```
-   Create: .ai/phases/phase-2.7.9/GHERKIN.md
+   Read: .ai/phases/phase-2.7.10/GHERKIN.md
    ```
 
-**After creating documentation, you should understand:**
-- What needs to be built (Results screen with score, stars, statistics)
-- How it should be architected (Screen layout, animations, navigation)
-- How to verify it's correct (BDD scenarios and manual tests)
+**After reading documentation, you should understand:**
+- What needs to be built (GWT module, HTML launcher, web-compatible audio)
+- How it should be architected (GWT backend, asset embedding, browser APIs)
+- How to verify it's correct (BDD scenarios and browser testing)
 
 ---
 
@@ -132,7 +132,8 @@ This project is a **native port** of a Phaser.js web game. The original web vers
 - ✅ Phase 2.7.7: Letter Pop Menu screen complete (CaseSelector, game settings)
 - ✅ Phase 2.7.8: Letter Pop Game complete (Bubble physics, timer, scoring)
 - ✅ Phase 2.7.9: Results Screen complete (GameResult, StarRating, celebration)
-- ⏳ Phase 2.7.10+: Additional features (TBD - high scores, more games, achievements)
+- ✅ Phase 2.7.11: McCabe Complexity Refactoring (all functions ≤5 complexity)
+- ⏳ Phase 2.7.10: Web Version (HTML5/GWT implementation)
 
 ---
 
@@ -319,36 +320,39 @@ Do not start next phase until:
 ```
 
 ### Current Phase Goals
-**Phase 2.7.9 Goal:** Implement Results Screen to display game performance
+**Phase 2.7.10 Goal:** Create web version of the game using GWT backend
 
 **You will create:**
-- ResultsScreen class
-- Final score display (X/10)
-- Star rating based on performance (1-3 stars)
-- Accuracy percentage
-- Time taken display
-- "Play Again" button to restart Letter Pop
-- "Main Menu" button to return home
-- Celebratory animations
-- Responsive layout for 2560x1600 (Tab S7 FE)
+- `html/` module with GWT configuration
+- HtmlLauncher class
+- GWT module descriptor (GdxDefinition.gwt.xml)
+- webapp/ directory with HTML entry point
+- Web-compatible audio implementation
+- Asset embedding for web deployment
+- Build configuration for GWT compilation
 
-**Reusing from Phase 2.7.4/2.7.5/2.7.6/2.7.8:**
-- GradientBackground (purple → pink gradient)
-- TitleText ("GREAT JOB!" or similar)
-- Button (play again and main menu buttons)
-- FloatingDecorations (visual celebration)
-- BalloonIcon (celebratory visuals)
-- ResponsiveUtils (percentage-based positioning)
-- ThemeConfig (color palette and fonts)
-- FontManager (crisp text rendering)
-- AudioManager (celebration sounds)
+**Web-specific considerations:**
+- Replace Box2D native library with emulated version
+- Handle browser audio limitations (Web Audio API)
+- Optimize asset loading for web
+- Configure build.gradle for GWT
+- Test in multiple browsers
 
-**Acceptance Criteria (TBD - create GHERKIN.md first):**
-- Documentation must be created before implementation
-- Phase 2.7.8 must be fully complete and committed
-- All prerequisites from PERSONA.md must be met
+**Reusing all existing screens and components:**
+- All screens from Phases 2.7.5 through 2.7.9
+- All UI components (Button, Slider, etc.)
+- Core architecture (ReadingGame, ThemeConfig)
+- Asset system (with web compatibility layer)
 
-**Time Estimate:** TBD (after documentation complete)
+**Acceptance Criteria (see GHERKIN.md):**
+- GWT module compiles successfully
+- Game runs in web browser
+- All screens functional in browser
+- Audio works in browser
+- Touch/mouse input works correctly
+- 60 FPS performance maintained
+
+**Time Estimate:** 4-6 hours (from PLAN.md)
 
 ---
 
@@ -515,29 +519,29 @@ Check `archive/phaser-web/src/scenes/MainMenuScene.js` for the original Phaser i
 
 ## Ready?
 
-Before starting Phase 2.7.7, you must:
+Before starting Phase 2.7.10, you must:
 - ✅ PERSONA.md (your identity and methodology)
 - ✅ GUARDRAILS.md (code standards)
-- ⚠️ phase-2.7.7/PLAN.md (MUST CREATE FIRST)
-- ⚠️ phase-2.7.7/UML.md (MUST CREATE FIRST)
-- ⚠️ phase-2.7.7/GHERKIN.md (MUST CREATE FIRST)
+- ✅ phase-2.7.10/PLAN.md (COMPLETE)
+- ✅ phase-2.7.10/UML.md (COMPLETE)
+- ✅ phase-2.7.10/GHERKIN.md (COMPLETE)
 
-**Phase 2.7.7 documentation must be created before implementation.**
+**Phase 2.7.10 documentation already exists.**
 
 Per PERSONA.md: "I ADAMANTLY REFUSE to begin development without proper documentation."
 
-Once documentation is complete:
-- Start implementing
-- Follow the plan
-- Test thoroughly
+Ready to implement:
+- Read the documentation in `.ai/phases/phase-2.7.10/`
+- Follow the plan step-by-step
+- Test in browser thoroughly
 - Commit properly
 
 Let's build something great for Aurora.
 
 ---
 
-**Last Updated:** October 19, 2025
+**Last Updated:** October 21, 2025
 **Branch:** staging
 **Build:** android-debug.apk (14MB)
 **Target Device:** Samsung Galaxy Tab S7 FE (2560x1600)
-**Phase 2.7.9 Status:** ✅ Complete - Results screen with star rating and celebration working
+**Phase 2.7.11 Status:** ✅ Complete - McCabe refactoring (100% functions ≤5 complexity)

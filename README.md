@@ -112,13 +112,14 @@ Android launcher
 7. ✅ Phase 2.7.7: Letter Pop Menu screen (CaseSelector, time/case settings)
 8. ✅ Phase 2.7.8: Letter Pop game (Bubble physics, TimerBar, scoring system)
 9. ✅ Phase 2.7.9: Results screen (GameResult, StarRating, celebration feedback)
-10. ✅ Android emulator setup for Tab S7 FE (2560x1600)
-11. ✅ APK testing on emulator verified
-12. ✅ All Phase 2.7.9 acceptance criteria met
+10. ✅ Phase 2.7.11: McCabe complexity refactoring (all functions ≤5 complexity)
+11. ✅ Android emulator setup for Tab S7 FE (2560x1600)
+12. ✅ APK testing on emulator verified
 
 ### Next Steps ⏳
-13. ⏳ Phase 2.7.10+: Additional features (high scores, more games, achievements)
-14. ⏳ Build release APK and deploy
+13. ⏳ Phase 2.7.10: Web Version (HTML5/GWT implementation)
+14. ⏳ Additional features (high scores, more games, achievements)
+15. ⏳ Build release APK and deploy
 
 ## Architecture Benefits
 
@@ -198,6 +199,6 @@ Personal project for Aurora.
 
 ---
 
-**Current Status:** Phase 2.7.9 complete - Results screen with star rating and celebration ✅
-**Next Phase:** Phase 2.7.10+ - Additional features (TBD)
-**Last Updated:** October 19, 2025
+**Current Status:** Phase 2.7.11 complete - McCabe refactoring (100% functions ≤5 complexity) ✅
+**Next Phase:** Phase 2.7.10 - Web Version (HTML5/GWT)
+**Last Updated:** October 21, 2025
