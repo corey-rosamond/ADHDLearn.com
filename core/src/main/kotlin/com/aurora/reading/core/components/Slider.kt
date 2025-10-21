@@ -125,18 +125,13 @@ class Slider(
     }
 
     fun handleTouchDown(touchX: Float, touchY: Float): Boolean {
-        // Check if touch is on handle
-        val distance = Vector2(touchX - handleX, touchY - handleY).len()
-        if (distance <= handleRadius * handleScale * 1.5f) {
+        if (isTouchOnHandle(touchX, touchY)) {
             isDragging = true
             return true
         }
 
-        // Check if touch is on bar (snap to position)
-        if (touchX >= barX && touchX <= barX + barWidth &&
-            touchY >= barY - handleRadius && touchY <= barY + barHeight + handleRadius) {
-            handleX = touchX.coerceIn(barX, barX + barWidth)
-            updateValue()
+        if (isTouchOnBar(touchX, touchY)) {
+            snapToPosition(touchX)
             isDragging = true
             return true
         }
@@ -152,21 +147,49 @@ class Slider(
     }
 
     fun handleTouchUp(touchX: Float, touchY: Float) {
-        // Support "tap-to-set" for instant touches (ADB, very fast taps)
         if (!isDragging) {
-            // Check if touch is on bar and snap to position
-            val inXRange = touchX >= barX && touchX <= barX + barWidth
-            val inYRange = touchY >= barY - handleRadius && touchY <= barY + barHeight + handleRadius
-
-            com.badlogic.gdx.Gdx.app.log("Slider", "Touch up at ($touchX, $touchY) - barX=$barX, barY=$barY, barWidth=$barWidth, barHeight=$barHeight, handleRadius=$handleRadius, inX=$inXRange, inY=$inYRange")
-
-            if (inXRange && inYRange) {
-                handleX = touchX.coerceIn(barX, barX + barWidth)
-                updateValue()
-                com.badlogic.gdx.Gdx.app.log("Slider", "Tap-to-set activated! New value=$currentValue")
-            }
+            handleTapToSet(touchX, touchY)
         }
         isDragging = false
+    }
+
+    /**
+     * Check if touch is on handle
+     */
+    private fun isTouchOnHandle(touchX: Float, touchY: Float): Boolean {
+        val distance = Vector2(touchX - handleX, touchY - handleY).len()
+        return distance <= handleRadius * handleScale * 1.5f
+    }
+
+    /**
+     * Check if touch is on bar
+     */
+    private fun isTouchOnBar(touchX: Float, touchY: Float): Boolean {
+        return touchX >= barX && touchX <= barX + barWidth &&
+               touchY >= barY - handleRadius && touchY <= barY + barHeight + handleRadius
+    }
+
+    /**
+     * Snap handle to touch position
+     */
+    private fun snapToPosition(touchX: Float) {
+        handleX = touchX.coerceIn(barX, barX + barWidth)
+        updateValue()
+    }
+
+    /**
+     * Handle tap-to-set for instant touches
+     */
+    private fun handleTapToSet(touchX: Float, touchY: Float) {
+        val inXRange = touchX >= barX && touchX <= barX + barWidth
+        val inYRange = touchY >= barY - handleRadius && touchY <= barY + barHeight + handleRadius
+
+        com.badlogic.gdx.Gdx.app.log("Slider", "Touch up at ($touchX, $touchY) - inX=$inXRange, inY=$inYRange")
+
+        if (inXRange && inYRange) {
+            snapToPosition(touchX)
+            com.badlogic.gdx.Gdx.app.log("Slider", "Tap-to-set activated! New value=$currentValue")
+        }
     }
 
     // Overload for compatibility

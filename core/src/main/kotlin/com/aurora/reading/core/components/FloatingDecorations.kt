@@ -80,33 +80,50 @@ class FloatingDecorations(
      */
     fun update(delta: Float) {
         for (decoration in decorations) {
-            // Move decoration
-            decoration.x += decoration.velocityX * delta
-            decoration.y += decoration.velocityY * delta
+            updatePosition(decoration, delta)
+            updateRotation(decoration, delta)
+            updateAlpha(decoration, delta)
+            wrapAroundEdges(decoration)
+        }
+    }
 
-            // Rotate decoration
-            decoration.rotation += decoration.rotationSpeed * delta
+    /**
+     * Update decoration position
+     */
+    private fun updatePosition(decoration: Decoration, delta: Float) {
+        decoration.x += decoration.velocityX * delta
+        decoration.y += decoration.velocityY * delta
+    }
 
-            // Pulse alpha
-            decoration.alpha += decoration.alphaSpeed * delta * 0.5f
-            if (decoration.alpha > 0.8f) {
-                decoration.alpha = 0.8f
-            } else if (decoration.alpha < 0.4f) {
-                decoration.alpha = 0.4f
-            }
+    /**
+     * Update decoration rotation
+     */
+    private fun updateRotation(decoration: Decoration, delta: Float) {
+        decoration.rotation += decoration.rotationSpeed * delta
+    }
 
-            // Wrap around screen edges
-            if (decoration.x < -size) {
-                decoration.x = worldWidth + size
-            } else if (decoration.x > worldWidth + size) {
-                decoration.x = -size
-            }
+    /**
+     * Update decoration alpha pulsing
+     */
+    private fun updateAlpha(decoration: Decoration, delta: Float) {
+        decoration.alpha += decoration.alphaSpeed * delta * 0.5f
+        decoration.alpha = decoration.alpha.coerceIn(0.4f, 0.8f)
+    }
 
-            if (decoration.y < -size) {
-                decoration.y = worldHeight + size
-            } else if (decoration.y > worldHeight + size) {
-                decoration.y = -size
-            }
+    /**
+     * Wrap decoration around screen edges
+     */
+    private fun wrapAroundEdges(decoration: Decoration) {
+        if (decoration.x < -size) {
+            decoration.x = worldWidth + size
+        } else if (decoration.x > worldWidth + size) {
+            decoration.x = -size
+        }
+
+        if (decoration.y < -size) {
+            decoration.y = worldHeight + size
+        } else if (decoration.y > worldHeight + size) {
+            decoration.y = -size
         }
     }
 

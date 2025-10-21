@@ -183,23 +183,31 @@ class FloatingStars(
      */
     fun update(delta: Float) {
         for (star in stars) {
-            // Update position
-            star.x += star.vx * delta
-            star.y += star.vy * delta
-
-            // Update rotation
-            star.rotation += star.rotationSpeed * delta
-
-            // Wrap around screen edges
-            if (star.x < -50f) star.x = worldWidth + 50f
-            if (star.x > worldWidth + 50f) star.x = -50f
-            if (star.y < -50f) star.y = worldHeight + 50f
-            if (star.y > worldHeight + 50f) star.y = -50f
-
-            // Gentle alpha pulsing
-            star.alpha += MathUtils.random(-0.1f, 0.1f) * delta
-            star.alpha = star.alpha.coerceIn(0.3f, 0.8f)
+            updateStarPosition(star, delta)
+            updateStarVisuals(star, delta)
         }
+    }
+
+    /**
+     * Update star position and wrap around edges
+     */
+    private fun updateStarPosition(star: Star, delta: Float) {
+        star.x += star.vx * delta
+        star.y += star.vy * delta
+
+        if (star.x < -50f) star.x = worldWidth + 50f
+        if (star.x > worldWidth + 50f) star.x = -50f
+        if (star.y < -50f) star.y = worldHeight + 50f
+        if (star.y > worldHeight + 50f) star.y = -50f
+    }
+
+    /**
+     * Update star rotation and alpha
+     */
+    private fun updateStarVisuals(star: Star, delta: Float) {
+        star.rotation += star.rotationSpeed * delta
+        star.alpha += MathUtils.random(-0.1f, 0.1f) * delta
+        star.alpha = star.alpha.coerceIn(0.3f, 0.8f)
     }
 
     /**
@@ -207,46 +215,61 @@ class FloatingStars(
      */
     fun draw(batch: SpriteBatch) {
         for (star in stars) {
-            if (useEmoji && star.emoji != null && emojiFont != null) {
-                // Draw emoji star
-                val prevFontColor = emojiFont.color.cpy()
-                emojiFont.color = Color(star.color.r, star.color.g, star.color.b, star.alpha)
-                emojiFont.data.setScale((emojiSize / 40f) * star.scale)
-                emojiFont.draw(batch, star.emoji, star.x, star.y)
-                emojiFont.color = prevFontColor
-                emojiFont.data.setScale(emojiSize / 40f)
-            } else if (star.texture != null) {
-                // Draw procedural star
-                val baseSize = if (largeStars) starSize else 32f
-                val size = baseSize * star.scale
-                val originX = size / 2f
-                val originY = size / 2f
-
-                val prevColor = batch.color.cpy()
-                batch.setColor(1f, 1f, 1f, star.alpha)
-
-                batch.draw(
-                    star.texture,
-                    star.x - originX,
-                    star.y - originY,
-                    originX,
-                    originY,
-                    size,
-                    size,
-                    1f,
-                    1f,
-                    star.rotation,
-                    0,
-                    0,
-                    star.texture.width,
-                    star.texture.height,
-                    false,
-                    false
-                )
-
-                batch.color = prevColor
+            when {
+                useEmoji && star.emoji != null && emojiFont != null -> drawEmojiStar(batch, star)
+                star.texture != null -> drawTextureStar(batch, star)
             }
         }
+    }
+
+    /**
+     * Draw emoji-based star
+     */
+    private fun drawEmojiStar(batch: SpriteBatch, star: Star) {
+        emojiFont ?: return
+
+        val prevFontColor = emojiFont.color.cpy()
+        emojiFont.color = Color(star.color.r, star.color.g, star.color.b, star.alpha)
+        emojiFont.data.setScale((emojiSize / 40f) * star.scale)
+        emojiFont.draw(batch, star.emoji, star.x, star.y)
+        emojiFont.color = prevFontColor
+        emojiFont.data.setScale(emojiSize / 40f)
+    }
+
+    /**
+     * Draw texture-based star
+     */
+    private fun drawTextureStar(batch: SpriteBatch, star: Star) {
+        val texture = star.texture ?: return
+
+        val baseSize = if (largeStars) starSize else 32f
+        val size = baseSize * star.scale
+        val originX = size / 2f
+        val originY = size / 2f
+
+        val prevColor = batch.color.cpy()
+        batch.setColor(1f, 1f, 1f, star.alpha)
+
+        batch.draw(
+            texture,
+            star.x - originX,
+            star.y - originY,
+            originX,
+            originY,
+            size,
+            size,
+            1f,
+            1f,
+            star.rotation,
+            0,
+            0,
+            texture.width,
+            texture.height,
+            false,
+            false
+        )
+
+        batch.color = prevColor
     }
 
     override fun dispose() {
