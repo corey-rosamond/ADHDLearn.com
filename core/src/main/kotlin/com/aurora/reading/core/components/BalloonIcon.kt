@@ -32,11 +32,31 @@ class BalloonIcon(
         val pixmap = Pixmap(pixmapSize, pixmapSize, Pixmap.Format.RGBA8888)
 
         val centerX = pixmapSize / 2f
-        val centerY = pixmapSize / 2.2f  // Slightly higher for balloon shape
+        val centerY = pixmapSize / 2.2f
         val radiusX = pixmapSize / 2.5f
-        val radiusY = pixmapSize / 2.2f  // Taller oval
+        val radiusY = pixmapSize / 2.2f
 
-        // Draw balloon body (filled oval)
+        // Draw balloon components
+        drawBalloonBody(pixmap, pixmapSize, centerX, centerY, radiusX, radiusY)
+        drawShineHighlight(pixmap, pixmapSize, centerX, centerY, radiusX, radiusY)
+        drawBalloonString(pixmap, pixmapSize, centerX, centerY, radiusY)
+
+        val texture = Texture(pixmap)
+        pixmap.dispose()
+        return texture
+    }
+
+    /**
+     * Draw the main balloon body as a filled oval
+     */
+    private fun drawBalloonBody(
+        pixmap: Pixmap,
+        pixmapSize: Int,
+        centerX: Float,
+        centerY: Float,
+        radiusX: Float,
+        radiusY: Float
+    ) {
         for (py in 0 until pixmapSize) {
             for (px in 0 until pixmapSize) {
                 val dx = (px - centerX) / radiusX
@@ -44,11 +64,9 @@ class BalloonIcon(
                 val distance = sqrt(dx * dx + dy * dy)
 
                 if (distance <= 1.0f) {
-                    // Inside balloon - apply color with smooth edge
                     val edge = 1.0f - distance
                     val alpha = edge.coerceIn(0f, 1f)
 
-                    // Main balloon color
                     pixmap.setColor(
                         balloonColor.r,
                         balloonColor.g,
@@ -59,8 +77,19 @@ class BalloonIcon(
                 }
             }
         }
+    }
 
-        // Add shine highlight (white ellipse in top-left)
+    /**
+     * Draw the shine highlight on the balloon
+     */
+    private fun drawShineHighlight(
+        pixmap: Pixmap,
+        pixmapSize: Int,
+        centerX: Float,
+        centerY: Float,
+        radiusX: Float,
+        radiusY: Float
+    ) {
         val shineX = centerX - radiusX * 0.3f
         val shineY = centerY - radiusY * 0.3f
         val shineRadiusX = radiusX * 0.35f
@@ -76,12 +105,10 @@ class BalloonIcon(
                     val edge = 1.0f - distance
                     val alpha = (edge * shineIntensity).coerceIn(0f, 1f)
 
-                    // White shine
                     val existing = Color()
                     val color = pixmap.getPixel(px, py)
                     Color.rgba8888ToColor(existing, color)
 
-                    // Blend white shine with existing color
                     val blendedR = existing.r + (1f - existing.r) * alpha
                     val blendedG = existing.g + (1f - existing.g) * alpha
                     val blendedB = existing.b + (1f - existing.b) * alpha
@@ -91,8 +118,18 @@ class BalloonIcon(
                 }
             }
         }
+    }
 
-        // Draw balloon string (small line at bottom)
+    /**
+     * Draw the balloon string with knot
+     */
+    private fun drawBalloonString(
+        pixmap: Pixmap,
+        pixmapSize: Int,
+        centerX: Float,
+        centerY: Float,
+        radiusY: Float
+    ) {
         val stringStartX = centerX.toInt()
         val stringStartY = (centerY + radiusY * 0.9f).toInt()
         val stringLength = (pixmapSize * 0.2f).toInt()
@@ -112,22 +149,26 @@ class BalloonIcon(
 
             if (sx in 0 until pixmapSize && sy in 0 until pixmapSize) {
                 pixmap.drawPixel(sx, sy)
-                // Make string slightly thicker
                 if (sx + 1 < pixmapSize) pixmap.drawPixel(sx + 1, sy)
             }
         }
 
-        // Draw knot at bottom of string
-        val knotX = stringStartX
-        val knotY = stringStartY + stringLength
+        // Draw knot at bottom
+        drawKnot(pixmap, stringStartX, stringStartY + stringLength)
+    }
+
+    /**
+     * Draw knot at the end of the balloon string
+     */
+    private fun drawKnot(pixmap: Pixmap, x: Int, y: Int) {
         val knotRadius = 2
-
-        pixmap.setColor(balloonColor.r * 0.6f, balloonColor.g * 0.6f, balloonColor.b * 0.6f, 0.9f)
-        pixmap.fillCircle(knotX, knotY, knotRadius)
-
-        val texture = Texture(pixmap)
-        pixmap.dispose()
-        return texture
+        pixmap.setColor(
+            balloonColor.r * 0.6f,
+            balloonColor.g * 0.6f,
+            balloonColor.b * 0.6f,
+            0.9f
+        )
+        pixmap.fillCircle(x, y, knotRadius)
     }
 
     /**
