@@ -1,3 +1,3 @@
 rootProject.name = "AurorasReadingAdventure"
 
-include("core", "android", "games:bubble-pop")
+include("core", "android", "html", "games:bubble-pop")

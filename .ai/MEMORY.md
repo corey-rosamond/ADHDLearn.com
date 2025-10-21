@@ -79,7 +79,31 @@ Before marking phase complete:
 
 ---
 
-## Next Phase: 2.7.10 Web Version
+## Phase 2.7.10: Web Version (IN PROGRESS - BLOCKED)
 
-**Documentation:** `.ai/phases/phase-2.7.10/` (PLAN.md, UML.md, GHERKIN.md)
-**Ready:** Yes - All prereqs complete
+**Status:** Blocked by GWT+Kotlin compatibility issues
+
+**Technical Issue:**
+- GWT (Google Web Toolkit) was designed for Java → JavaScript
+- Kotlin support in GWT is experimental and problematic
+- FreeType extension not available for GWT (breaks FontManager)
+- Core module in Kotlin cannot be properly compiled by GWT
+
+**What Works:**
+- html module created with proper structure
+- GWT gradle plugin configured
+- HtmlLauncher.java created
+- GWT module descriptor created
+- HTML page template ready
+- Assets symlinked
+
+**What Doesn't Work:**
+- GWT cannot find/compile Kotlin sources from core module
+- Error: "No source code is available for type com.aurora.reading.core.ReadingGame"
+
+**Options to Continue:**
+1. Rewrite core module in Java (defeats Kotlin benefits)
+2. Use Kotlin/JS instead of GWT (modern, but complete rewrite)
+3. Skip web version entirely (Android works perfectly)
+
+**Recommendation:** Discuss with user before proceeding
