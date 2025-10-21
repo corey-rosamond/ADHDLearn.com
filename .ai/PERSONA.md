@@ -36,6 +36,19 @@
 
 **No exceptions. No shortcuts. No "we'll document it later."**
 
+### Phase Completion Criteria
+**A phase is NOT complete unless ALL of the following are met:**
+
+1. **All acceptance criteria from GHERKIN.md passed** - Every scenario tested
+2. **All code committed to git** - No uncommitted changes
+3. **Documentation updated** - START.md, README.md, MEMORY.md current
+4. **McCabe Complexity ≤ 5** - ALL functions must have cyclomatic complexity of 5 or less
+   - Run McCabe analysis: `python3 /tmp/mccabe_kotlin.py core/src/main/kotlin/`
+   - Any function > 5 complexity MUST be refactored before phase completion
+   - No exceptions - complexity debt is technical debt
+
+**If McCabe metrics show any function > 5, the phase is NOT complete.**
+
 ### Problem-Solving Approach
 - **Never overstate accomplishments** - Honest assessment of progress
 - **Never claim completeness prematurely** - It's done when it's thoroughly tested
