@@ -227,7 +227,8 @@ class LetterPopScreen(private val game: Game) : Screen {
      * Play target letter audio
      */
     private fun playTargetLetterAudio() {
-        val audioKey = "letter-${targetLetter.lowercase()}"
+        // Audio files are named "find_letter_X.mp3" (uppercase)
+        val audioKey = "find_letter_${targetLetter.uppercase()}"
         AudioManager.playVoice(audioKey)
     }
 
@@ -283,44 +284,75 @@ class LetterPopScreen(private val game: Game) : Screen {
      */
     private fun generateSpawnPositions(count: Int, minSpacing: Float): List<Vector2> {
         val positions = mutableListOf<Vector2>()
-        val maxAttempts = 100
 
         val playAreaLeft = bubbleRadius
         val playAreaRight = worldWidth - bubbleRadius
         val playAreaTop = worldHeight - headerHeight - bubbleRadius
         val playAreaBottom = headerHeight + bubbleRadius
 
-        repeat(count) {
-            var attempts = 0
-            var validPosition: Vector2? = null
+        repeat(count) { index ->
+            val validPosition = findValidSpawnPosition(
+                positions,
+                minSpacing,
+                playAreaLeft,
+                playAreaRight,
+                playAreaBottom,
+                playAreaTop
+            )
 
-            while (attempts < maxAttempts) {
-                val testPos = Vector2(
-                    MathUtils.random(playAreaLeft, playAreaRight),
-                    MathUtils.random(playAreaBottom, playAreaTop)
-                )
-
-                // Check if position is far enough from existing positions
-                val tooClose = positions.any { existing ->
-                    testPos.dst(existing) < minSpacing
-                }
-
-                if (!tooClose) {
-                    validPosition = testPos
-                    break
-                }
-
-                attempts++
-            }
-
-            // Use valid position or fallback to grid position
-            positions.add(validPosition ?: Vector2(
-                playAreaLeft + (playAreaRight - playAreaLeft) * (it % 3) / 2f,
-                playAreaBottom + (playAreaTop - playAreaBottom) * (it / 3) / 1f
+            positions.add(validPosition ?: getFallbackGridPosition(
+                index,
+                playAreaLeft,
+                playAreaRight,
+                playAreaBottom,
+                playAreaTop
             ))
         }
 
         return positions
+    }
+
+    /**
+     * Try to find a valid spawn position that doesn't overlap existing positions
+     */
+    private fun findValidSpawnPosition(
+        existingPositions: List<Vector2>,
+        minSpacing: Float,
+        left: Float,
+        right: Float,
+        bottom: Float,
+        top: Float
+    ): Vector2? {
+        val maxAttempts = 100
+        repeat(maxAttempts) {
+            val testPos = Vector2(
+                MathUtils.random(left, right),
+                MathUtils.random(bottom, top)
+            )
+
+            val tooClose = existingPositions.any { existing ->
+                testPos.dst(existing) < minSpacing
+            }
+
+            if (!tooClose) return testPos
+        }
+        return null
+    }
+
+    /**
+     * Get fallback grid position when random placement fails
+     */
+    private fun getFallbackGridPosition(
+        index: Int,
+        left: Float,
+        right: Float,
+        bottom: Float,
+        top: Float
+    ): Vector2 {
+        return Vector2(
+            left + (right - left) * (index % 3) / 2f,
+            bottom + (top - bottom) * (index / 3) / 1f
+        )
     }
 
     /**
@@ -419,48 +451,63 @@ class LetterPopScreen(private val game: Game) : Screen {
      * Update bubble physics
      */
     private fun updateBubbles(delta: Float) {
-        bubbles.forEach { bubble ->
+        // Create a snapshot to avoid ConcurrentModificationException
+        val bubblesSnapshot = bubbles.toList()
+
+        // Update each bubble and check wall collisions
+        bubblesSnapshot.forEach { bubble ->
             bubble.update(delta)
-
-            // Wall collision detection
-            val pos = bubble.position
-            val radius = bubbleRadius
-
-            // Left/Right walls
-            if (pos.x - radius < 0) {
-                bubble.bounceX()
-                bubble.smoosh()
-                pos.x = radius
-                AudioManager.playBubblePop()
-            } else if (pos.x + radius > worldWidth) {
-                bubble.bounceX()
-                bubble.smoosh()
-                pos.x = worldWidth - radius
-                AudioManager.playBubblePop()
-            }
-
-            // Top/Bottom walls
-            if (pos.y + radius > worldHeight) {
-                bubble.bounceY()
-                bubble.smoosh()
-                pos.y = worldHeight - radius
-                AudioManager.playBubblePop()
-            } else if (pos.y - radius < headerHeight) {
-                bubble.bounceY()
-                bubble.smoosh()
-                pos.y = headerHeight + radius
-                AudioManager.playBubblePop()
-            }
+            checkBubbleWallCollisions(bubble)
         }
 
-        // Bubble-to-bubble collision
-        for (i in bubbles.indices) {
-            for (j in i + 1 until bubbles.size) {
-                val bubbleA = bubbles[i]
-                val bubbleB = bubbles[j]
+        // Check bubble-to-bubble collisions
+        checkBubbleBubbleCollisions(bubblesSnapshot)
+    }
+
+    /**
+     * Check and handle wall collisions for a single bubble
+     */
+    private fun checkBubbleWallCollisions(bubble: Bubble) {
+        val pos = bubble.position
+        val radius = bubbleRadius
+
+        // Left/Right walls
+        if (pos.x - radius < 0) {
+            bubble.bounceX()
+            bubble.smoosh()
+            pos.x = radius
+            AudioManager.playBubblePop()
+        } else if (pos.x + radius > worldWidth) {
+            bubble.bounceX()
+            bubble.smoosh()
+            pos.x = worldWidth - radius
+            AudioManager.playBubblePop()
+        }
+
+        // Top/Bottom walls
+        if (pos.y + radius > worldHeight) {
+            bubble.bounceY()
+            bubble.smoosh()
+            pos.y = worldHeight - radius
+            AudioManager.playBubblePop()
+        } else if (pos.y - radius < headerHeight) {
+            bubble.bounceY()
+            bubble.smoosh()
+            pos.y = headerHeight + radius
+            AudioManager.playBubblePop()
+        }
+    }
+
+    /**
+     * Check and handle bubble-to-bubble collisions
+     */
+    private fun checkBubbleBubbleCollisions(bubblesSnapshot: List<Bubble>) {
+        for (i in bubblesSnapshot.indices) {
+            for (j in i + 1 until bubblesSnapshot.size) {
+                val bubbleA = bubblesSnapshot[i]
+                val bubbleB = bubblesSnapshot[j]
 
                 if (bubbleA.bounds.overlaps(bubbleB.bounds)) {
-                    // Simple elastic collision
                     resolveCollision(bubbleA, bubbleB)
                     bubbleA.smoosh()
                     bubbleB.smoosh()
@@ -513,21 +560,29 @@ class LetterPopScreen(private val game: Game) : Screen {
         Gdx.app.log("LetterPopScreen", "Screen shown")
     }
 
-    override fun render(delta: Float) {
-        // Update timer and total time elapsed
-        if (!isFadingOut && titleFadeDelay <= 0) {
-            timeRemaining -= delta
-            totalTimeElapsed += delta // Track total time for results (Phase 2.7.9)
+    /**
+     * Update game timer and total elapsed time
+     * @return true if time expired, false otherwise
+     */
+    private fun updateTimer(delta: Float): Boolean {
+        if (isFadingOut || titleFadeDelay > 0) return false
 
-            if (timeRemaining <= 0) {
-                handleTimeExpired()
-                return
-            }
+        timeRemaining -= delta
+        totalTimeElapsed += delta
 
-            timerBar.setProgress(timeRemaining / timePerLetter.toFloat())
+        if (timeRemaining <= 0) {
+            handleTimeExpired()
+            return true
         }
 
-        // Update title fade
+        timerBar.setProgress(timeRemaining / timePerLetter.toFloat())
+        return false
+    }
+
+    /**
+     * Update title fade animation
+     */
+    private fun updateTitleFade(delta: Float) {
         if (titleFadeDelay > 0) {
             titleFadeDelay -= delta
         }
@@ -536,50 +591,79 @@ class LetterPopScreen(private val game: Game) : Screen {
             titleAlpha -= delta * 1.25f // 0.8s fade
             if (titleAlpha < 0) titleAlpha = 0f
         }
+    }
 
-        // Update bubbles
-        updateBubbles(delta)
+    /**
+     * Update fade out animation
+     * @return true if navigation complete, false otherwise
+     */
+    private fun updateFadeOut(delta: Float): Boolean {
+        if (!isFadingOut) return false
 
-        // Update fade out
-        if (isFadingOut) {
-            fadeAlpha -= delta * 3.33f // 0.3s fade
-            if (fadeAlpha <= 0) {
-                game.screen = MainMenuScreen(game)
-                return
-            }
+        fadeAlpha -= delta * 3.33f // 0.3s fade
+        if (fadeAlpha <= 0) {
+            game.screen = MainMenuScreen(game)
+            return true
+        }
+        return false
+    }
+
+    /**
+     * Handle touch input for buttons and bubbles
+     */
+    private fun handleTouchInput() {
+        if (!Gdx.input.justTouched() || isFadingOut) return
+
+        // Convert screen pixels to world coordinates
+        val screenX = Gdx.input.x.toFloat()
+        val screenY = (Gdx.graphics.height - Gdx.input.y).toFloat() // Flip Y
+
+        val touchX = (screenX / Gdx.graphics.width) * worldWidth
+        val touchY = (screenY / Gdx.graphics.height) * worldHeight
+
+        // Check home button first
+        if (isHomeButtonTouched(touchX, touchY)) {
+            navigateToMainMenu()
+            return
         }
 
-        // Handle touch input
-        if (Gdx.input.justTouched() && !isFadingOut) {
-            val touchX = Gdx.input.x.toFloat()
-            val touchY = worldHeight - Gdx.input.y.toFloat() // Flip Y
+        // Check bubble clicks
+        checkBubbleClicks(touchX, touchY)
+    }
 
-            // Check home button first (simple bounds check)
-            val btnX = responsive.scaleX(92f)
-            val btnY = responsive.scaleY(94f)
-            val btnW = responsive.scaleX(5f)
-            val btnH = responsive.scaleY(7f)
-            val buttonBounds = com.badlogic.gdx.math.Rectangle(
-                btnX - btnW / 2,
-                btnY - btnH / 2,
-                btnW,
-                btnH
-            )
-            if (buttonBounds.contains(touchX, touchY)) {
-                navigateToMainMenu()
-                return
-            }
+    /**
+     * Check if home button was touched
+     */
+    private fun isHomeButtonTouched(touchX: Float, touchY: Float): Boolean {
+        val btnX = responsive.scaleX(92f)
+        val btnY = responsive.scaleY(94f)
+        val btnW = responsive.scaleX(5f)
+        val btnH = responsive.scaleY(7f)
+        val buttonBounds = com.badlogic.gdx.math.Rectangle(
+            btnX - btnW / 2,
+            btnY - btnH / 2,
+            btnW,
+            btnH
+        )
+        return buttonBounds.contains(touchX, touchY)
+    }
 
-            // Check bubble clicks
-            for (bubble in bubbles) {
-                if (!bubble.isDestroyed && bubble.contains(touchX, touchY)) {
-                    handleBubbleClick(bubble)
-                    break
-                }
+    /**
+     * Check if any bubble was clicked
+     */
+    private fun checkBubbleClicks(touchX: Float, touchY: Float) {
+        for (bubble in bubbles) {
+            if (!bubble.isDestroyed && bubble.contains(touchX, touchY)) {
+                handleBubbleClick(bubble)
+                break
             }
         }
+    }
 
-        // Render
+    /**
+     * Render all UI elements
+     */
+    private fun renderUI() {
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f)
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
 
@@ -590,12 +674,32 @@ class LetterPopScreen(private val game: Game) : Screen {
 
         // Title (fading out)
         if (titleAlpha > 0) {
-            // Apply alpha to title (would need to modify components to support alpha)
             balloonIcon.draw(batch)
             titleText.draw(batch)
         }
 
         // Score display (top center)
+        renderScore()
+
+        // Round progress (top left)
+        renderRoundProgress()
+
+        batch.end()
+
+        // Timer bar
+        timerBar.render(batch, shapeRenderer)
+
+        // Bubbles
+        renderBubbles()
+
+        // Fade out overlay
+        renderFadeOverlay()
+    }
+
+    /**
+     * Render score display
+     */
+    private fun renderScore() {
         glyphLayout.setText(scoreLabelFont, "SCORE")
         scoreLabelFont.draw(
             batch,
@@ -611,8 +715,12 @@ class LetterPopScreen(private val game: Game) : Screen {
             responsive.centerX - glyphLayout.width / 2,
             responsive.scaleY(88f)
         )
+    }
 
-        // Round progress (top left)
+    /**
+     * Render round progress indicator
+     */
+    private fun renderRoundProgress() {
         val roundText = "ROUND ${currentLetterIndex + 1}"
         glyphLayout.setText(roundFont, roundText)
         roundFont.draw(
@@ -621,32 +729,49 @@ class LetterPopScreen(private val game: Game) : Screen {
             responsive.scaleX(5f),
             responsive.scaleY(95f)
         )
+    }
 
-        batch.end()
-
-        // Timer bar
-        timerBar.render(batch, shapeRenderer)
-
-        // Bubbles
+    /**
+     * Render all bubbles and home button
+     */
+    private fun renderBubbles() {
         batch.begin()
         bubbles.forEach { bubble ->
             bubble.render(batch, shapeRenderer)
         }
-
-        // Home button
         homeButton.draw(batch)
+        batch.end()
+    }
 
-        // Fade out overlay
+    /**
+     * Render fade out overlay
+     */
+    private fun renderFadeOverlay() {
         if (fadeAlpha < 1f) {
-            batch.end()
             shapeRenderer.begin(ShapeRenderer.ShapeType.Filled)
             shapeRenderer.color = Color(0f, 0f, 0f, 1f - fadeAlpha)
             shapeRenderer.rect(0f, 0f, worldWidth, worldHeight)
             shapeRenderer.end()
-            batch.begin()
         }
+    }
 
-        batch.end()
+    override fun render(delta: Float) {
+        // Update timer (returns true if expired)
+        if (updateTimer(delta)) return
+
+        // Update animations
+        updateTitleFade(delta)
+        updateBubbles(delta)
+        homeButton.update(delta)
+
+        // Update fade out (returns true if navigation complete)
+        if (updateFadeOut(delta)) return
+
+        // Handle touch input
+        handleTouchInput()
+
+        // Render all UI
+        renderUI()
     }
 
     override fun resize(width: Int, height: Int) {}
