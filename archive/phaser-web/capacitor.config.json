@@ -1,8 +1,0 @@
-{
-  "appId": "com.aurora.reading",
-  "appName": "Aurora's Reading Adventure",
-  "webDir": "www",
-  "server": {
-    "androidScheme": "https"
-  }
-}

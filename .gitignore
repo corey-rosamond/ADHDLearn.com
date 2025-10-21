@@ -1,43 +1,27 @@
-# Gradle
-.gradle/
-build/
-*.iml
-*.ipr
-*.iws
-.idea/
-out/
-local.properties
-
-# Android
-*.apk
-*.ap_
-*.aab
-*.dex
-*.class
-gen/
-proguard/
-lint/
-
-# libGDX
-lwjgl3/
-
-# Java/Kotlin
-*.log
-*.tmp
-*.bak
-*.swp
-*~.nib
-*.jar
-!gradle/wrapper/gradle-wrapper.jar
-
 # OS specific
 .DS_Store
 Thumbs.db
 
 # Node modules
 node_modules/
+
+# Environment
 .env
 
-# Native libraries (auto-generated)
-android/libs/
-OrcaSlicer_Linux_AppImage_Ubuntu2404_V2.3.1.AppImage
+# Build artifacts
+*.apk
+*.aab
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# Android build
+android/build/
+android/.gradle/
+android/app/build/
