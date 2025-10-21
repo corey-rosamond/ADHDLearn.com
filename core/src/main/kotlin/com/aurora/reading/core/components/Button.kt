@@ -145,59 +145,94 @@ class Button(
      * Draw the button
      */
     fun draw(batch: SpriteBatch) {
-        // Calculate scaled dimensions
+        val scaledDimensions = calculateScaledDimensions()
+        updateBoundsForHitTesting(scaledDimensions)
+
+        val alpha = if (enabled) 1f else 0.5f
+
+        drawButtonTexture(batch, scaledDimensions, alpha)
+        drawIcon(batch, scaledDimensions, alpha)
+        drawText(batch, scaledDimensions)
+    }
+
+    /**
+     * Calculate scaled dimensions
+     */
+    private fun calculateScaledDimensions(): ScaledDimensions {
         val scaledWidth = width * currentScale
         val scaledHeight = height * currentScale
         val scaledX = x + (width - scaledWidth) / 2f
         val scaledY = y + (height - scaledHeight) / 2f
+        return ScaledDimensions(scaledX, scaledY, scaledWidth, scaledHeight)
+    }
 
-        // Update bounds for hit testing
-        bounds.set(scaledX, scaledY, scaledWidth, scaledHeight)
+    /**
+     * Update bounds for hit testing
+     */
+    private fun updateBoundsForHitTesting(dims: ScaledDimensions) {
+        bounds.set(dims.x, dims.y, dims.width, dims.height)
+    }
 
-        // Draw button texture
-        val alpha = if (enabled) 1f else 0.5f
+    /**
+     * Draw button texture
+     */
+    private fun drawButtonTexture(batch: SpriteBatch, dims: ScaledDimensions, alpha: Float) {
         val prevColor = batch.color.cpy()
         batch.setColor(1f, 1f, 1f, alpha)
-        batch.draw(texture, scaledX, scaledY, scaledWidth, scaledHeight)
+        batch.draw(texture, dims.x, dims.y, dims.width, dims.height)
         batch.color = prevColor
-
-        // Draw icon if present (positioned above text, scales with button)
-        if (iconTexture != null && iconSize > 0f) {
-            val scaledIconSize = iconSize * currentScale
-            val iconX = scaledX + scaledWidth / 2f - scaledIconSize / 2f
-            val iconY = scaledY + scaledHeight / 2f + scaledIconSize / 6f  // Position above center
-
-            batch.setColor(1f, 1f, 1f, alpha)
-            batch.draw(iconTexture, iconX, iconY, scaledIconSize, scaledIconSize)
-            batch.color = prevColor
-        }
-
-        // Draw text if present (positioned below icon if icon exists, scales with button)
-        if (text.isNotEmpty()) {
-            val scaledTextX = scaledX + scaledWidth / 2f - (glyphLayout.width * currentScale) / 2f
-            val scaledTextY = if (iconTexture != null && iconSize > 0f) {
-                // Position text below icon
-                scaledY + scaledHeight / 2f - (glyphLayout.height * currentScale) * 0.5f
-            } else {
-                // Center text normally
-                scaledY + scaledHeight / 2f + (glyphLayout.height * currentScale) / 2f
-            }
-
-            val prevFontColor = font.color.cpy()
-            font.color = if (enabled) textColor else Color(textColor.r, textColor.g, textColor.b, 0.5f)
-
-            // Scale font rendering
-            val prevScaleX = font.data.scaleX
-            val prevScaleY = font.data.scaleY
-            font.data.setScale(currentScale)
-
-            font.draw(batch, text, scaledTextX, scaledTextY)
-
-            // Restore font scale
-            font.data.setScale(prevScaleX, prevScaleY)
-            font.color = prevFontColor
-        }
     }
+
+    /**
+     * Draw button icon if present
+     */
+    private fun drawIcon(batch: SpriteBatch, dims: ScaledDimensions, alpha: Float) {
+        if (iconTexture == null || iconSize <= 0f) return
+
+        val scaledIconSize = iconSize * currentScale
+        val iconX = dims.x + dims.width / 2f - scaledIconSize / 2f
+        val iconY = dims.y + dims.height / 2f + scaledIconSize / 6f
+
+        val prevColor = batch.color.cpy()
+        batch.setColor(1f, 1f, 1f, alpha)
+        batch.draw(iconTexture, iconX, iconY, scaledIconSize, scaledIconSize)
+        batch.color = prevColor
+    }
+
+    /**
+     * Draw button text if present
+     */
+    private fun drawText(batch: SpriteBatch, dims: ScaledDimensions) {
+        if (text.isEmpty()) return
+
+        val scaledTextX = dims.x + dims.width / 2f - (glyphLayout.width * currentScale) / 2f
+        val scaledTextY = if (iconTexture != null && iconSize > 0f) {
+            dims.y + dims.height / 2f - (glyphLayout.height * currentScale) * 0.5f
+        } else {
+            dims.y + dims.height / 2f + (glyphLayout.height * currentScale) / 2f
+        }
+
+        val prevFontColor = font.color.cpy()
+        val prevScaleX = font.data.scaleX
+        val prevScaleY = font.data.scaleY
+
+        font.color = if (enabled) textColor else Color(textColor.r, textColor.g, textColor.b, 0.5f)
+        font.data.setScale(currentScale)
+        font.draw(batch, text, scaledTextX, scaledTextY)
+
+        font.data.setScale(prevScaleX, prevScaleY)
+        font.color = prevFontColor
+    }
+
+    /**
+     * Helper class for scaled dimensions
+     */
+    private data class ScaledDimensions(
+        val x: Float,
+        val y: Float,
+        val width: Float,
+        val height: Float
+    )
 
     /**
      * Set button position
