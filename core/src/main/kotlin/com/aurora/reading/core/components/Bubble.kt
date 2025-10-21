@@ -89,53 +89,67 @@ class Bubble(
     fun update(delta: Float) {
         if (isDestroyed) return
 
-        // Update position based on velocity
-        position.add(velocity.x * delta, velocity.y * delta)
+        updateVelocity(delta)
 
-        // Update collision bounds
-        bounds.setPosition(position.x, position.y)
-
-        // Update pop animation
         if (isPopping) {
-            popTime += delta
-
-            if (popTime < POP_DURATION) {
-                // Expand and fade out
-                val progress = popTime / POP_DURATION
-                scaleX = 1f + progress * 0.5f // Scale up to 1.5x
-                scaleY = 1f + progress * 0.5f
-                popAlpha = 1f - progress // Fade out
-            } else {
-                // Animation complete
-                isDestroyed = true
-                popOnComplete?.invoke()
-            }
-            return // Don't update smoosh when popping
-        }
-
-        // Update smoosh animation
-        if (isSmooshing) {
-            smooshTime += delta
-
-            if (smooshTime < SMOOSH_DURATION) {
-                // Squish phase (compress horizontally, expand vertically)
-                val progress = smooshTime / SMOOSH_DURATION
-                scaleX = 0.8f + (0.2f * progress)
-                scaleY = 1.2f - (0.2f * progress)
-            } else if (smooshTime < SMOOSH_DURATION * 2) {
-                // Return phase
-                val progress = (smooshTime - SMOOSH_DURATION) / SMOOSH_DURATION
-                scaleX = 1f
-                scaleY = 1f
-
-                if (progress >= 1f) {
-                    isSmooshing = false
-                    smooshTime = 0f
-                }
-            }
+            updatePopAnimation(delta)
         } else {
+            updateSmooshAnimation(delta)
+        }
+    }
+
+    /**
+     * Update position based on velocity
+     */
+    private fun updateVelocity(delta: Float) {
+        position.add(velocity.x * delta, velocity.y * delta)
+        bounds.setPosition(position.x, position.y)
+    }
+
+    /**
+     * Update pop animation (expand and fade out)
+     */
+    private fun updatePopAnimation(delta: Float) {
+        popTime += delta
+
+        if (popTime < POP_DURATION) {
+            val progress = popTime / POP_DURATION
+            scaleX = 1f + progress * 0.5f // Scale up to 1.5x
+            scaleY = 1f + progress * 0.5f
+            popAlpha = 1f - progress // Fade out
+        } else {
+            isDestroyed = true
+            popOnComplete?.invoke()
+        }
+    }
+
+    /**
+     * Update smoosh animation (squish and return)
+     */
+    private fun updateSmooshAnimation(delta: Float) {
+        if (!isSmooshing) {
             scaleX = scale
             scaleY = scale
+            return
+        }
+
+        smooshTime += delta
+
+        if (smooshTime < SMOOSH_DURATION) {
+            // Squish phase
+            val progress = smooshTime / SMOOSH_DURATION
+            scaleX = 0.8f + (0.2f * progress)
+            scaleY = 1.2f - (0.2f * progress)
+        } else if (smooshTime < SMOOSH_DURATION * 2) {
+            // Return phase
+            val progress = (smooshTime - SMOOSH_DURATION) / SMOOSH_DURATION
+            scaleX = 1f
+            scaleY = 1f
+
+            if (progress >= 1f) {
+                isSmooshing = false
+                smooshTime = 0f
+            }
         }
     }
 
