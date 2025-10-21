@@ -451,30 +451,54 @@ class MainMenuScreen(private val game: Game) : Screen {
     private fun handleInput() {
         if (transitioning) return
 
+        val worldPos = getWorldTouchPosition()
+
         if (Gdx.input.isTouched) {
-            val touchPos = Vector2(Gdx.input.x.toFloat(), Gdx.input.y.toFloat())
-            val worldPos = viewport.unproject(touchPos)
-
-            if (Gdx.input.justTouched()) {
-                // Touch down - check which button was pressed
-                settingsButton.handleTouchDown(worldPos.x, worldPos.y)
-                letterPopTile.handleTouchDown(worldPos.x, worldPos.y)
-
-                // Check debug icon click
-                if (worldPos.x >= debugIconX && worldPos.x <= debugIconX + debugIconSize &&
-                    worldPos.y >= debugIconY && worldPos.y <= debugIconY + debugIconSize) {
-                    Gdx.app.log("MainMenuScreen", "Debug icon (magnifying glass) clicked!")
-                    AudioManager.playBubblePop()
-                }
-            }
+            handleTouchDown(worldPos)
         } else {
-            // Touch released - complete the click if button was pressed
-            val touchPos = Vector2(Gdx.input.x.toFloat(), Gdx.input.y.toFloat())
-            val worldPos = viewport.unproject(touchPos)
-
-            settingsButton.handleTouchUp(worldPos.x, worldPos.y)
-            letterPopTile.handleTouchUp(worldPos.x, worldPos.y)
+            handleTouchUp(worldPos)
         }
+    }
+
+    /**
+     * Convert screen touch coordinates to world coordinates
+     */
+    private fun getWorldTouchPosition(): Vector2 {
+        val touchPos = Vector2(Gdx.input.x.toFloat(), Gdx.input.y.toFloat())
+        return viewport.unproject(touchPos)
+    }
+
+    /**
+     * Handle touch down events
+     */
+    private fun handleTouchDown(worldPos: Vector2) {
+        if (!Gdx.input.justTouched()) return
+
+        settingsButton.handleTouchDown(worldPos.x, worldPos.y)
+        letterPopTile.handleTouchDown(worldPos.x, worldPos.y)
+
+        if (isDebugIconTouched(worldPos)) {
+            Gdx.app.log("MainMenuScreen", "Debug icon (magnifying glass) clicked!")
+            AudioManager.playBubblePop()
+        }
+    }
+
+    /**
+     * Handle touch up events
+     */
+    private fun handleTouchUp(worldPos: Vector2) {
+        settingsButton.handleTouchUp(worldPos.x, worldPos.y)
+        letterPopTile.handleTouchUp(worldPos.x, worldPos.y)
+    }
+
+    /**
+     * Check if debug icon was touched
+     */
+    private fun isDebugIconTouched(worldPos: Vector2): Boolean {
+        return worldPos.x >= debugIconX &&
+               worldPos.x <= debugIconX + debugIconSize &&
+               worldPos.y >= debugIconY &&
+               worldPos.y <= debugIconY + debugIconSize
     }
 
     /**

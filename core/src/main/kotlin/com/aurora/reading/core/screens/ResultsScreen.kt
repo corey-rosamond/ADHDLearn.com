@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Interpolation
 import com.badlogic.gdx.math.Rectangle
+import com.aurora.reading.core.assets.Assets
 import com.aurora.reading.core.components.*
 import com.aurora.reading.core.config.ThemeConfig
 import com.aurora.reading.core.models.GameResult
@@ -136,8 +137,9 @@ class ResultsScreen(
             y = responsive.scaleY(15f),
             width = responsive.scaleX(20f),
             height = responsive.scaleY(10f),
-            texturePath = "images/button.png",
-            fontSize = responsive.scaleX(2f).toInt()
+            texturePath = Assets.UI.BTN_BLUE,
+            fontSize = responsive.scaleX(2f).toInt(),
+            onClick = { playAgain() }
         )
 
         mainMenuButton = Button(
@@ -146,15 +148,16 @@ class ResultsScreen(
             y = responsive.scaleY(15f),
             width = responsive.scaleX(20f),
             height = responsive.scaleY(10f),
-            texturePath = "images/button.png",
-            fontSize = responsive.scaleX(2f).toInt()
+            texturePath = Assets.UI.BTN_GREEN,
+            fontSize = responsive.scaleX(2f).toInt(),
+            onClick = { navigateToMainMenu() }
         )
 
         // Fonts
         scoreFont = FontManager.getFont(
-            size = responsive.scaleX(8f).toInt(),
+            size = responsive.scaleX(6f).toInt(), // Reduced from 8% to 6% for better fit
             color = Color.WHITE,
-            borderWidth = responsive.scaleX(0.4f).coerceAtLeast(2f),
+            borderWidth = responsive.scaleX(0.3f).coerceAtLeast(2f),
             borderColor = ThemeConfig.Colors.PURPLE
         )
 
@@ -256,6 +259,16 @@ class ResultsScreen(
             responsive.scaleY(37f)
         )
 
+        // Participation message (always positive, celebrates effort)
+        val participationMsg = gameResult.getParticipationMessage()
+        glyphLayout.setText(labelFont, participationMsg)
+        labelFont.draw(
+            batch,
+            participationMsg,
+            responsive.scaleX(50f) - glyphLayout.width / 2,
+            responsive.scaleY(28f)
+        )
+
         playAgainButton.draw(batch)
         mainMenuButton.draw(batch)
 
@@ -275,28 +288,47 @@ class ResultsScreen(
      */
     private fun updateFade(delta: Float) {
         if (fadeIn) {
-            fadeTime += delta
-            fadeAlpha = Interpolation.fade.apply(fadeTime / FADE_DURATION).coerceIn(0f, 1f)
-
-            if (fadeTime >= FADE_DURATION) {
-                fadeIn = false
-                fadeAlpha = 1f
-            }
+            updateFadeIn(delta)
         }
 
         if (fadeOut) {
-            fadeTime += delta
-            fadeAlpha = 1f - Interpolation.fade.apply(fadeTime / FADE_DURATION).coerceIn(0f, 1f)
+            updateFadeOut(delta)
+        }
+    }
 
-            if (fadeTime >= FADE_DURATION) {
-                fadeOut = false
-                fadeAlpha = 0f
+    /**
+     * Update fade in animation
+     */
+    private fun updateFadeIn(delta: Float) {
+        fadeTime += delta
+        fadeAlpha = Interpolation.fade.apply(fadeTime / FADE_DURATION).coerceIn(0f, 1f)
 
-                // Transition to next screen
-                nextScreen?.let {
-                    game.screen = it
-                }
-            }
+        if (fadeTime >= FADE_DURATION) {
+            fadeIn = false
+            fadeAlpha = 1f
+        }
+    }
+
+    /**
+     * Update fade out animation and transition
+     */
+    private fun updateFadeOut(delta: Float) {
+        fadeTime += delta
+        fadeAlpha = 1f - Interpolation.fade.apply(fadeTime / FADE_DURATION).coerceIn(0f, 1f)
+
+        if (fadeTime >= FADE_DURATION) {
+            fadeOut = false
+            fadeAlpha = 0f
+            transitionToNextScreen()
+        }
+    }
+
+    /**
+     * Transition to the next screen
+     */
+    private fun transitionToNextScreen() {
+        nextScreen?.let {
+            game.screen = it
         }
     }
 
@@ -331,47 +363,29 @@ class ResultsScreen(
      * Handle user input
      */
     private fun handleInput() {
-        if (!Gdx.input.justTouched()) return
+        if (Gdx.input.isTouched) {
+            val touchX = Gdx.input.x.toFloat()
+            val touchY = (Gdx.graphics.height - Gdx.input.y).toFloat()
 
-        val touchX = Gdx.input.x.toFloat()
-        val touchY = (Gdx.graphics.height - Gdx.input.y).toFloat()
+            // Convert screen coordinates to world coordinates
+            val worldX = (touchX / Gdx.graphics.width) * worldWidth
+            val worldY = (touchY / Gdx.graphics.height) * worldHeight
 
-        // Convert screen coordinates to world coordinates
-        val worldX = (touchX / Gdx.graphics.width) * worldWidth
-        val worldY = (touchY / Gdx.graphics.height) * worldHeight
+            if (Gdx.input.justTouched()) {
+                // Touch down
+                playAgainButton.handleTouchDown(worldX, worldY)
+                mainMenuButton.handleTouchDown(worldX, worldY)
+            }
+        } else {
+            // Touch up
+            val touchX = Gdx.input.x.toFloat()
+            val touchY = (Gdx.graphics.height - Gdx.input.y).toFloat()
 
-        // Check Play Again button
-        val playX = responsive.scaleX(35f)
-        val playY = responsive.scaleY(15f)
-        val playW = responsive.scaleX(20f)
-        val playH = responsive.scaleY(10f)
-        val playBounds = Rectangle(
-            playX - playW / 2,
-            playY - playH / 2,
-            playW,
-            playH
-        )
+            val worldX = (touchX / Gdx.graphics.width) * worldWidth
+            val worldY = (touchY / Gdx.graphics.height) * worldHeight
 
-        if (playBounds.contains(worldX, worldY)) {
-            playAgain()
-            return
-        }
-
-        // Check Main Menu button
-        val menuX = responsive.scaleX(65f)
-        val menuY = responsive.scaleY(15f)
-        val menuW = responsive.scaleX(20f)
-        val menuH = responsive.scaleY(10f)
-        val menuBounds = Rectangle(
-            menuX - menuW / 2,
-            menuY - menuH / 2,
-            menuW,
-            menuH
-        )
-
-        if (menuBounds.contains(worldX, worldY)) {
-            navigateToMainMenu()
-            return
+            playAgainButton.handleTouchUp(worldX, worldY)
+            mainMenuButton.handleTouchUp(worldX, worldY)
         }
     }
 
