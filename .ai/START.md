@@ -47,6 +47,25 @@ Read: .ai/GUARDRAILS.md
 ```
 This defines code quality standards, best practices, and common pitfalls to avoid.
 
+### 4. Reports Directory Guidelines
+```
+Directory: .ai/reports/
+```
+**IMPORTANT:** All analysis reports, metrics, and generated documentation should be stored in `.ai/reports/`.
+
+**Rules:**
+- Store all McCabe complexity reports in `.ai/reports/`
+- Store all performance analysis in `.ai/reports/`
+- Store all test reports in `.ai/reports/`
+- **AI should IGNORE contents of `.ai/reports/` unless explicitly instructed otherwise**
+- Do not read from `.ai/reports/` during normal development
+- Only reference reports when specifically asked by the user
+
+**Examples:**
+- `.ai/reports/mccabe-phase-2.7.11.md`
+- `.ai/reports/performance-android-vs-web.md`
+- `.ai/reports/test-results-phase-2.7.9.md`
+
 **Key Takeaways:**
 - Single Responsibility Principle
 - Dependency Injection over singletons
@@ -205,8 +224,24 @@ Authored-By: Corey Rosamond <rosamond.corey@gmail.com>"
 git push
 ```
 
+#### D. Run McCabe Complexity Analysis
+```bash
+# Run McCabe analysis on codebase
+python3 /tmp/mccabe_kotlin.py core/src/main/kotlin/
+
+# REQUIREMENT: ALL functions must have complexity ≤ 5
+# If ANY function has complexity > 5, phase is NOT complete
+# Refactor before proceeding to next phase
+```
+
+**Phase Completion Requirement:**
+- **MANDATORY:** All functions MUST have McCabe complexity ≤ 5
+- Any function with complexity > 5 must be refactored
+- No exceptions - this is non-negotiable for code quality
+- See PERSONA.md for rationale
+
 #### E. Only THEN Proceed to Next Phase
-Do not start Phase 2.7.6 until:
+Do not start next phase until:
 - [ ] START.md updated
 - [ ] README.md updated
 - [ ] MEMORY.md updated
@@ -214,6 +249,7 @@ Do not start Phase 2.7.6 until:
 - [ ] Changes pushed to GitHub
 - [ ] All acceptance criteria met
 - [ ] All tests passed
+- [ ] **McCabe complexity ≤ 5 for ALL functions** ⚠️ MANDATORY
 
 ---
 
