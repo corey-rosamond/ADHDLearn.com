@@ -1,22 +1,35 @@
 {
-  "name": "auroras-reading-adventure",
+  "name": "adhdlearn-platform",
   "version": "1.0.0",
-  "description": "A colorful, engaging letter learning game for kids",
-  "main": "index.html",
+  "description": "ADHDLearn.com - Family learning platform for children with ADHD",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "child-portal",
+    "parent-portal",
+    "shared"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:child": "npm run dev --workspace=child-portal",
+    "dev:parent": "npm run dev --workspace=parent-portal",
+    "build:all": "npm run build --workspaces --if-present",
+    "test:all": "npm run test --workspaces --if-present",
+    "lint": "eslint . --ext .js,.jsx",
+    "format": "prettier --write \"**/*.{js,jsx,json,md}\""
   },
   "keywords": [
+    "adhd",
+    "learning",
     "education",
-    "game",
-    "kids",
-    "reading"
+    "games",
+    "phaser"
   ],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@capacitor/android": "^7.4.3",
-    "@capacitor/cli": "^7.4.3",
-    "@capacitor/core": "^7.4.3"
+  "author": "Corey",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.34.0",
+    "prettier": "^3.2.5"
   }
 }

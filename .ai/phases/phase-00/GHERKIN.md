@@ -7,11 +7,13 @@
 ---
 
 ## Feature: Apache Virtual Host Configuration
+
 **As a** system administrator
 **I want to** configure 8 Apache virtual hosts
 **So that** all subdomains route correctly to their directories
 
 ### Scenario: Production domains resolve correctly
+
 ```gherkin
 Given I have configured Apache virtual hosts
 When I navigate to "https://adhdlearn.com"
@@ -33,6 +35,7 @@ And the SSL certificate should be valid
 ```
 
 ### Scenario: Staging domains resolve correctly
+
 ```gherkin
 Given I have configured Apache virtual hosts
 When I navigate to "https://staging.adhdlearn.com"
@@ -50,6 +53,7 @@ Then I should see a JSON response: {"status": "ok", "environment": "staging"}
 ```
 
 ### Scenario: Directory structure created
+
 ```gherkin
 Given I have SSH access to the server
 When I run "ls -la /var/www/adhdlearn.com"
@@ -76,6 +80,7 @@ Then I should see subdirectories:
 ```
 
 ### Scenario: Git repository initialized
+
 ```gherkin
 Given I am in "/var/www/adhdlearn.com"
 When I run "git branch"
@@ -92,6 +97,7 @@ Then I should see initial commit: "Initial repository setup"
 ```
 
 ### Scenario: Git hooks configured
+
 ```gherkin
 Given I have git hooks in ".git/hooks"
 When I run "ls -la .git/hooks"
@@ -116,6 +122,7 @@ Then the hook should:
 ```
 
 ### Scenario: SSL certificates configured
+
 ```gherkin
 Given I have Let's Encrypt installed
 When I run "certbot certificates"
@@ -135,6 +142,7 @@ And certificates should auto-renew 30 days before expiration
 ```
 
 ### Scenario: Apache configuration valid
+
 ```gherkin
 Given I have modified Apache configuration
 When I run "apache2ctl configtest"
@@ -146,6 +154,7 @@ And no errors should appear in the logs
 ```
 
 ### Scenario: Placeholder pages deployed
+
 ```gherkin
 Given I have created placeholder index.html files
 When I navigate to "https://adhdlearn.com"

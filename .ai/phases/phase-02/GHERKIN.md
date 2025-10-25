@@ -7,11 +7,13 @@
 ---
 
 ## Feature: Letter Pop Standalone Deployment
+
 **As a** Aurora (child user)
 **I want to** play Letter Pop from my tablet
 **So that** I can practice letter recognition
 
 ### Scenario: Access Letter Pop directly
+
 ```gherkin
 Given Aurora's tablet is connected to the internet
 When Aurora navigates to "https://child.adhdlearn.com"
@@ -21,6 +23,7 @@ And no login screen should appear (standalone mode)
 ```
 
 ### Scenario: Configure Letter Pop settings
+
 ```gherkin
 Given Aurora is on the Letter Pop start screen
 When she sees the configuration options
@@ -43,6 +46,7 @@ And her settings should be saved to localStorage for next time
 ```
 
 ### Scenario: Play Letter Pop game
+
 ```gherkin
 Given Aurora configured the game with:
   | Letter Case | Uppercase |
@@ -76,6 +80,7 @@ Then she should see:
 ```
 
 ### Scenario: Incorrect letter selection
+
 ```gherkin
 Given the target letter is "A"
 And Aurora taps a bubble with letter "B"
@@ -91,6 +96,7 @@ And the mistake should be tracked for analytics (stored locally)
 ```
 
 ### Scenario: Time running out warning
+
 ```gherkin
 Given Aurora is playing Letter Pop
 And 10 seconds remain on the timer
@@ -103,6 +109,7 @@ And this should alert her to hurry without causing stress
 ```
 
 ### Scenario: Game completion - time expires
+
 ```gherkin
 Given Aurora has been playing for 60 seconds
 And she has:
@@ -127,6 +134,7 @@ And she should see buttons:
 ```
 
 ### Scenario: Game completion - all letters found
+
 ```gherkin
 Given Aurora is playing Letter Pop
 And she successfully finds all 26 letters
@@ -142,6 +150,7 @@ And she should see:
 ```
 
 ### Scenario: Scores saved to localStorage
+
 ```gherkin
 Given Aurora completed a Letter Pop game
 And she scored 140 points with 70% accuracy
@@ -173,6 +182,7 @@ And Aurora should see her high score displayed on the start screen
 ```
 
 ### Scenario: View high scores
+
 ```gherkin
 Given Aurora has played Letter Pop 5 times with scores:
   | Score | Accuracy | Date |
@@ -199,6 +209,7 @@ Then she should see a list of her last 10 games:
 ```
 
 ### Scenario: Responsive design on tablet
+
 ```gherkin
 Given Aurora is using a Samsung Galaxy Tab S7 FE (12.4" screen)
 When she loads Letter Pop
@@ -213,6 +224,7 @@ Then the game should:
 ```
 
 ### Scenario: Accessibility features
+
 ```gherkin
 Given Aurora is playing Letter Pop
 Then the game should provide:

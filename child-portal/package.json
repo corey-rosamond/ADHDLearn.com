@@ -1,0 +1,15 @@
+{
+  "name": "adhdlearn-child-portal",
+  "version": "1.0.0",
+  "description": "ADHDLearn.com Child Portal - React + Phaser games",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": ["adhd", "learning", "games", "phaser"],
+  "author": "Corey",
+  "license": "UNLICENSED",
+  "private": true
+}

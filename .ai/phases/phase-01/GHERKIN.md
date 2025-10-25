@@ -7,11 +7,13 @@
 ---
 
 ## Feature: Directory Structure Creation
+
 **As a** developer
 **I want to** have an organized project structure
 **So that** code is maintainable and scalable
 
 ### Scenario: Root directory structure exists
+
 ```gherkin
 Given I am in the project root
 When I run "tree -L 1 -d"
@@ -30,6 +32,7 @@ Then I should see:
 ```
 
 ### Scenario: API directory structure
+
 ```gherkin
 Given I am in "/api"
 When I run "tree -L 2 -d"
@@ -53,6 +56,7 @@ And I should see configuration files:
 ```
 
 ### Scenario: Child portal directory structure
+
 ```gherkin
 Given I am in "/child-portal"
 When I run "tree -L 2 -d src"
@@ -76,6 +80,7 @@ And I should see configuration files:
 ```
 
 ### Scenario: Games directory structure
+
 ```gherkin
 Given I am in "/games"
 When I run "tree -L 2 -d"
@@ -97,6 +102,7 @@ And each game should have:
 ```
 
 ### Scenario: Database directory structure
+
 ```gherkin
 Given I am in "/database"
 When I run "tree -L 2"
@@ -109,6 +115,7 @@ Then I should see:
 ```
 
 ### Scenario: Git repository initialized
+
 ```gherkin
 Given I am in the project root
 When I run "git status"
@@ -131,6 +138,7 @@ And I should see a .gitignore file containing:
 ```
 
 ### Scenario: Package.json workspaces configured
+
 ```gherkin
 Given I am in the project root
 When I read "package.json"
@@ -160,6 +168,7 @@ Then I should see workspaces configuration:
 ```
 
 ### Scenario: README files exist
+
 ```gherkin
 Given I am in the project root
 Then I should see README.md with content explaining:

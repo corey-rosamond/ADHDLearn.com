@@ -13,6 +13,7 @@
 **Cause:** MySQL not allowing remote connections or firewall blocking
 
 **Solution:**
+
 1. Check MySQL user permissions:
    ```sql
    SELECT User, Host FROM mysql.user WHERE User='[username]';
@@ -39,6 +40,7 @@
 **Cause:** Wrong credentials or user doesn't exist
 
 **Solution:**
+
 1. Verify credentials with user
 2. Test connection:
    ```bash
@@ -56,6 +58,7 @@
 **Cause:** Database doesn't exist yet
 
 **Solution:**
+
 ```sql
 CREATE DATABASE adhdlearn CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
@@ -69,6 +72,7 @@ CREATE DATABASE adhdlearn CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 **Cause:** ADB not in PATH
 
 **Solution:**
+
 ```bash
 export ANDROID_HOME=/home/corey/android-sdk
 export PATH=$PATH:$ANDROID_HOME/platform-tools
@@ -84,6 +88,7 @@ source ~/.bashrc
 **Cause:** Device not connected or USB debugging disabled
 
 **Solution:**
+
 1. Check device connection:
    ```bash
    $ANDROID_HOME/platform-tools/adb devices
@@ -104,6 +109,7 @@ source ~/.bashrc
 **Cause:** USB debugging authorization not accepted
 
 **Solution:**
+
 1. Unlock device
 2. Accept "Allow USB debugging" prompt
 3. Check "Always allow from this computer"
@@ -117,6 +123,7 @@ source ~/.bashrc
 **Cause:** `adb shell input tap` is unreliable
 
 **Solution:** Use `swipe` instead of `tap`:
+
 ```bash
 # Instead of: adb shell input tap X Y
 # Use:
@@ -134,12 +141,14 @@ $ANDROID_HOME/platform-tools/adb shell input swipe X Y X Y 100
 **Cause:** npm trying to write to protected directory
 
 **Solution:**
+
 ```bash
 sudo chown -R $USER ~/.npm
 sudo chown -R $USER /home/corey/Desktop/ADHDLearn.com/node_modules
 ```
 
 Or use nvm (Node Version Manager) to avoid permission issues:
+
 ```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
 nvm install 18
@@ -151,6 +160,7 @@ nvm use 18
 **Cause:** Dependencies not installed or package.json out of sync
 
 **Solution:**
+
 1. Clear node_modules and reinstall:
    ```bash
    rm -rf node_modules package-lock.json
@@ -166,6 +176,7 @@ nvm use 18
 **Cause:** Dependency conflict
 
 **Solution:**
+
 ```bash
 # Try with legacy peer deps
 npm install --legacy-peer-deps
@@ -182,6 +193,7 @@ npm install -g npm@latest
 **Cause:** Node.js not installed or not in PATH
 
 **Solution:**
+
 ```bash
 # Check if installed
 which node
@@ -204,6 +216,7 @@ npm --version
 **Cause:** Local commits not pushed to remote
 
 **Solution:**
+
 ```bash
 git push origin staging
 ```
@@ -213,6 +226,7 @@ git push origin staging
 **Cause:** Branches have different roots
 
 **Solution:**
+
 ```bash
 git pull origin staging --allow-unrelated-histories
 ```
@@ -222,6 +236,7 @@ git pull origin staging --allow-unrelated-histories
 **Cause:** Not in git repository directory
 
 **Solution:**
+
 ```bash
 cd /home/corey/Desktop/ADHDLearn.com
 git status
@@ -232,6 +247,7 @@ git status
 **Cause:** SSH key not set up
 
 **Solution:**
+
 ```bash
 # Generate SSH key
 ssh-keygen -t ed25519 -C "your_email@example.com"
@@ -249,6 +265,7 @@ cat ~/.ssh/id_ed25519.pub
 **Cause:** Same file edited in different branches
 
 **Solution:**
+
 ```bash
 # Open conflicted file, resolve conflicts (<<<<<<, =======, >>>>>> markers)
 # Then:
@@ -265,6 +282,7 @@ git commit -m "Resolve merge conflict"
 **Cause:** HTTPS required for audio playback in browsers
 
 **Solution:**
+
 1. Use HTTPS development server:
    ```bash
    python3 https-server.py
@@ -277,6 +295,7 @@ git commit -m "Resolve merge conflict"
 **Cause:** Asset not preloaded or wrong key
 
 **Solution:**
+
 1. Add to PreloadScene:
    ```javascript
    this.load.image('[key]', 'path/to/image.png');
@@ -289,6 +308,7 @@ git commit -m "Resolve merge conflict"
 **Cause:** Browser requires user interaction before playing audio
 
 **Solution:**
+
 ```javascript
 // Resume AudioContext on first touch/click
 this.input.once('pointerdown', () => {
@@ -303,6 +323,7 @@ this.input.once('pointerdown', () => {
 **Cause:** Scene not added to game config
 
 **Solution:**
+
 ```javascript
 // In src/config.js
 const config = {
@@ -310,8 +331,8 @@ const config = {
     BootScene,
     PreloadScene,
     MainMenuScene,
-    GameScene  // Add your scene here
-  ]
+    GameScene, // Add your scene here
+  ],
 };
 ```
 
@@ -320,7 +341,9 @@ const config = {
 **Cause:** Too many game objects or inefficient rendering
 
 **Solution:**
+
 1. Enable FPS display to diagnose:
+
    ```javascript
    // In create()
    this.time.advancedTiming = true;
@@ -329,6 +352,7 @@ const config = {
    // In update()
    this.debugText.setText(`FPS: ${this.game.loop.actualFps.toFixed(2)}`);
    ```
+
 2. Optimize:
    - Use object pooling for frequently created/destroyed objects
    - Reduce number of physics bodies
@@ -345,6 +369,7 @@ const config = {
 **Cause:** setState in render or useEffect without dependencies causing infinite loop
 
 **Solution:**
+
 ```javascript
 // Bad
 useEffect(() => {
@@ -367,6 +392,7 @@ useEffect(() => {
 **Cause:** Accessing nested property before data loads
 
 **Solution:**
+
 ```javascript
 // Bad
 <div>{user.profile.name}</div>
@@ -385,6 +411,7 @@ useEffect(() => {
 **Cause:** Hooks used incorrectly
 
 **Solution:**
+
 - Only call hooks at top level of function component
 - Don't call hooks inside loops, conditions, or nested functions
 - Don't call hooks in regular JavaScript functions
@@ -393,13 +420,13 @@ useEffect(() => {
 // Bad
 function Component() {
   if (condition) {
-    const [state, setState] = useState();  // ❌
+    const [state, setState] = useState(); // ❌
   }
 }
 
 // Good
 function Component() {
-  const [state, setState] = useState();  // ✅
+  const [state, setState] = useState(); // ✅
   if (condition) {
     // use state here
   }
@@ -411,6 +438,7 @@ function Component() {
 **Cause:** Multiple versions of React or calling hooks from class component
 
 **Solution:**
+
 ```bash
 # Check for duplicate React
 npm ls react
@@ -430,6 +458,7 @@ npm install
 **Cause:** Migration not run
 
 **Solution:**
+
 1. Check table exists:
    ```sql
    SHOW TABLES LIKE 'table_name';
@@ -448,7 +477,9 @@ npm install
 **Cause:** Trying to insert row with existing primary key
 
 **Solution:**
+
 1. Use INSERT IGNORE or ON DUPLICATE KEY UPDATE:
+
    ```sql
    INSERT IGNORE INTO table (id, field) VALUES (1, 'value');
 
@@ -456,6 +487,7 @@ npm install
    INSERT INTO table (id, field) VALUES (1, 'value')
    ON DUPLICATE KEY UPDATE field = 'value';
    ```
+
 2. Or use AUTO_INCREMENT and let MySQL assign IDs
 
 ### Error: "Column count doesn't match value count"
@@ -463,6 +495,7 @@ npm install
 **Cause:** INSERT statement has wrong number of values
 
 **Solution:**
+
 ```sql
 -- Bad
 INSERT INTO users (name, email) VALUES ('John');  -- Missing email
@@ -476,6 +509,7 @@ INSERT INTO users (name, email) VALUES ('John', 'john@example.com');
 **Cause:** Column doesn't exist in table
 
 **Solution:**
+
 1. Check table structure:
    ```sql
    DESCRIBE table_name;
@@ -494,19 +528,22 @@ INSERT INTO users (name, email) VALUES ('John', 'john@example.com');
 **Cause:** CORS not configured or wrong origin
 
 **Solution:**
+
 ```javascript
 const cors = require('cors');
 
-app.use(cors({
-  origin: [
-    'https://child.adhdlearn.com',
-    'https://parent.adhdlearn.com',
-    'https://staging.child.adhdlearn.com',
-    'https://staging.parent.adhdlearn.com',
-    'https://localhost:8000'  // Development
-  ],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: [
+      'https://child.adhdlearn.com',
+      'https://parent.adhdlearn.com',
+      'https://staging.child.adhdlearn.com',
+      'https://staging.parent.adhdlearn.com',
+      'https://localhost:8000', // Development
+    ],
+    credentials: true,
+  })
+);
 ```
 
 ### Error: "JWT expired"
@@ -514,6 +551,7 @@ app.use(cors({
 **Cause:** Token expired
 
 **Solution:**
+
 1. Check token expiration in middleware
 2. Implement refresh token logic
 3. Return 401 and prompt re-login on frontend:
@@ -521,7 +559,7 @@ app.use(cors({
    if (error.name === 'TokenExpiredError') {
      return res.status(401).json({
        success: false,
-       error: 'Session expired. Please log in again.'
+       error: 'Session expired. Please log in again.',
      });
    }
    ```
@@ -531,17 +569,18 @@ app.use(cors({
 **Cause:** Trying to send response twice
 
 **Solution:**
+
 ```javascript
 // Bad
 app.get('/api/resource', (req, res) => {
   res.json({ data: 'value' });
-  res.json({ data: 'another' });  // ❌ Error
+  res.json({ data: 'another' }); // ❌ Error
 });
 
 // Good - use return
 app.get('/api/resource', (req, res) => {
   if (condition) {
-    return res.json({ data: 'value' });  // ✅ Return stops execution
+    return res.json({ data: 'value' }); // ✅ Return stops execution
   }
   res.json({ data: 'another' });
 });
@@ -552,6 +591,7 @@ app.get('/api/resource', (req, res) => {
 **Cause:** Another process using the port
 
 **Solution:**
+
 ```bash
 # Find process using port 5000
 lsof -i :5000
@@ -572,6 +612,7 @@ const PORT = process.env.PORT || 5001;
 **Cause:** Various (check error message)
 
 **Common solutions:**
+
 1. Check for console.log referencing undefined:
    ```javascript
    // Remove or fix these
@@ -598,6 +639,7 @@ const PORT = process.env.PORT || 5001;
 **Cause:** Import path wrong or module not installed
 
 **Solution:**
+
 1. Check import path is correct (case-sensitive)
 2. Install missing module:
    ```bash
@@ -610,6 +652,7 @@ const PORT = process.env.PORT || 5001;
 **Cause:** Build process needs more memory
 
 **Solution:**
+
 ```bash
 # Increase Node.js memory limit
 export NODE_OPTIONS="--max-old-space-size=4096"
@@ -625,6 +668,7 @@ npm run build
 **Cause:** Permissions issue or .htaccess blocking
 
 **Solution:**
+
 ```bash
 # Fix permissions
 sudo chown -R www-data:www-data /var/www/[domain]
@@ -639,6 +683,7 @@ sudo tail -f /var/log/apache2/error.log
 **Cause:** Server misconfiguration or PHP/backend error
 
 **Solution:**
+
 1. Check Apache error log:
    ```bash
    sudo tail -f /var/log/apache2/error.log
@@ -652,6 +697,7 @@ sudo tail -f /var/log/apache2/error.log
 **Cause:** Let's Encrypt certificate expired or not installed
 
 **Solution:**
+
 ```bash
 # Renew certificate
 sudo certbot renew
@@ -672,6 +718,7 @@ sudo certbot renew --dry-run
 **Cause:** PM2 not installed
 
 **Solution:**
+
 ```bash
 npm install -g pm2
 ```
@@ -681,6 +728,7 @@ npm install -g pm2
 **Cause:** Process not started or wrong name
 
 **Solution:**
+
 ```bash
 # List all processes
 pm2 list
@@ -700,6 +748,7 @@ pm2 stop api-staging
 **Cause:** PM2 not picking up changes
 
 **Solution:**
+
 ```bash
 # Restart with latest code
 pm2 restart api-staging --update-env
@@ -720,6 +769,7 @@ pm2 logs api-staging
 **Cause:** Capacitor CLI not installed
 
 **Solution:**
+
 ```bash
 npm install -g @capacitor/cli
 ```
@@ -729,6 +779,7 @@ npm install -g @capacitor/cli
 **Cause:** Capacitor dependencies not installed
 
 **Solution:**
+
 ```bash
 npm install @capacitor/core @capacitor/cli
 npm install @capacitor/android
@@ -739,6 +790,7 @@ npm install @capacitor/android
 **Cause:** Android build error
 
 **Solution:**
+
 1. Check Android Studio SDK installed
 2. Set ANDROID_HOME:
    ```bash
@@ -757,6 +809,7 @@ npm install @capacitor/android
 ## Always Try First
 
 **Before asking user:**
+
 1. ✅ Check this file for known solutions
 2. ✅ Check MEMORY.md for recent similar issues
 3. ✅ Read error message carefully (Google exact message)
@@ -765,6 +818,7 @@ npm install @capacitor/android
 6. ✅ Check logs for more details
 
 **Common debugging steps:**
+
 ```bash
 # Check logs
 sudo tail -f /var/log/apache2/error.log  # Apache
@@ -793,6 +847,7 @@ df -h
 **Add new solutions as you discover them**
 
 **Format:**
+
 ```markdown
 ### Error: "Exact error message"
 

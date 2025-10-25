@@ -9,6 +9,7 @@
 ## Pre-Phase Checklist
 
 Before starting a phase, verify:
+
 - [ ] PLAN.md exists in `.ai/phases/phase-XX/`
 - [ ] GHERKIN.md exists with acceptance criteria
 - [ ] UML.md exists with architecture diagrams
@@ -53,25 +54,30 @@ Before starting a phase, verify:
 **Before writing any code:**
 
 1. **Check current working directory:**
+
    ```bash
    pwd  # Should be /home/corey/Desktop/ADHDLearn.com
    ```
 
 2. **If backend phase, verify database connection:**
+
    ```bash
    mysql -h 160.153.180.159 -u [user] -p
    ```
+
    - Test connection works
    - Verify database `adhdlearn` exists
    - Check user has proper permissions
 
 3. **Verify Node.js version:**
+
    ```bash
    node --version  # Should be 18+
    npm --version   # Should be 9+
    ```
 
 4. **Check git status:**
+
    ```bash
    git status
    git branch  # Should show staging
@@ -93,6 +99,7 @@ Before starting a phase, verify:
    - Format: `phase-03-sessions-table.sql`
 
 2. **Migration file must include:**
+
    ```sql
    -- Phase X: [Description]
    -- Created: [Date]
@@ -112,12 +119,14 @@ Before starting a phase, verify:
    ```
 
 3. **Document rollback SQL (in comments):**
+
    ```sql
    -- ROLLBACK:
    -- DROP TABLE IF EXISTS table_name;
    ```
 
 4. **Execute migration:**
+
    ```bash
    mysql -h 160.153.180.159 -u [user] -p adhdlearn < backend/migrations/phase-XX-description.sql
    ```
@@ -154,23 +163,27 @@ Before starting a phase, verify:
    - Log important events
 
 4. **Response format (MUST follow this):**
+
    ```javascript
    // Success
    res.json({
      success: true,
-     data: { /* actual data */ },
-     message: "Optional success message"
+     data: {
+       /* actual data */
+     },
+     message: 'Optional success message',
    });
 
    // Error
    res.status(400).json({
      success: false,
-     error: "User-friendly error message",
-     details: "Optional technical details"
+     error: 'User-friendly error message',
+     details: 'Optional technical details',
    });
    ```
 
 5. **Register routes in main app:**
+
    ```javascript
    // backend/server.js or backend/app.js
    const featureRoutes = require('./routes/feature');
@@ -178,6 +191,7 @@ Before starting a phase, verify:
    ```
 
 6. **Test each endpoint manually:**
+
    ```bash
    # GET request
    curl -X GET https://api.adhdlearn.com/api/resource
@@ -203,6 +217,7 @@ Before starting a phase, verify:
    - Example: `src/components/Dashboard.jsx`
 
 2. **Follow React best practices:**
+
    ```javascript
    import React, { useState, useEffect } from 'react';
 
@@ -216,11 +231,7 @@ Before starting a phase, verify:
        };
      }, [dependencies]);
 
-     return (
-       <div className="tailwind-classes">
-         {/* Component JSX */}
-       </div>
-     );
+     return <div className="tailwind-classes">{/* Component JSX */}</div>;
    }
 
    export default ComponentName;
@@ -249,8 +260,8 @@ Before starting a phase, verify:
          method: 'GET',
          headers: {
            'Content-Type': 'application/json',
-           'Authorization': `Bearer ${token}`
-         }
+           Authorization: `Bearer ${token}`,
+         },
        });
        const data = await response.json();
        if (data.success) {
@@ -275,6 +286,7 @@ Before starting a phase, verify:
    - Example: `src/games/reading/word-builder/scenes/GameScene.js`
 
 2. **Follow Phaser 3 best practices:**
+
    ```javascript
    class GameScene extends Phaser.Scene {
      constructor() {
@@ -311,6 +323,7 @@ Before starting a phase, verify:
    - Clean up in shutdown() method
 
 4. **Audio management:**
+
    ```javascript
    // Use AudioManager service
    import AudioManager from '../../../services/AudioManager';
@@ -323,17 +336,18 @@ Before starting a phase, verify:
    ```
 
 5. **Score tracking:**
+
    ```javascript
    // Send score to backend
-   const saveScore = async (score) => {
+   const saveScore = async score => {
      await fetch('https://api.adhdlearn.com/api/sessions', {
        method: 'POST',
        headers: { 'Content-Type': 'application/json' },
        body: JSON.stringify({
          game_id: 1,
          score: score,
-         duration: timeSpent
-       })
+         duration: timeSpent,
+       }),
      });
    };
    ```
@@ -375,6 +389,7 @@ Before starting a phase, verify:
    - Note any issues found and fixed
 
 5. **Take screenshots:**
+
    ```bash
    # Android device
    $ANDROID_HOME/platform-tools/adb shell screencap -p /sdcard/screen.png
@@ -395,19 +410,24 @@ Before starting a phase, verify:
 **Mandatory before committing**
 
 1. **Run ESLint:**
+
    ```bash
    npm run lint
    ```
+
    - Fix ALL errors
    - Fix all warnings (or document why ignored)
 
 2. **Run Prettier:**
+
    ```bash
    npm run format
    ```
+
    - Formats all code consistently
 
 3. **Check McCabe complexity (≤ 5 for ALL functions):**
+
    ```bash
    # Install if not already installed
    npm install -g complexity-report
@@ -441,28 +461,34 @@ Before starting a phase, verify:
 **Update before committing**
 
 1. **Update START.md:**
+
    ```markdown
    **Last Updated:** [Today's date]
    **Current Phase:** Phase X Complete
    **Next Phase:** Phase X+1
 
    ## What's Working
+
    - ✅ Feature from Phase X
    - ✅ ... (add new features)
    ```
 
 2. **Update MEMORY.md:**
+
    ```markdown
    **Last Updated:** [Today's date]
    **Current Status:** Phase X Complete - Ready for Phase X+1
 
    ## Recent Changes
+
    - Phase X: [Description] - [Date] - ✅ Complete
 
    ## Critical Commands Used
+
    - [Any new commands discovered]
 
    ## Issues Encountered
+
    - [Problem]: [Solution]
    ```
 
@@ -485,22 +511,26 @@ Before starting a phase, verify:
 **Commit with detailed message**
 
 1. **Review all changes:**
+
    ```bash
    git status
    git diff
    ```
 
 2. **Stage changes:**
+
    ```bash
    git add .
    ```
 
 3. **Verify what's staged:**
+
    ```bash
    git status
    ```
 
 4. **Commit with structured message:**
+
    ```bash
    git commit -m "Complete Phase X: [Phase Name]
 
@@ -550,11 +580,13 @@ Before starting a phase, verify:
 **Deploy and test on staging environment**
 
 1. **SSH to server:**
+
    ```bash
    ssh corey@160.153.180.159
    ```
 
 2. **Navigate to staging directory:**
+
    ```bash
    # For child portal
    cd /var/www/child.adhdlearn.com/staging
@@ -567,27 +599,32 @@ Before starting a phase, verify:
    ```
 
 3. **Pull latest changes:**
+
    ```bash
    git pull origin staging
    ```
 
 4. **Install dependencies if needed:**
+
    ```bash
    npm install
    ```
 
 5. **Build frontend if needed:**
+
    ```bash
    npm run build
    ```
 
 6. **Restart backend if needed:**
+
    ```bash
    pm2 restart api-staging
    pm2 logs api-staging  # Check logs
    ```
 
 7. **Test on staging domain:**
+
    ```bash
    # Test API
    curl https://staging.api.adhdlearn.com/api/health
@@ -632,15 +669,18 @@ Before starting a phase, verify:
 **Only after all above steps complete**
 
 1. **Update MEMORY.md with completion:**
+
    ```markdown
    **Last Updated:** [Date]
    **Current Status:** Phase X Complete - Ready for Phase X+1
 
    ## Completed Phases
+
    - Phase X: [Name] - [Date] - ✅ All tests passed, deployed to staging
    ```
 
 2. **Update START.md:**
+
    ```markdown
    **Last Updated:** [Date]
    **Current Phase:** Phase X+1 (ready to begin)
@@ -648,6 +688,7 @@ Before starting a phase, verify:
    ```
 
 3. **Create phase completion summary:**
+
    ```markdown
    # Phase X Completion Summary
 
@@ -655,23 +696,28 @@ Before starting a phase, verify:
    **Duration:** [X hours/days]
 
    ## Deliverables
+
    - ✅ [Feature 1]
    - ✅ [Feature 2]
 
    ## Testing Results
+
    - ✅ All GHERKIN scenarios passed
    - ✅ McCabe complexity ≤ 5
    - ✅ Deployed to staging
    - ✅ Tested on device
 
    ## Known Issues
+
    - None (or list any minor issues to fix later)
 
    ## Next Phase
+
    Phase X+1: [Name]
    ```
 
 4. **Notify user:**
+
    ```
    Phase X is complete! 🎉
 
@@ -689,34 +735,42 @@ Before starting a phase, verify:
 ## Common Pitfalls
 
 ### ❌ Starting without reading docs
+
 **Problem:** Coding before understanding requirements
 **Fix:** Always read PLAN, GHERKIN, UML, WIREFRAMES first
 
 ### ❌ Skipping manual testing
+
 **Problem:** Committing broken code
 **Fix:** Test every scenario in GHERKIN.md before committing
 
 ### ❌ Committing with complexity > 5
+
 **Problem:** Code is hard to maintain
 **Fix:** Refactor immediately, re-run analysis
 
 ### ❌ Forgetting documentation updates
+
 **Problem:** START.md, MEMORY.md become outdated
 **Fix:** Update before committing (add to checklist)
 
 ### ❌ Not testing on actual device
+
 **Problem:** Touch issues, performance problems missed
 **Fix:** Always test on Galaxy Tab S7 FE for game/UI changes
 
 ### ❌ Ignoring console errors
+
 **Problem:** Silent failures, poor UX
 **Fix:** Fix ALL errors before committing
 
 ### ❌ Hardcoding credentials
+
 **Problem:** Security vulnerability
 **Fix:** Use environment variables
 
 ### ❌ Skipping git push
+
 **Problem:** Work not backed up
 **Fix:** Push to staging after every commit
 
@@ -739,6 +793,7 @@ Before starting a phase, verify:
 **Total per phase:** 4-12 hours of AI work
 
 **Factors that increase time:**
+
 - New technology (first time using a library)
 - Complex game logic
 - Extensive UI work
@@ -749,6 +804,7 @@ Before starting a phase, verify:
 ## Success Criteria
 
 **A phase is complete when:**
+
 - ✅ All acceptance criteria from GHERKIN.md pass
 - ✅ All code committed to git
 - ✅ McCabe complexity ≤ 5 for all functions
@@ -768,18 +824,21 @@ Before starting a phase, verify:
 ## Emergency Procedures
 
 ### If tests fail after deployment
+
 1. Revert deployment: `git reset --hard HEAD~1`
 2. Fix issues locally
 3. Re-test
 4. Re-deploy
 
 ### If database migration fails
+
 1. Run rollback SQL
 2. Fix migration script
 3. Re-run migration
 4. Verify with `SHOW TABLES` and `DESCRIBE`
 
 ### If production breaks
+
 1. Immediately revert to previous version
 2. Notify user
 3. Fix in staging

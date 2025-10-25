@@ -1,6 +1,7 @@
 # Development Guardrails
 
 ## Purpose
+
 This document defines code quality standards, best practices, and common pitfalls to avoid when developing ADHDLearn.com. These guardrails ensure the codebase remains clean, maintainable, and aligned with the project's ADHD-friendly educational goals.
 
 ---
@@ -12,12 +13,14 @@ This document defines code quality standards, best practices, and common pitfall
 **CURRENT STACK:** React + Phaser 3 + Node.js + MySQL
 
 This document contains code examples for the current technology stack. All examples use:
+
 - **JavaScript/React** for frontend components
 - **Phaser 3** for games
 - **Node.js + Express** for backend API
 - **MySQL** for database
 
 **EXPLICITLY NOT USING:**
+
 - ❌ **Kotlin** - Abandoned October 2025 (GWT incompatibility)
 - ❌ **libGDX** - Kotlin + Web doesn't work
 - ❌ **Java/Gradle**
@@ -29,16 +32,20 @@ This document contains code examples for the current technology stack. All examp
 ## Quick Reference
 
 **Frontend:**
+
 - React 18 + Vite + Tailwind CSS (parent portal)
 - React 18 + Vite + Phaser 3.80.1 (child portal with games)
 
 **Backend:**
+
 - Node.js 18+ + Express + Socket.io
 
 **Database:**
+
 - MySQL 8.0 (160.153.180.159)
 
 **Deployment:**
+
 - Apache + Let's Encrypt SSL
 - 8 virtual hosts (staging + production × 4 subdomains)
 - Capacitor for Android APK
@@ -48,289 +55,304 @@ This document contains code examples for the current technology stack. All examp
 ## Core Principles
 
 ### 1. Single Responsibility Principle
+
 Each class, function, and module should do ONE thing well.
 
 **✅ GOOD:**
+
 ```javascript
 class Bubble {
-    constructor(scene, x, y, letter) {
-        this.scene = scene;
-        this.container = scene.add.container(x, y);
-        this.letter = letter;
-        this.createVisuals();
-    }
+  constructor(scene, x, y, letter) {
+    this.scene = scene;
+    this.container = scene.add.container(x, y);
+    this.letter = letter;
+    this.createVisuals();
+  }
 
-    createVisuals() {
-        // Only handles visual creation
-        this.graphics = this.scene.add.graphics();
-        this.graphics.fillStyle(0x4488ff, 1);
-        this.graphics.fillCircle(0, 0, 40);
-    }
+  createVisuals() {
+    // Only handles visual creation
+    this.graphics = this.scene.add.graphics();
+    this.graphics.fillStyle(0x4488ff, 1);
+    this.graphics.fillCircle(0, 0, 40);
+  }
 
-    pop() {
-        // Only handles pop behavior
-        this.scene.tweens.add({
-            targets: this.container,
-            scaleX: 1.5,
-            scaleY: 1.5,
-            alpha: 0,
-            duration: 300,
-            onComplete: () => this.destroy()
-        });
-    }
+  pop() {
+    // Only handles pop behavior
+    this.scene.tweens.add({
+      targets: this.container,
+      scaleX: 1.5,
+      scaleY: 1.5,
+      alpha: 0,
+      duration: 300,
+      onComplete: () => this.destroy(),
+    });
+  }
 }
 ```
 
 **❌ BAD:**
+
 ```javascript
 class Bubble {
-    constructor(scene, x, y, letter) {
-        // Too many responsibilities in constructor
-        this.scene = scene;
-        this.container = scene.add.container(x, y);
-        this.letter = letter;
+  constructor(scene, x, y, letter) {
+    // Too many responsibilities in constructor
+    this.scene = scene;
+    this.container = scene.add.container(x, y);
+    this.letter = letter;
 
-        // Creating visuals
-        this.graphics = scene.add.graphics();
-        this.graphics.fillStyle(0x4488ff, 1);
-        this.graphics.fillCircle(0, 0, 40);
+    // Creating visuals
+    this.graphics = scene.add.graphics();
+    this.graphics.fillStyle(0x4488ff, 1);
+    this.graphics.fillCircle(0, 0, 40);
 
-        // Setting up audio
-        this.popSound = scene.sound.add('pop');
+    // Setting up audio
+    this.popSound = scene.sound.add('pop');
 
-        // Setting up click handler
-        this.container.setInteractive();
-        this.container.on('pointerdown', () => {
-            this.popSound.play();
-            // Game logic mixed in
-            scene.score += 10;
-            scene.updateScoreDisplay();
-            this.destroy();
-        });
-    }
+    // Setting up click handler
+    this.container.setInteractive();
+    this.container.on('pointerdown', () => {
+      this.popSound.play();
+      // Game logic mixed in
+      scene.score += 10;
+      scene.updateScoreDisplay();
+      this.destroy();
+    });
+  }
 }
 ```
 
 ### 2. Dependency Injection
+
 Pass dependencies explicitly rather than accessing globals.
 
 **✅ GOOD:**
+
 ```javascript
 class LetterPopScene extends Phaser.Scene {
-    constructor() {
-        super('LetterPopScene');
-    }
+  constructor() {
+    super('LetterPopScene');
+  }
 
-    create() {
-        // Inject dependencies
-        this.audioManager = this.registry.get('audioManager');
-        this.progressManager = this.registry.get('progressManager');
+  create() {
+    // Inject dependencies
+    this.audioManager = this.registry.get('audioManager');
+    this.progressManager = this.registry.get('progressManager');
 
-        this.createBubble('A');
-    }
+    this.createBubble('A');
+  }
 
-    createBubble(letter) {
-        const bubble = new Bubble(this, 400, 300, letter, this.audioManager);
-        return bubble;
-    }
+  createBubble(letter) {
+    const bubble = new Bubble(this, 400, 300, letter, this.audioManager);
+    return bubble;
+  }
 }
 
 class Bubble {
-    constructor(scene, x, y, letter, audioManager) {
-        this.scene = scene;
-        this.audioManager = audioManager; // Injected
-        this.letter = letter;
-    }
+  constructor(scene, x, y, letter, audioManager) {
+    this.scene = scene;
+    this.audioManager = audioManager; // Injected
+    this.letter = letter;
+  }
 
-    pop() {
-        this.audioManager.playSound('pop'); // Uses injected dependency
-    }
+  pop() {
+    this.audioManager.playSound('pop'); // Uses injected dependency
+  }
 }
 ```
 
 **❌ BAD:**
+
 ```javascript
 // Global variable - hard to test, creates tight coupling
 let globalAudioManager;
 
 class Bubble {
-    constructor(scene, x, y, letter) {
-        this.scene = scene;
-        this.letter = letter;
-    }
+  constructor(scene, x, y, letter) {
+    this.scene = scene;
+    this.letter = letter;
+  }
 
-    pop() {
-        globalAudioManager.playSound('pop'); // Accessing global
-    }
+  pop() {
+    globalAudioManager.playSound('pop'); // Accessing global
+  }
 }
 ```
 
 ### 3. Avoid Magic Numbers
+
 Use named constants for clarity.
 
 **✅ GOOD:**
+
 ```javascript
 class LetterPopScene extends Phaser.Scene {
-    constructor() {
-        super('LetterPopScene');
+  constructor() {
+    super('LetterPopScene');
 
-        // Constants at the top, clearly named
-        this.BUBBLE_RADIUS = 40;
-        this.BUBBLE_SPAWN_INTERVAL = 2000;
-        this.MAX_BUBBLES = 5;
-        this.BUBBLE_FLOAT_SPEED = 50;
-        this.CORRECT_SCORE = 10;
-    }
+    // Constants at the top, clearly named
+    this.BUBBLE_RADIUS = 40;
+    this.BUBBLE_SPAWN_INTERVAL = 2000;
+    this.MAX_BUBBLES = 5;
+    this.BUBBLE_FLOAT_SPEED = 50;
+    this.CORRECT_SCORE = 10;
+  }
 
-    spawnBubble() {
-        const bubble = new Bubble(this, x, y, letter, this.BUBBLE_RADIUS);
-        bubble.setVelocityY(-this.BUBBLE_FLOAT_SPEED);
-    }
+  spawnBubble() {
+    const bubble = new Bubble(this, x, y, letter, this.BUBBLE_RADIUS);
+    bubble.setVelocityY(-this.BUBBLE_FLOAT_SPEED);
+  }
 
-    handleCorrectAnswer() {
-        this.score += this.CORRECT_SCORE;
-    }
+  handleCorrectAnswer() {
+    this.score += this.CORRECT_SCORE;
+  }
 }
 ```
 
 **❌ BAD:**
+
 ```javascript
 class LetterPopScene extends Phaser.Scene {
-    spawnBubble() {
-        const bubble = new Bubble(this, x, y, letter, 40); // What is 40?
-        bubble.setVelocityY(-50); // What is 50?
-    }
+  spawnBubble() {
+    const bubble = new Bubble(this, x, y, letter, 40); // What is 40?
+    bubble.setVelocityY(-50); // What is 50?
+  }
 
-    handleCorrectAnswer() {
-        this.score += 10; // What does 10 represent?
-    }
+  handleCorrectAnswer() {
+    this.score += 10; // What does 10 represent?
+  }
 }
 ```
 
 ### 4. Proper Error Handling
+
 Always handle potential failures gracefully.
 
 **✅ GOOD:**
+
 ```javascript
 class AudioManager {
-    playVoice(key) {
-        // Validate input
-        if (!key) {
-            console.warn('AudioManager.playVoice: No key provided');
-            return;
-        }
-
-        // Check if sound exists
-        if (!this.scene.cache.audio.exists(key)) {
-            console.warn(`AudioManager.playVoice: Audio key "${key}" not found`);
-            return; // Graceful degradation
-        }
-
-        // Stop any playing voice
-        if (this.currentVoice && this.currentVoice.isPlaying) {
-            this.currentVoice.stop();
-        }
-
-        // Play with error handling
-        try {
-            this.currentVoice = this.scene.sound.add(key);
-            this.currentVoice.play({ volume: this.voiceVolume });
-        } catch (error) {
-            console.error(`AudioManager.playVoice: Error playing "${key}"`, error);
-        }
+  playVoice(key) {
+    // Validate input
+    if (!key) {
+      console.warn('AudioManager.playVoice: No key provided');
+      return;
     }
+
+    // Check if sound exists
+    if (!this.scene.cache.audio.exists(key)) {
+      console.warn(`AudioManager.playVoice: Audio key "${key}" not found`);
+      return; // Graceful degradation
+    }
+
+    // Stop any playing voice
+    if (this.currentVoice && this.currentVoice.isPlaying) {
+      this.currentVoice.stop();
+    }
+
+    // Play with error handling
+    try {
+      this.currentVoice = this.scene.sound.add(key);
+      this.currentVoice.play({ volume: this.voiceVolume });
+    } catch (error) {
+      console.error(`AudioManager.playVoice: Error playing "${key}"`, error);
+    }
+  }
 }
 ```
 
 **❌ BAD:**
+
 ```javascript
 class AudioManager {
-    playVoice(key) {
-        // No validation, will crash if key is undefined
-        // No check if audio exists, will crash if missing
-        // No try-catch, will crash on playback error
-        this.currentVoice = this.scene.sound.add(key);
-        this.currentVoice.play();
-    }
+  playVoice(key) {
+    // No validation, will crash if key is undefined
+    // No check if audio exists, will crash if missing
+    // No try-catch, will crash on playback error
+    this.currentVoice = this.scene.sound.add(key);
+    this.currentVoice.play();
+  }
 }
 ```
 
 ### 5. Clean Scene Lifecycle
+
 Properly manage create, update, and shutdown.
 
 **✅ GOOD:**
+
 ```javascript
 class LetterPopScene extends Phaser.Scene {
-    create() {
-        // Initialize state
-        this.bubbles = [];
-        this.score = 0;
+  create() {
+    // Initialize state
+    this.bubbles = [];
+    this.score = 0;
 
-        // Create visuals
-        this.createBackground();
-        this.createUI();
+    // Create visuals
+    this.createBackground();
+    this.createUI();
 
-        // Start game logic
-        this.startRound();
+    // Start game logic
+    this.startRound();
+  }
+
+  update(time, delta) {
+    // Update only what changes each frame
+    this.bubbles.forEach(bubble => bubble.update(delta));
+  }
+
+  shutdown() {
+    // Clean up to prevent memory leaks
+    this.bubbles.forEach(bubble => bubble.destroy());
+    this.bubbles = [];
+
+    // Remove event listeners
+    this.input.off('pointerdown');
+
+    // Stop timers
+    if (this.spawnTimer) {
+      this.spawnTimer.remove();
     }
-
-    update(time, delta) {
-        // Update only what changes each frame
-        this.bubbles.forEach(bubble => bubble.update(delta));
-    }
-
-    shutdown() {
-        // Clean up to prevent memory leaks
-        this.bubbles.forEach(bubble => bubble.destroy());
-        this.bubbles = [];
-
-        // Remove event listeners
-        this.input.off('pointerdown');
-
-        // Stop timers
-        if (this.spawnTimer) {
-            this.spawnTimer.remove();
-        }
-    }
+  }
 }
 ```
 
 **❌ BAD:**
+
 ```javascript
 class LetterPopScene extends Phaser.Scene {
-    create() {
-        // Everything jammed in create
-        this.bubbles = [];
-        this.score = 0;
-        this.bg = this.add.rectangle(400, 300, 800, 600, 0x4488ff);
-        this.scoreText = this.add.text(10, 10, 'Score: 0');
+  create() {
+    // Everything jammed in create
+    this.bubbles = [];
+    this.score = 0;
+    this.bg = this.add.rectangle(400, 300, 800, 600, 0x4488ff);
+    this.scoreText = this.add.text(10, 10, 'Score: 0');
 
-        // Game logic mixed with initialization
-        this.spawnBubble();
-        this.spawnBubble();
-        this.spawnBubble();
+    // Game logic mixed with initialization
+    this.spawnBubble();
+    this.spawnBubble();
+    this.spawnBubble();
 
-        // No organization
+    // No organization
+  }
+
+  update(time, delta) {
+    // Doing too much in update
+    this.bubbles.forEach(bubble => {
+      bubble.y -= 1;
+      if (bubble.y < 0) {
+        bubble.destroy();
+        this.bubbles.splice(this.bubbles.indexOf(bubble), 1);
+        this.spawnBubble();
+      }
+    });
+
+    // Checking for game end in update (should be event-driven)
+    if (this.score >= 100) {
+      this.scene.start('ResultsScene');
     }
+  }
 
-    update(time, delta) {
-        // Doing too much in update
-        this.bubbles.forEach(bubble => {
-            bubble.y -= 1;
-            if (bubble.y < 0) {
-                bubble.destroy();
-                this.bubbles.splice(this.bubbles.indexOf(bubble), 1);
-                this.spawnBubble();
-            }
-        });
-
-        // Checking for game end in update (should be event-driven)
-        if (this.score >= 100) {
-            this.scene.start('ResultsScene');
-        }
-    }
-
-    // No shutdown method - memory leaks!
+  // No shutdown method - memory leaks!
 }
 ```
 
@@ -339,7 +361,9 @@ class LetterPopScene extends Phaser.Scene {
 ## React Best Practices
 
 ### Use Functional Components with Hooks
+
 **✅ GOOD:**
+
 ```javascript
 import { useState, useEffect } from 'react';
 
@@ -377,6 +401,7 @@ function ChildDashboard({ childId }) {
 ```
 
 **❌ BAD:**
+
 ```javascript
 // Class component - avoid
 class ChildDashboard extends React.Component {
@@ -399,7 +424,9 @@ class ChildDashboard extends React.Component {
 ```
 
 ### Avoid Infinite Render Loops
+
 **✅ GOOD:**
+
 ```javascript
 function ScoreDisplay({ sessionId }) {
   const [score, setScore] = useState(null);
@@ -414,6 +441,7 @@ function ScoreDisplay({ sessionId }) {
 ```
 
 **❌ BAD:**
+
 ```javascript
 function ScoreDisplay({ sessionId }) {
   const [score, setScore] = useState(null);
@@ -427,6 +455,7 @@ function ScoreDisplay({ sessionId }) {
 ```
 
 ### Prop Validation (Optional but Recommended)
+
 ```javascript
 import PropTypes from 'prop-types';
 
@@ -443,14 +472,16 @@ GameCard.propTypes = {
   game: PropTypes.shape({
     id: PropTypes.number.isRequired,
     title: PropTypes.string.isRequired,
-    description: PropTypes.string
+    description: PropTypes.string,
   }).isRequired,
-  onPlay: PropTypes.func.isRequired
+  onPlay: PropTypes.func.isRequired,
 };
 ```
 
 ### Context for Global State (Avoid Prop Drilling)
+
 **✅ GOOD:**
+
 ```javascript
 // AuthContext.jsx
 import { createContext, useContext, useState } from 'react';
@@ -465,7 +496,7 @@ export function AuthProvider({ children }) {
     const response = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password }),
     });
     const data = await response.json();
     setToken(data.token);
@@ -480,9 +511,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={{ user, token, login, logout }}>{children}</AuthContext.Provider>
   );
 }
 
@@ -502,7 +531,9 @@ function Header() {
 ## Express/Backend Best Practices
 
 ### Proper Route Organization
+
 **✅ GOOD:**
+
 ```javascript
 // routes/children.js
 const express = require('express');
@@ -527,10 +558,10 @@ router.get('/', authenticate, async (req, res) => {
 // Get specific child
 router.get('/:id', authenticate, async (req, res) => {
   try {
-    const [children] = await db.query(
-      'SELECT * FROM children WHERE id = ? AND family_id = ?',
-      [req.params.id, req.user.family_id]
-    );
+    const [children] = await db.query('SELECT * FROM children WHERE id = ? AND family_id = ?', [
+      req.params.id,
+      req.user.family_id,
+    ]);
 
     if (children.length === 0) {
       return res.status(404).json({ success: false, message: 'Child not found' });
@@ -547,11 +578,14 @@ module.exports = router;
 ```
 
 ### Input Validation
+
 **✅ GOOD:**
+
 ```javascript
 const { body, validationResult } = require('express-validator');
 
-router.post('/register',
+router.post(
+  '/register',
   // Validation middleware
   body('email').isEmail().normalizeEmail(),
   body('password').isLength({ min: 8 }),
@@ -563,7 +597,7 @@ router.post('/register',
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        errors: errors.array()
+        errors: errors.array(),
       });
     }
 
@@ -575,6 +609,7 @@ router.post('/register',
 ```
 
 **❌ BAD:**
+
 ```javascript
 router.post('/register', async (req, res) => {
   // No validation - accepts any input
@@ -585,7 +620,9 @@ router.post('/register', async (req, res) => {
 ```
 
 ### Authentication Middleware
+
 **✅ GOOD:**
+
 ```javascript
 // middleware/auth.js
 const jwt = require('jsonwebtoken');
@@ -596,7 +633,7 @@ function authenticate(req, res, next) {
   if (!token) {
     return res.status(401).json({
       success: false,
-      message: 'No token provided'
+      message: 'No token provided',
     });
   }
 
@@ -607,7 +644,7 @@ function authenticate(req, res, next) {
   } catch (error) {
     return res.status(401).json({
       success: false,
-      message: 'Invalid token'
+      message: 'Invalid token',
     });
   }
 }
@@ -616,7 +653,9 @@ module.exports = { authenticate };
 ```
 
 ### Database Connection Pooling
+
 **✅ GOOD:**
+
 ```javascript
 // db.js
 const mysql = require('mysql2/promise');
@@ -628,7 +667,7 @@ const pool = mysql.createPool({
   database: 'adhdlearn',
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
 });
 
 module.exports = pool;
@@ -639,7 +678,9 @@ const [rows] = await db.query('SELECT * FROM users WHERE id = ?', [userId]);
 ```
 
 ### Environment Variables
+
 **✅ GOOD:**
+
 ```javascript
 // Load at app start
 require('dotenv').config();
@@ -655,6 +696,7 @@ if (!JWT_SECRET) {
 ```
 
 **❌ BAD:**
+
 ```javascript
 // Hardcoded secrets - NEVER do this
 const JWT_SECRET = 'my-secret-key-123';
@@ -666,77 +708,86 @@ const DB_PASSWORD = 'password123';
 ## Phaser 3 Best Practices
 
 ### Use Containers for Complex Game Objects
+
 **✅ GOOD:**
+
 ```javascript
 class Bubble extends Phaser.GameObjects.Container {
-    constructor(scene, x, y, letter) {
-        super(scene, x, y);
-        scene.add.existing(this);
+  constructor(scene, x, y, letter) {
+    super(scene, x, y);
+    scene.add.existing(this);
 
-        // All child objects positioned relative to container
-        this.graphics = scene.add.graphics();
-        this.graphics.fillStyle(0x4488ff, 1);
-        this.graphics.fillCircle(0, 0, 40);
-        this.add(this.graphics);
+    // All child objects positioned relative to container
+    this.graphics = scene.add.graphics();
+    this.graphics.fillStyle(0x4488ff, 1);
+    this.graphics.fillCircle(0, 0, 40);
+    this.add(this.graphics);
 
-        this.text = scene.add.text(0, 0, letter, {
-            fontSize: '32px',
-            color: '#ffffff'
-        }).setOrigin(0.5);
-        this.add(this.text);
+    this.text = scene.add
+      .text(0, 0, letter, {
+        fontSize: '32px',
+        color: '#ffffff',
+      })
+      .setOrigin(0.5);
+    this.add(this.text);
 
-        // Container handles all transformations
-        this.setSize(80, 80);
-        this.setInteractive();
-    }
+    // Container handles all transformations
+    this.setSize(80, 80);
+    this.setInteractive();
+  }
 }
 ```
 
 ### Preload All Assets
+
 **✅ GOOD:**
+
 ```javascript
 class PreloadScene extends Phaser.Scene {
-    preload() {
-        // Show progress
-        this.createProgressBar();
+  preload() {
+    // Show progress
+    this.createProgressBar();
 
-        // Load all assets before gameplay
-        this.load.audio('pop', 'assets/audio/pop.mp3');
-        this.load.audio('letter-a', 'assets/audio/letters/letter-a.mp3');
-        this.load.image('bubble', 'assets/images/bubble.png');
+    // Load all assets before gameplay
+    this.load.audio('pop', 'assets/audio/pop.mp3');
+    this.load.audio('letter-a', 'assets/audio/letters/letter-a.mp3');
+    this.load.image('bubble', 'assets/images/bubble.png');
 
-        // Track progress
-        this.load.on('progress', (value) => {
-            this.progressBar.clear();
-            this.progressBar.fillStyle(0x00ff00, 1);
-            this.progressBar.fillRect(250, 280, 300 * value, 40);
-        });
-    }
+    // Track progress
+    this.load.on('progress', value => {
+      this.progressBar.clear();
+      this.progressBar.fillStyle(0x00ff00, 1);
+      this.progressBar.fillRect(250, 280, 300 * value, 40);
+    });
+  }
 
-    create() {
-        // All assets loaded, proceed to game
-        this.scene.start('MainMenuScene');
-    }
+  create() {
+    // All assets loaded, proceed to game
+    this.scene.start('MainMenuScene');
+  }
 }
 ```
 
 **❌ BAD:**
+
 ```javascript
 class LetterPopScene extends Phaser.Scene {
-    create() {
-        // Loading during gameplay - causes stutter and lag
-        this.load.audio('pop', 'assets/audio/pop.mp3');
-        this.load.start();
+  create() {
+    // Loading during gameplay - causes stutter and lag
+    this.load.audio('pop', 'assets/audio/pop.mp3');
+    this.load.start();
 
-        this.load.on('complete', () => {
-            this.createGame(); // Delayed start
-        });
-    }
+    this.load.on('complete', () => {
+      this.createGame(); // Delayed start
+    });
+  }
 }
 ```
 
 ### Use Tweens for Smooth Animations
+
 **✅ GOOD:**
+
 ```javascript
 popBubble() {
     // Smooth, controlled animation
@@ -755,6 +806,7 @@ popBubble() {
 ```
 
 **❌ BAD:**
+
 ```javascript
 popBubble() {
     // Manual animation in update - janky and inefficient
@@ -779,7 +831,9 @@ update(delta) {
 ## ADHD-Friendly Design Patterns
 
 ### Immediate Feedback (< 50ms)
+
 **✅ GOOD:**
+
 ```javascript
 handleBubbleClick(bubble) {
     // Immediate visual feedback
@@ -800,6 +854,7 @@ handleBubbleClick(bubble) {
 ```
 
 **❌ BAD:**
+
 ```javascript
 handleBubbleClick(bubble) {
     // Check answer first (could take 50-100ms)
@@ -817,7 +872,9 @@ handleBubbleClick(bubble) {
 ```
 
 ### Non-Punitive Feedback
+
 **✅ GOOD:**
+
 ```javascript
 handleIncorrectAnswer(bubble) {
     // Gentle wobble - not harsh
@@ -840,6 +897,7 @@ handleIncorrectAnswer(bubble) {
 ```
 
 **❌ BAD:**
+
 ```javascript
 handleIncorrectAnswer(bubble) {
     // Harsh visual - red X mark
@@ -863,48 +921,53 @@ handleIncorrectAnswer(bubble) {
 ```
 
 ### Progress Visibility
+
 **✅ GOOD:**
+
 ```javascript
 class LetterPopScene extends Phaser.Scene {
-    create() {
-        // Always show progress
-        this.progressText = this.add.text(400, 30, '', {
-            fontSize: '24px',
-            color: '#ffffff'
-        }).setOrigin(0.5);
+  create() {
+    // Always show progress
+    this.progressText = this.add
+      .text(400, 30, '', {
+        fontSize: '24px',
+        color: '#ffffff',
+      })
+      .setOrigin(0.5);
 
-        this.updateProgress();
+    this.updateProgress();
+  }
+
+  updateProgress() {
+    // Clear, simple progress
+    this.progressText.setText(`Letter ${this.currentIndex + 1} of ${this.totalLetters}`);
+  }
+
+  nextLetter() {
+    this.currentIndex++;
+    this.updateProgress(); // Update immediately
+
+    // Celebrate milestones
+    if (this.currentIndex === Math.floor(this.totalLetters / 2)) {
+      this.showMessage('Halfway there!');
     }
-
-    updateProgress() {
-        // Clear, simple progress
-        this.progressText.setText(`Letter ${this.currentIndex + 1} of ${this.totalLetters}`);
-    }
-
-    nextLetter() {
-        this.currentIndex++;
-        this.updateProgress(); // Update immediately
-
-        // Celebrate milestones
-        if (this.currentIndex === Math.floor(this.totalLetters / 2)) {
-            this.showMessage('Halfway there!');
-        }
-    }
+  }
 }
 ```
 
 **❌ BAD:**
+
 ```javascript
 class LetterPopScene extends Phaser.Scene {
-    create() {
-        // No progress indicator
-        // Aurora doesn't know how much longer
-    }
+  create() {
+    // No progress indicator
+    // Aurora doesn't know how much longer
+  }
 
-    nextLetter() {
-        this.currentIndex++;
-        // No feedback on progress
-    }
+  nextLetter() {
+    this.currentIndex++;
+    // No feedback on progress
+  }
 }
 ```
 
@@ -913,45 +976,48 @@ class LetterPopScene extends Phaser.Scene {
 ## Performance Guidelines
 
 ### Object Pooling for Frequently Created Objects
+
 **✅ GOOD:**
+
 ```javascript
 class ParticlePool {
-    constructor(scene, size = 50) {
-        this.scene = scene;
-        this.pool = [];
+  constructor(scene, size = 50) {
+    this.scene = scene;
+    this.pool = [];
 
-        // Pre-create particles
-        for (let i = 0; i < size; i++) {
-            const particle = scene.add.circle(0, 0, 5, 0xffffff);
-            particle.setActive(false);
-            particle.setVisible(false);
-            this.pool.push(particle);
-        }
+    // Pre-create particles
+    for (let i = 0; i < size; i++) {
+      const particle = scene.add.circle(0, 0, 5, 0xffffff);
+      particle.setActive(false);
+      particle.setVisible(false);
+      this.pool.push(particle);
+    }
+  }
+
+  spawn(x, y, color) {
+    // Reuse inactive particle
+    const particle = this.pool.find(p => !p.active);
+
+    if (particle) {
+      particle.setPosition(x, y);
+      particle.setFillStyle(color);
+      particle.setActive(true);
+      particle.setVisible(true);
+      return particle;
     }
 
-    spawn(x, y, color) {
-        // Reuse inactive particle
-        const particle = this.pool.find(p => !p.active);
+    return null; // Pool exhausted
+  }
 
-        if (particle) {
-            particle.setPosition(x, y);
-            particle.setFillStyle(color);
-            particle.setActive(true);
-            particle.setVisible(true);
-            return particle;
-        }
-
-        return null; // Pool exhausted
-    }
-
-    despawn(particle) {
-        particle.setActive(false);
-        particle.setVisible(false);
-    }
+  despawn(particle) {
+    particle.setActive(false);
+    particle.setVisible(false);
+  }
 }
 ```
 
 **❌ BAD:**
+
 ```javascript
 spawnParticles(x, y) {
     // Creates 20 new objects every time - garbage collection nightmare
@@ -972,33 +1038,38 @@ spawnParticles(x, y) {
 ```
 
 ### Limit Active Objects
+
 **✅ GOOD:**
+
 ```javascript
 class LetterPopScene extends Phaser.Scene {
-    create() {
-        this.MAX_BUBBLES = 5;
-        this.bubbles = [];
+  create() {
+    this.MAX_BUBBLES = 5;
+    this.bubbles = [];
+  }
+
+  spawnBubble() {
+    // Limit active bubbles
+    if (this.bubbles.length >= this.MAX_BUBBLES) {
+      return; // Don't spawn more
     }
 
-    spawnBubble() {
-        // Limit active bubbles
-        if (this.bubbles.length >= this.MAX_BUBBLES) {
-            return; // Don't spawn more
-        }
-
-        const bubble = new Bubble(this, x, y, letter);
-        this.bubbles.push(bubble);
-    }
+    const bubble = new Bubble(this, x, y, letter);
+    this.bubbles.push(bubble);
+  }
 }
 ```
 
 ### Use Texture Atlases for Multiple Images
+
 **✅ GOOD:**
+
 ```javascript
 // In PreloadScene
-this.load.atlas('game-sprites',
-    'assets/atlases/game-sprites.png',
-    'assets/atlases/game-sprites.json'
+this.load.atlas(
+  'game-sprites',
+  'assets/atlases/game-sprites.png',
+  'assets/atlases/game-sprites.json'
 );
 
 // In game
@@ -1007,6 +1078,7 @@ this.add.image(x, y, 'game-sprites', 'star');
 ```
 
 **❌ BAD:**
+
 ```javascript
 // Loading many individual images - slow
 this.load.image('bubble', 'assets/images/bubble.png');
@@ -1020,7 +1092,9 @@ this.load.image('confetti', 'assets/images/confetti.png');
 ## Testing Requirements
 
 ### Every Feature Needs BDD Scenarios
+
 **✅ GOOD:**
+
 ```gherkin
 Feature: Bubble Pop Mechanic
   As Aurora
@@ -1039,6 +1113,7 @@ Scenario: Click correct bubble
 ```
 
 ### Manual Testing Checklist for Each Phase
+
 Each phase must have a manual testing checklist in GHERKIN.md that can be followed step-by-step.
 
 ---
@@ -1046,11 +1121,13 @@ Each phase must have a manual testing checklist in GHERKIN.md that can be follow
 ## GUI Visual Testing Protocol
 
 ### Purpose
+
 When testing the look and feel of GUI elements, scenes, or layouts, we use a **screenshot-based personality review process** to ensure the interface is engaging, accessible, and Aurora-friendly. This prevents developer bias and ensures diverse perspectives are considered.
 
 ### Workflow
 
 #### Step 1: Capture Screenshot
+
 1. Launch the application in the emulator
 2. Manually navigate to the scene/screen being tested
 3. Interact with elements as needed to show the state
@@ -1063,15 +1140,18 @@ When testing the look and feel of GUI elements, scenes, or layouts, we use a **s
 6. Use descriptive filenames: `main-menu-v1.png`, `bubble-pop-iteration-3.png`, etc.
 
 #### Step 2: Create 5 Diverse Personalities
+
 Create 5 distinct reviewers with different perspectives. **Avoid simple true/false personalities.**
 
 **Required Mix:**
+
 - At least 2 children (ages 4-7, different backgrounds/preferences)
 - At least 1 UI/UX designer (professional perspective)
 - At least 1 player/tester (gameplay focus)
 - At least 1 parent/educator (learning/safety focus)
 
 **✅ GOOD Examples:**
+
 ```
 1. Sophie, Age 5 - Loves pink and purple, gets distracted easily, prefers big colorful buttons
 2. Marcus, Age 6 - Colorblind (red-green), loves animals, gets frustrated with small text
@@ -1081,6 +1161,7 @@ Create 5 distinct reviewers with different perspectives. **Avoid simple true/fal
 ```
 
 **❌ BAD Examples:**
+
 ```
 1. Person who likes it
 2. Person who doesn't like it
@@ -1096,6 +1177,7 @@ Create 5 distinct reviewers with different perspectives. **Avoid simple true/fal
 **CRITICAL RULE:** You MUST actually read the screenshot file using the Read tool and show it to each personality individually. **NEVER generate fake responses without actually viewing the screenshot.**
 
 **✅ CORRECT Process:**
+
 ```markdown
 Let me show the screenshot to each personality:
 
@@ -1109,6 +1191,7 @@ The stars are pretty but they're moving too slow, I want them to zoom!"
 ```
 
 **❌ WRONG Process:**
+
 ```markdown
 Personality 1 (Sophie): "The colors are nice but buttons could be bigger."
 Personality 2 (Marcus): "I like it, looks good."
@@ -1121,6 +1204,7 @@ Personality 2 (Marcus): "I like it, looks good."
 #### Step 4: Collect Detailed Feedback
 
 For each personality, document:
+
 - **What they noticed first** (captures attention hierarchy)
 - **What they liked** (preserve these elements)
 - **What confused them** (UX issues)
@@ -1130,6 +1214,7 @@ For each personality, document:
 #### Step 5: Synthesize and Prioritize
 
 After collecting all 5 perspectives:
+
 1. Identify **consensus issues** (3+ personalities agree)
 2. Flag **accessibility concerns** (especially from child perspectives)
 3. Note **professional insights** (from designer/educator)
@@ -1138,6 +1223,7 @@ After collecting all 5 perspectives:
 #### Step 6: Iterate
 
 Make changes based on feedback, take a new screenshot, and repeat the process. Continue until:
+
 - All consensus issues are resolved
 - Accessibility concerns are addressed
 - At least 4 out of 5 personalities are satisfied
@@ -1181,11 +1267,12 @@ Can the clouds be animal shapes? That would be cool!"
 [Read tool shows screenshot]
 
 "Good color choices overall. Issues:
-1) Contrast ratio on the orange button fails WCAG AA (especially for colorblind users)
-2) Text hierarchy is unclear - title and button are competing for attention
-3) Missing visual affordances - buttons don't look tappable enough
-4) No clear call-to-action flow - where should eyes go first?
-5) Settings button needs an icon, not just text
+
+1. Contrast ratio on the orange button fails WCAG AA (especially for colorblind users)
+2. Text hierarchy is unclear - title and button are competing for attention
+3. Missing visual affordances - buttons don't look tappable enough
+4. No clear call-to-action flow - where should eyes go first?
+5. Settings button needs an icon, not just text
 
 Positives: Clean layout, decorative elements don't interfere with UX, good use of negative space."
 
@@ -1224,11 +1311,13 @@ Missing progress indicators - kids with ADHD need to know 'how much' remains."
 **Would change:** Simplify title, reduce cloud animation speed, add progress indicators
 
 ### Consensus Issues (Must Fix):
+
 1. **Button contrast** - 3 people mentioned (Marcus, Jessica, Tom)
 2. **Settings button clarity** - 4 people mentioned (Sophie, Marcus, Jessica, Tom)
 3. **Title complexity** - 2 people mentioned (Sophie, Maria)
 
 ### Changes for Iteration 2:
+
 1. Increase button border/shadow for better contrast and affordance
 2. Add icon to Settings button (gear icon)
 3. Simplify title to "Aurora's Letters"
@@ -1259,6 +1348,7 @@ test/screenshots/
 ### When to Use This Protocol
 
 **Required for:**
+
 - New scenes or major scene redesigns
 - Button layout changes
 - Color scheme changes
@@ -1266,6 +1356,7 @@ test/screenshots/
 - Any change affecting "look and feel"
 
 **Not required for:**
+
 - Bug fixes that don't change visuals
 - Logic/code refactoring
 - Performance optimizations
@@ -1274,6 +1365,7 @@ test/screenshots/
 ### Red Flags
 
 If during review you notice:
+
 - All 5 personalities giving similar generic feedback → You're not creating diverse enough personas
 - Feedback seems fabricated → You didn't actually view the screenshot
 - No actionable items → Personas aren't specific enough
@@ -1286,6 +1378,7 @@ If during review you notice:
 ## Common Pitfalls to Avoid
 
 ### 1. Forgetting to Clean Up Event Listeners
+
 ```javascript
 // Always remove listeners in shutdown
 shutdown() {
@@ -1296,13 +1389,14 @@ shutdown() {
 ```
 
 ### 2. Hardcoding Scene Keys
+
 ```javascript
 // ✅ GOOD: Constants file
 export const SCENES = {
-    BOOT: 'BootScene',
-    PRELOAD: 'PreloadScene',
-    MAIN_MENU: 'MainMenuScene',
-    LETTER_POP: 'LetterPopScene'
+  BOOT: 'BootScene',
+  PRELOAD: 'PreloadScene',
+  MAIN_MENU: 'MainMenuScene',
+  LETTER_POP: 'LetterPopScene',
 };
 
 // ❌ BAD: Magic strings everywhere
@@ -1310,12 +1404,13 @@ this.scene.start('LetterPopScene'); // Typo = crash
 ```
 
 ### 3. Not Using Scene Data for Passing Information
+
 ```javascript
 // ✅ GOOD
 this.scene.start('ResultsScene', {
-    score: this.score,
-    correctAnswers: this.correctAnswers,
-    totalQuestions: this.totalQuestions
+  score: this.score,
+  correctAnswers: this.correctAnswers,
+  totalQuestions: this.totalQuestions,
 });
 
 // ❌ BAD: Using globals
@@ -1324,6 +1419,7 @@ this.scene.start('ResultsScene');
 ```
 
 ### 4. Mixing Game Logic in UI Code
+
 ```javascript
 // ✅ GOOD: Separation
 class ScoreDisplay {
@@ -1346,6 +1442,7 @@ handleCorrectAnswer() {
 ```
 
 ### 5. Not Handling Delta Time in Update
+
 ```javascript
 // ✅ GOOD: Delta-based movement
 update(time, delta) {
@@ -1367,6 +1464,7 @@ update(time, delta) {
 ## Documentation Standards
 
 ### Every Class Needs a Header Comment
+
 ```javascript
 /**
  * Bubble
@@ -1385,11 +1483,12 @@ update(time, delta) {
  * - Scene (for tweens and rendering)
  */
 class Bubble extends Phaser.GameObjects.Container {
-    // ...
+  // ...
 }
 ```
 
 ### Complex Functions Need Inline Comments
+
 ```javascript
 /**
  * Spawns a new bubble at a random position
@@ -1426,6 +1525,7 @@ spawnBubble(letter) {
 **MANDATORY:** All functions must have McCabe complexity of 5 or less.
 
 **For JavaScript/Node.js:**
+
 ```bash
 # Install complexity-report globally
 npm install -g complexity-report
@@ -1438,12 +1538,14 @@ cr src/components/GameCard.jsx
 ```
 
 **If any function exceeds complexity 5:**
+
 1. Extract conditions into helper functions
 2. Use early returns to reduce nesting
 3. Break complex functions into smaller pieces
 4. Re-run analysis until all functions ≤ 5
 
 **Example Refactoring:**
+
 ```javascript
 // ❌ BAD: Complexity = 8
 function processGameResult(score, timeLeft, mistakes) {
@@ -1486,6 +1588,7 @@ function calculateStars(mistakes) {
 ## Git Commit Standards
 
 ### Commit After Each Phase Completion
+
 ```bash
 git add .
 git commit -m "Complete Phase X: [Phase Name]
@@ -1504,6 +1607,7 @@ git push origin staging
 ```
 
 ### Update README.md After Each Phase
+
 Keep README.md current with what's implemented.
 
 ---
@@ -1511,6 +1615,7 @@ Keep README.md current with what's implemented.
 ## Summary
 
 These guardrails ensure:
+
 - **Clean, maintainable code** following SOLID principles
 - **React best practices** with functional components and hooks
 - **Express/Node.js security** with proper validation and auth
@@ -1522,6 +1627,7 @@ These guardrails ensure:
 - **Clear documentation** so future developers (or future you) understand the code
 
 **Technology Stack:**
+
 - Frontend: React + Vite, Phaser 3, Tailwind CSS
 - Backend: Node.js + Express, MySQL 8.0, Socket.io
 - Deployment: Apache + SSL, Capacitor (Android)
@@ -1529,6 +1635,7 @@ These guardrails ensure:
 **Remember:** The goal isn't perfection. The goal is building a platform that helps Aurora learn while maintaining a codebase we can confidently modify and expand.
 
 If something isn't in the guardrails and you're unsure, ask yourself:
+
 1. Is it simple and clear?
 2. Would I understand this code in 6 months?
 3. Does it help Aurora learn?

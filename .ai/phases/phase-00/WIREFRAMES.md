@@ -15,6 +15,7 @@ Phase 0 is infrastructure-only and does not include user-facing interfaces. Plac
 ## Placeholder Pages
 
 ### Production Marketing Site
+
 **URL:** https://adhdlearn.com
 
 ```
@@ -32,6 +33,7 @@ Phase 0 is infrastructure-only and does not include user-facing interfaces. Plac
 Simple HTML - no styling required.
 
 ### Child Portal Placeholder
+
 **URL:** https://child.adhdlearn.com
 
 ```
@@ -45,6 +47,7 @@ Simple HTML - no styling required.
 ```
 
 ### Parent Portal Placeholder
+
 **URL:** https://parent.adhdlearn.com
 
 ```
@@ -58,9 +61,11 @@ Simple HTML - no styling required.
 ```
 
 ### API Health Check
+
 **URL:** https://api.adhdlearn.com/health
 
 Returns JSON:
+
 ```json
 {
   "status": "ok",

@@ -1,0 +1,11 @@
+{
+  "name": "adhdlearn-shared",
+  "version": "1.0.0",
+  "description": "Shared utilities, constants, and types for ADHDLearn.com",
+  "main": "index.js",
+  "type": "module",
+  "keywords": ["adhd", "learning", "shared"],
+  "author": "Corey",
+  "license": "UNLICENSED",
+  "private": true
+}

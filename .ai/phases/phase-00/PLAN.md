@@ -16,6 +16,7 @@
 ### What This Phase Delivers
 
 Complete server infrastructure configured and ready:
+
 - 8 Apache virtual hosts (production + staging for each subdomain)
 - SSL certificates via Let's Encrypt
 - Git deployment hooks
@@ -34,6 +35,7 @@ None (API setup happens in Phase 3)
 ### Frontend Changes
 
 **New Files:**
+
 - `/var/www/adhdlearn.com/production/child/index.html` - Placeholder
 - `/var/www/adhdlearn.com/production/parent/index.html` - Placeholder
 - `/var/www/adhdlearn.com/production/www/index.html` - Placeholder
@@ -44,6 +46,7 @@ None (API setup happens in Phase 3)
 #### Apache Virtual Host Configuration
 
 **Production Child Portal:** `/etc/apache2/sites-available/child.adhdlearn.com.conf`
+
 ```apache
 <VirtualHost *:80>
     ServerName child.adhdlearn.com
@@ -87,6 +90,7 @@ None (API setup happens in Phase 3)
 ```
 
 Repeat similar configurations for:
+
 - `parent.adhdlearn.com`
 - `adhdlearn.com`
 - `api.adhdlearn.com` (reverse proxy to localhost:3000)
@@ -158,4 +162,3 @@ N/A (infrastructure only)
 None (Phase 0 is the foundation)
 
 ---
-

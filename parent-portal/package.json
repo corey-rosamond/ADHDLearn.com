@@ -1,0 +1,15 @@
+{
+  "name": "adhdlearn-parent-portal",
+  "version": "1.0.0",
+  "description": "ADHDLearn.com Parent Portal - Dashboard and management",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": ["adhd", "learning", "parent", "dashboard"],
+  "author": "Corey",
+  "license": "UNLICENSED",
+  "private": true
+}

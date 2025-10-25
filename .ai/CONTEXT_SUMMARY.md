@@ -22,6 +22,7 @@
 **Deployment:** Planning complete, implementation pending
 
 **Planning Status:**
+
 - ✅ All 37 phases (00-36) fully documented
 - ✅ Each phase has PLAN.md, GHERKIN.md, UML.md, WIREFRAMES.md
 - ✅ Technology stack finalized (Phaser + React + Node.js + MySQL)
@@ -81,6 +82,7 @@
 ## Essential Commands
 
 ### Development
+
 ```bash
 # Start HTTPS development server (required for audio)
 python3 https-server.py
@@ -96,6 +98,7 @@ cd parent-portal && npm run dev
 ```
 
 ### Testing
+
 ```bash
 # Run linter
 npm run lint
@@ -109,6 +112,7 @@ cr src/ --format json
 ```
 
 ### Android Device
+
 ```bash
 # ADB commands
 export ANDROID_HOME=/home/corey/android-sdk
@@ -119,6 +123,7 @@ $ANDROID_HOME/platform-tools/adb pull /sdcard/screen.png test/screenshots/
 ```
 
 ### Database
+
 ```bash
 # Connect to MySQL
 mysql -h 160.153.180.159 -u [user] -p adhdlearn
@@ -128,6 +133,7 @@ mysql -h 160.153.180.159 -u [user] -p adhdlearn < backend/migrations/phase-XX.sq
 ```
 
 ### Git Workflow
+
 ```bash
 # Check status
 git status
@@ -162,12 +168,14 @@ git push origin main
 ## 4 Subdomains
 
 **Production:**
+
 1. **adhdlearn.com** - Marketing website (static HTML)
 2. **child.adhdlearn.com** - Child portal (React + Phaser games)
 3. **parent.adhdlearn.com** - Parent dashboard (React)
 4. **api.adhdlearn.com** - Backend API (Node.js + Express)
 
 **Staging (same structure):**
+
 - staging.adhdlearn.com
 - staging.child.adhdlearn.com
 - staging.parent.adhdlearn.com
@@ -201,6 +209,7 @@ git push origin main
 ## ADHD-Friendly Design Rules
 
 **Every UI element must be:**
+
 - **Immediate feedback:** < 50ms response time
 - **High contrast:** WCAG AAA contrast ratios
 - **Large touch targets:** ≥ 44×44px minimum
@@ -210,6 +219,7 @@ git push origin main
 - **Predictable:** Consistent layouts and interactions
 
 **Color System (from WIREFRAMES):**
+
 - Primary: Bright, saturated colors
 - Reading: Blue (#3B82F6)
 - Math: Green (#10B981)
@@ -260,6 +270,7 @@ git push origin main
 ## Phase Workflow (Quick)
 
 **For each phase:**
+
 1. Read `.ai/phases/phase-XX/PLAN.md`
 2. Read `.ai/phases/phase-XX/GHERKIN.md`
 3. Read `.ai/phases/phase-XX/UML.md`
@@ -290,21 +301,25 @@ git push origin main
 ## Key Files to Know
 
 **Planning:**
+
 - `.ai/START.md` - Development entry point
 - `.ai/TECHNOLOGY_STACK.md` - Tech stack reference
 - `.ai/CONTEXT_SUMMARY.md` - This file (load first)
 - `.ai/plan/PHASES_OVERVIEW.md` - All phases overview
 
 **Quality:**
+
 - `.ai/GUARDRAILS.md` - Code quality rules
 - `.ai/PERSONA.md` - Development philosophy
 - `.ai/ERROR_SOLUTIONS.md` - Troubleshooting
 
 **History:**
+
 - `.ai/MEMORY.md` - Session memory, key decisions
 - `.ai/RECOMMENDATIONS.md` - AI development recommendations
 
 **Phase Docs (37 phases):**
+
 - `.ai/phases/phase-XX/PLAN.md` - What to build
 - `.ai/phases/phase-XX/GHERKIN.md` - How to test
 - `.ai/phases/phase-XX/UML.md` - Architecture
@@ -336,18 +351,21 @@ git push origin main
 ## Important Context
 
 ### Why Phaser?
+
 - Previous Kotlin/libGDX attempt failed (GWT can't compile Kotlin)
 - Phaser works for web (critical requirement)
 - Capacitor wraps for Android
 - Performance acceptable for Aurora's needs
 
 ### Why 37 Phases?
+
 - Value-driven development
 - Each phase delivers working features
 - Aurora gets value starting Phase 2
 - Incremental deployment reduces risk
 
 ### Why MySQL?
+
 - Familiar, reliable, well-supported
 - Good performance for this scale
 - Easy to manage and backup
@@ -358,6 +376,7 @@ git push origin main
 ## Success Metrics
 
 **Phase completion requires:**
+
 - ✅ All acceptance criteria from GHERKIN.md pass
 - ✅ All code committed to git
 - ✅ McCabe complexity ≤ 5 for all functions
