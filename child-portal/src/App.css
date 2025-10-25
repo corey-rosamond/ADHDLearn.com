@@ -1,0 +1,30 @@
+/* Global styles for Child Portal */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  touch-action: none; /* Prevent pull-to-refresh */
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+#game-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* Disable text selection in game */
+#game-container canvas {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}

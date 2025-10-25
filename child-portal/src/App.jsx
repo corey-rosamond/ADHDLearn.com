@@ -1,14 +1,36 @@
-import React from 'react';
-
-// ADHDLearn.com Child Portal
-// Main React application for child-facing features
+import { useEffect, useRef } from 'react';
+import startLetterPopGame from './phaser-game/index.js';
+import './App.css';
 
 function App() {
+  const gameRef = useRef(null);
+
+  useEffect(() => {
+    // Initialize Phaser game with existing working code
+    const game = startLetterPopGame();
+    gameRef.current = game;
+
+    // Cleanup on unmount
+    return () => {
+      if (gameRef.current) {
+        gameRef.current.destroy(true);
+        gameRef.current = null;
+      }
+    };
+  }, []);
+
   return (
-    <div className="app">
-      <h1>ADHDLearn.com - Child Portal</h1>
-      <p>Placeholder - will be implemented in Phase 2</p>
-    </div>
+    <div id="game-container" style={{
+      width: '100vw',
+      height: '100vh',
+      margin: 0,
+      padding: 0,
+      overflow: 'hidden',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#00BCD4'
+    }} />
   );
 }
 
