@@ -1,9 +1,17 @@
 # START HERE - Development Entry Point
 
 ## Current Status
-**Technology:** Phaser 3 (JavaScript/Web)
-**Status:** Restored from archive after Kotlin/libGDX attempt failed
-**Last Updated:** October 21, 2025
+**Technology:** React + Phaser 3 + Node.js + MySQL (Full-Stack Platform)
+**Current Phase:** Phase 0 (Completed) → Ready for Phase 1
+**Planning Status:** All 37 phases fully documented
+**Status:** Server infrastructure deployed and operational
+**Last Updated:** October 25, 2025
+
+**Quick Context:**
+- Existing Phaser game (Letter Pop) working and archived
+- 37 phases planned for full platform development
+- Each phase has PLAN.md, GHERKIN.md, UML.md, WIREFRAMES.md
+- Technology stack finalized and documented
 
 ---
 
@@ -36,30 +44,76 @@
 
 ---
 
-## Project Structure (Phaser)
+## Architecture Overview
+
+### 4 Subdomains (Production + Staging)
+1. **adhdlearn.com** - Marketing website (static HTML)
+2. **child.adhdlearn.com** - Child portal (React + Phaser games)
+3. **parent.adhdlearn.com** - Parent dashboard (React + Tailwind)
+4. **api.adhdlearn.com** - Backend API (Node.js + Express)
+
+**Total:** 8 Apache virtual hosts (staging + production for each)
+
+### Technology Stack
+- **Frontend:** React 18 + Vite + Tailwind CSS
+- **Games:** Phaser 3.80.1+
+- **Backend:** Node.js 18+ + Express
+- **Database:** MySQL 8.0 (160.153.180.159)
+- **Real-time:** Socket.io
+- **Deployment:** Apache + Let's Encrypt SSL
+- **Android:** Capacitor wrapper
+
+**See `.ai/TECHNOLOGY_STACK.md` for complete details**
+
+---
+
+## Project Structure (Full Platform)
 
 ```
-/
-├── index.html              # Main entry point
-├── src/
-│   ├── scenes/             # Phaser game scenes
-│   │   ├── BootScene.js
-│   │   ├── PreloadScene.js
-│   │   ├── MainMenuScene.js
-│   │   ├── SettingsScene.js
-│   │   ├── LetterPopScene.js
-│   │   └── ResultsScene.js
-│   ├── components/         # Reusable UI components
-│   ├── gameobjects/        # Game objects (Bubble, etc.)
-│   ├── services/           # Audio, settings management
-│   └── utils/              # Utility functions
-├── assets/                 # Audio, images, fonts
-├── android/                # Capacitor Android wrapper
-└── .ai/                    # Development documentation
-    ├── PERSONA.md
-    ├── GUARDRAILS.md
-    ├── MEMORY.md
-    └── phases/             # Phaser phase documentation
+/home/corey/Desktop/ADHDLearn.com/
+├── .ai/                           # All planning and documentation
+│   ├── START.md                   # This file - entry point
+│   ├── TECHNOLOGY_STACK.md        # Tech stack reference
+│   ├── CONTEXT_SUMMARY.md         # Quick reference (load first)
+│   ├── PHASE_WORKFLOW.md          # Phase completion guide
+│   ├── ERROR_SOLUTIONS.md         # Common errors & fixes
+│   ├── GUARDRAILS.md              # Code quality rules
+│   ├── PERSONA.md                 # Developer philosophy
+│   ├── MEMORY.md                  # Session memory
+│   ├── RECOMMENDATIONS.md         # AI development tips
+│   ├── phases/                    # 37 phase directories
+│   │   └── phase-XX/
+│   │       ├── PLAN.md            # Implementation plan
+│   │       ├── GHERKIN.md         # Acceptance criteria
+│   │       ├── UML.md             # Architecture diagrams
+│   │       └── WIREFRAMES.md      # UI/UX designs
+│   └── plan/                      # Master planning docs
+│       ├── PHASES_OVERVIEW.md     # All phases overview
+│       ├── PLAN.md                # Master plan
+│       ├── UML.md                 # System architecture
+│       └── WIREFRAMES.md          # Design system
+├── backend/                       # Node.js API (to be created)
+│   ├── server.js
+│   ├── routes/
+│   ├── middleware/
+│   └── migrations/
+├── src/                           # Child portal (existing Phaser)
+│   ├── scenes/                    # Phaser game scenes
+│   ├── games/                     # Game implementations
+│   ├── components/                # React components
+│   ├── services/                  # AudioManager, etc.
+│   └── utils/
+├── parent-portal/                 # Parent dashboard (to be created)
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   └── services/
+│   └── package.json
+├── marketing/                     # Marketing site (to be created)
+├── android/                       # Capacitor wrapper (exists)
+├── assets/                        # Shared assets (exists)
+├── scripts/                       # Deployment scripts
+└── test/                          # Test results and screenshots
 ```
 
 ---
@@ -140,12 +194,68 @@ Current metrics on Samsung Galaxy Tab S7 FE:
 
 ---
 
-## Next Steps
+## Development Roadmap
 
-1. Continue with Phaser development
-2. Add more games/activities
-3. Improve performance where possible
-4. Deploy as PWA + Android app
+### 37 Phases (Value-Driven Development)
+
+**Each phase delivers working, deployable features**
+
+**Phase 0:** Server Infrastructure (Apache, SSL, 8 vhosts)
+**Phase 1:** Project Foundation (directory structure, git)
+**Phase 2:** Deploy Letter Pop (Aurora can play)
+**Phase 3:** Database + Backend (scores persist)
+**Phase 4:** Parent Auth (registration, login)
+**Phase 5:** Parent Dashboard (view Aurora's scores)
+**Phase 6:** Family Management (add children)
+**Phase 7:** Child Login (PIN-based)
+**Phase 8:** Child Dashboard (categories)
+**Phase 9-10:** More Reading Games (Word Builder, Sight Words)
+**Phase 11-13:** Math Category (Counting, Shapes, Addition)
+**Phase 14-16:** Chore System (full workflow)
+**Phase 17-18:** Analytics (charts, confusion matrix)
+**Phase 19:** Real-Time Updates (WebSocket)
+**Phase 20:** Achievements & Badges
+**Phase 21:** Marketing Website
+**Phase 22:** Age Norms Comparison
+**Phase 23:** Science Category
+**Phase 24-26:** Life Skills (Cooking, 3D Printing, Shopping)
+**Phase 27:** Weekly Email Reports
+**Phase 28:** ML Pattern Detection
+**Phase 29:** PDF Reports
+**Phase 30:** Android APK
+**Phase 31:** Multi-Parent Support
+**Phase 32:** Multiple Children
+**Phase 33:** Parental Controls
+**Phase 34:** Advanced Testing (Playwright, CI/CD)
+**Phase 35:** Performance Optimization
+**Phase 36:** Accessibility Improvements
+
+**See `.ai/plan/PHASES_OVERVIEW.md` for detailed descriptions**
+
+---
+
+## Quick Start for AI Development
+
+**Before starting ANY phase:**
+
+1. **Read context files:**
+   - `.ai/CONTEXT_SUMMARY.md` - Load this FIRST every session
+   - `.ai/TECHNOLOGY_STACK.md` - Verify tech stack
+   - `.ai/PHASE_WORKFLOW.md` - Phase completion process
+
+2. **Read phase documentation:**
+   - `.ai/phases/phase-XX/PLAN.md` - What to build
+   - `.ai/phases/phase-XX/GHERKIN.md` - How to test
+   - `.ai/phases/phase-XX/UML.md` - Architecture
+   - `.ai/phases/phase-XX/WIREFRAMES.md` - UI design
+
+3. **Follow workflow:**
+   - Never start coding before reading all docs
+   - Test all GHERKIN scenarios before committing
+   - Ensure McCabe complexity ≤ 5 for all functions
+   - Update documentation before finishing
+
+**Never start coding without completing steps 1-2 above.**
 
 ---
 
@@ -177,6 +287,42 @@ Current metrics on Samsung Galaxy Tab S7 FE:
 
 ---
 
-**Last Updated:** October 21, 2025
-**Current Technology:** Phaser 3 + JavaScript
-**Deployment:** Web (PWA) + Android (Capacitor)
+---
+
+## Core Principles
+
+1. **Plan before code** - Always read phase docs first
+2. **Test before commit** - Every GHERKIN scenario must pass
+3. **Document before finish** - Update START, MEMORY, README
+4. **Quality is mandatory** - McCabe ≤ 5, no exceptions
+5. **Aurora-first** - ADHD-friendly design, always
+6. **Value every phase** - Each phase delivers working features
+
+---
+
+## Key Files Reference
+
+**Load First:**
+- `.ai/CONTEXT_SUMMARY.md` - Quick reference (START HERE each session)
+
+**Planning:**
+- `.ai/START.md` - This file (development entry point)
+- `.ai/TECHNOLOGY_STACK.md` - Tech stack decisions
+- `.ai/plan/PHASES_OVERVIEW.md` - All 37 phases overview
+
+**Workflow:**
+- `.ai/PHASE_WORKFLOW.md` - Step-by-step phase completion
+- `.ai/ERROR_SOLUTIONS.md` - Common errors and fixes
+- `.ai/GUARDRAILS.md` - Code quality rules
+- `.ai/PERSONA.md` - Development philosophy
+
+**History:**
+- `.ai/MEMORY.md` - Session memory, decisions
+- `.ai/RECOMMENDATIONS.md` - AI development recommendations
+
+---
+
+**Last Updated:** October 25, 2025
+**Current Technology:** React + Phaser 3 + Node.js + MySQL (Full-Stack)
+**Current Phase:** Phase 0 (Ready to begin)
+**Deployment:** 8 Apache vhosts (staging + production × 4 subdomains)

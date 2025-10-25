@@ -25,3 +25,4 @@ node_modules/
 android/build/
 android/.gradle/
 android/app/build/
+.ai/SERVER_CREDENTIALS.md

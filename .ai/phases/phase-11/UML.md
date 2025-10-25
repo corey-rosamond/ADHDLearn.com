@@ -1,564 +1,614 @@
-# Phase 11: Letter Pop - Score System - UML
+# Phase 11: Architecture Diagrams
 
-## Class Diagram
+**Project:** ADHDLearn.com
+**Phase:** 11 of 36
+**Last Updated:** October 22, 2025
 
-```mermaid
-classDiagram
-    class LetterPopScene {
-        -Number score
-        -Number totalCorrect
-        -Number totalLetters
-        -Text scoreText
-        -Text timeText
-        -Number startTime
-        +constructor()
-        +create()
-        +createUI()
-        +incrementScore()
-        +updateScoreDisplay()
-        +updateTimeDisplay()
-        +resetScore()
-    }
+---
 
-    class ScoreDisplay {
-        -Text textObject
-        -Number currentScore
-        -String format
-        -Number x
-        -Number y
-        +setText(score)
-        +animate()
-        +setPosition(x, y)
-    }
 
-    class TimeTracker {
-        -Number startTime
-        -Number elapsed
-        -Text displayText
-        -TimerEvent updateTimer
-        +start()
-        +update()
-        +format() String
-        +reset()
-    }
-
-    class UIManager {
-        -ScoreDisplay scoreDisplay
-        -TimeTracker timeTracker
-        -Number uiDepth
-        +createScoreUI()
-        +createTimeUI()
-        +updateScore(value)
-        +updateTime()
-    }
-
-    class TextStyle {
-        <<Config>>
-        +String fontSize
-        +String fontFamily
-        +String color
-        +String stroke
-        +Number strokeThickness
-        +String fontStyle
-    }
-
-    LetterPopScene --> ScoreDisplay : creates
-    LetterPopScene --> TimeTracker : creates
-    LetterPopScene --> UIManager : uses
-    ScoreDisplay --> TextStyle : uses
-    TimeTracker --> TextStyle : uses
-    UIManager --> ScoreDisplay : manages
-    UIManager --> TimeTracker : manages
-```
-
-## Sequence Diagram: Score Increment Flow
-
-```mermaid
-sequenceDiagram
-    actor Player
-    participant Bubble
-    participant Scene as LetterPopScene
-    participant ScoreManager
-    participant ScoreText
-    participant Tweens
-
-    Player->>Bubble: Click correct bubble
-    Bubble->>Scene: handleCorrectClick()
-
-    Scene->>Scene: Celebrate (particles, sound)
-    Scene->>ScoreManager: incrementScore()
-
-    ScoreManager->>ScoreManager: score++
-    Note over ScoreManager: score: 4 → 5
-
-    ScoreManager->>ScoreText: updateScoreDisplay()
-    ScoreText->>ScoreText: setText("Correct: 5")
-    ScoreText-->>Player: Display updated score
-
-    ScoreManager->>Tweens: Animate score text
-    Tweens->>ScoreText: Scale up to 1.2x
-    Tweens->>ScoreText: Yoyo back to 1.0x
-    ScoreText-->>Player: Visual feedback (pulse)
-```
-
-## Sequence Diagram: Scene Initialization with UI
-
-```mermaid
-sequenceDiagram
-    participant Game as Phaser Game
-    participant Scene as LetterPopScene
-    participant UI as UIManager
-    participant Score as ScoreDisplay
-    participant Time as TimeTracker
-
-    Game->>Scene: Start scene
-    Scene->>Scene: create()
-
-    Scene->>UI: createUI()
-
-    UI->>Score: Create score text
-    Score->>Score: Initialize at position (20, 20)
-    Score->>Score: Set text: "Correct: 0"
-    Score->>Score: Set style (28px, white, stroke)
-    Score->>Score: setDepth(1000)
-    Score-->>UI: Score display ready
-
-    UI->>Time: Create time text
-    Time->>Time: Initialize at position (760, 20)
-    Time->>Time: Set text: "Time: 0:00"
-    Time->>Time: Set style (24px, white, stroke)
-    Time->>Time: setDepth(1000)
-    Time-->>UI: Time display ready
-
-    UI->>Scene: Start timer event
-    Scene->>Scene: time.addEvent(update every 1000ms)
-    Scene->>Scene: Store startTime
-
-    UI-->>Scene: UI creation complete
-    Scene->>Scene: startRound()
-```
-
-## State Diagram: Score System States
-
-```mermaid
-stateDiagram-v2
-    [*] --> Initialized: Scene created
-
-    Initialized --> DisplayingScore: UI created
-    DisplayingScore --> WaitingForClick: Score = 0
-
-    WaitingForClick --> CheckingClick: Player clicks
-
-    CheckingClick --> CorrectClick: Letter matches
-    CheckingClick --> IncorrectClick: Letter doesn't match
-
-    CorrectClick --> IncrementingScore: score++
-    IncrementingScore --> UpdatingDisplay: Update text
-    UpdatingDisplay --> AnimatingScore: Pulse animation
-    AnimatingScore --> DisplayingScore: Animation complete
-    DisplayingScore --> WaitingForClick: Ready for next
-
-    IncorrectClick --> DisplayingScore: Score unchanged
-    DisplayingScore --> WaitingForClick: Continue
-
-    note right of IncrementingScore
-        Score only increases
-        on correct clicks
-    end note
-
-    note right of IncorrectClick
-        Score stays same
-        Non-punitive
-    end note
-```
-
-## Activity Diagram: Score Update Logic
-
-```mermaid
-flowchart TD
-    Start([Player Clicks Bubble]) --> CheckCorrect{Correct Letter?}
-
-    CheckCorrect -->|No| NoChange[Score unchanged]
-    NoChange --> End
-
-    CheckCorrect -->|Yes| Increment[score++]
-    Increment --> UpdateText[scoreText.setText Correct: X]
-    UpdateText --> CheckAnimation{Animate enabled?}
-
-    CheckAnimation -->|No| End
-    CheckAnimation -->|Yes| CreateTween[Create scale tween]
-
-    CreateTween --> ScaleUp[Scale to 1.2x]
-    ScaleUp --> Wait[Wait 100ms]
-    Wait --> ScaleDown[Yoyo back to 1.0x]
-    ScaleDown --> OptionalColor{Color flash enabled?}
-
-    OptionalColor -->|No| End
-    OptionalColor -->|Yes| FlashGold[Change to gold #FFD700]
-    FlashGold --> Delay[Delay 200ms]
-    Delay --> RestoreColor[Restore to white]
-    RestoreColor --> End
-
-    End([Score Update Complete])
-
-    style Start fill:#90EE90
-    style Increment fill:#FFD700
-    style NoChange fill:#FFB6C1
-    style End fill:#DDA0DD
-```
-
-## Activity Diagram: Time Tracking
-
-```mermaid
-flowchart TD
-    Start([Scene Created]) --> StoreStartTime[Store this.time.now]
-    StoreStartTime --> CreateTimer[Create timer event]
-    CreateTimer --> SetDelay[delay: 1000ms loop: true]
-    SetDelay --> TimerRunning[Timer active]
-
-    TimerRunning --> Trigger{Every 1 second}
-    Trigger --> CalcElapsed[elapsed = now - startTime]
-    CalcElapsed --> ConvertToSeconds[elapsed / 1000]
-    ConvertToSeconds --> CalcMinutes[minutes = elapsed / 60]
-    CalcMinutes --> CalcSeconds[seconds = elapsed % 60]
-    CalcSeconds --> FormatSeconds{seconds < 10?}
-
-    FormatSeconds -->|Yes| Pad[secondsStr = 0 + seconds]
-    FormatSeconds -->|No| NoPad[secondsStr = seconds]
-
-    Pad --> FormatTime[Format: minutes:secondsStr]
-    NoPad --> FormatTime
-
-    FormatTime --> UpdateText[timeText.setText Time: X:XX]
-    UpdateText --> TimerRunning
-
-    style Start fill:#90EE90
-    style TimerRunning fill:#87CEEB
-    style UpdateText fill:#98FB98
-```
-
-## Component Hierarchy Diagram
+## Math Category Unlocked
 
 ```mermaid
 graph TB
-    Scene[LetterPopScene]
-
-    Scene --> GameElements[Game Elements]
-    Scene --> UILayer[UI Layer depth: 1000]
-
-    GameElements --> Background[Background]
-    GameElements --> Bubbles[Bubble Containers]
-    GameElements --> Particles[Particle Effects]
-
-    UILayer --> ScoreUI[Score Display]
-    UILayer --> TimeUI[Time Display]
-
-    ScoreUI --> ScoreText[Text: Correct: X]
-    ScoreUI --> ScoreStyle[Style: 28px white stroke]
-    ScoreUI --> ScorePos[Position: 20, 20]
-
-    TimeUI --> TimeText[Text: Time: X:XX]
-    TimeUI --> TimeStyle[Style: 24px white stroke]
-    TimeUI --> TimePos[Position: 760, 20 right-aligned]
-
-    style UILayer fill:#FFD700
-    style ScoreUI fill:#90EE90
-    style TimeUI fill:#87CEEB
-    style GameElements fill:#FFB6C1
-```
-
-## Data Flow: Score Tracking
-
-```mermaid
-flowchart LR
-    A[Scene Initialized] --> B[score = 0]
-    B --> C[Create scoreText]
-    C --> D[Display: Correct: 0]
-
-    D --> E[Player Plays]
-
-    E --> F{Click Event}
-    F -->|Correct| G[handleCorrectClick]
-    F -->|Incorrect| H[handleIncorrectClick]
-
-    G --> I[incrementScore]
-    I --> J[score++]
-    J --> K[updateScoreDisplay]
-    K --> L[scoreText.setText]
-    L --> M[Display: Correct: X]
-    M --> N[Optional: Animate]
-    N --> E
-
-    H --> E
-
-    style B fill:#FFD700
-    style J fill:#90EE90
-    style M fill:#87CEEB
-    style H fill:#FFB6C1
-```
-
-## UI Layout Diagram
-
-```mermaid
-graph TB
-    subgraph "Game Canvas 800x600"
-        ScoreTopLeft["Score Display
-        Position: 20, 20
-        Anchor: Top-Left
-        Text: Correct: X"]
-
-        TimeTopRight["Time Display
-        Position: 760, 20
-        Anchor: Top-Right
-        Text: Time: X:XX"]
-
-        GameArea["Game Play Area
-        Bubbles spawn here
-        Center region
-        300x300 approx"]
+    subgraph "Child Dashboard"
+        Reading[Reading Category<br/>3 games]
+        Math[Math Category<br/>1 game - UNLOCKED]
+        Science[Science Category<br/>LOCKED]
     end
-
-    style ScoreTopLeft fill:#90EE90
-    style TimeTopRight fill:#87CEEB
-    style GameArea fill:#FFB6C1
+    
+    subgraph "Math Adventures"
+        Counting[Counting Game<br/>1-10 objects]
+    end
+    
+    Math --> Counting
+    
+    style Math fill:#4ECDC4
+    style Reading fill:#FF6B9D
+    style Science fill:#95E1D3,stroke-dasharray: 5 5
 ```
 
-## Score Text Animation Sequence
+---
 
-```mermaid
-sequenceDiagram
-    participant Score as Score Value
-    participant Display as Score Text
-    participant Tween as Tween System
+# Phase 12-13: Additional Math Games
 
-    Score->>Score: Increment (4 → 5)
-    Score->>Display: updateScoreDisplay()
-    Display->>Display: setText("Correct: 5")
-
-    Display->>Tween: Create scale tween
-    Note over Tween: Target: Display, Duration: 100ms
-
-    Tween->>Display: scaleX = 1.2, scaleY = 1.2
-    Note over Display: Text grows
-
-    Tween->>Tween: Wait 100ms
-    Tween->>Display: yoyo back to 1.0
-    Note over Display: Text returns to normal
-
-    Tween-->>Score: Animation complete
-```
-
-## Time Display Update Flow
+## Math Category Growth
 
 ```mermaid
 graph LR
-    Timer[Timer Event 1000ms] --> Callback[updateTimeDisplay]
-    Callback --> GetNow[this.time.now]
-    GetNow --> Subtract[now - startTime]
-    Subtract --> ToSeconds[/ 1000]
-    ToSeconds --> Minutes[Math.floor elapsed / 60]
-    ToSeconds --> Seconds[elapsed % 60]
-    Minutes --> Format[minutes:seconds]
-    Seconds --> Format
-    Format --> SetText[timeText.setText]
-    SetText --> Display[Display: Time: X:XX]
-    Display --> Timer
-
-    style Timer fill:#87CEEB
-    style Format fill:#90EE90
-    style Display fill:#98FB98
+    Math[Math Category] --> Counting[Counting Game]
+    Math --> Shapes[Shapes Recognition]
+    Math --> Addition[Addition Game]
+    
+    style Math fill:#4ECDC4
 ```
 
-## Score vs Time Comparison
+---
+
+# Phase 14-16: Chore System - Complete Architecture
+
+## Full Chore Flow
+
+```mermaid
+sequenceDiagram
+    participant Parent as Parent Portal
+    participant API as Backend
+    participant DB as Database
+    participant Child as Child Portal
+    participant Socket as WebSocket
+    
+    Parent->>API: POST /api/chores<br/>Create "Make bed"
+    API->>DB: INSERT into chores
+    DB->>API: chore_id: 1
+    API->>Parent: Chore created
+    
+    Child->>API: GET /api/chores?assignedTo=2
+    API->>DB: SELECT chores WHERE assigned_to=2
+    DB->>API: Return chores
+    API->>Child: Show chore list
+    
+    Child->>Child: Upload photo proof
+    Child->>API: PATCH /api/chores/1/complete
+    API->>DB: UPDATE status='completed'
+    API->>Socket: Emit chore-completed event
+    Socket->>Parent: Notify parent
+    
+    Parent->>API: PATCH /api/chores/1/approve
+    API->>DB: UPDATE status='approved'
+    API->>DB: UPDATE users SET total_points += 5
+    API->>Parent: Chore approved
+    API->>Socket: Emit chore-approved event
+    Socket->>Child: Notify child (+5 points!)
+```
+
+## Database Schema
+
+```mermaid
+erDiagram
+    families ||--o{ chores : has
+    users ||--o{ chores : assigned_to
+    users ||--o{ chores : created_by
+    
+    chores {
+        BIGINT chore_id PK
+        INT family_id FK
+        INT assigned_to_user_id FK
+        INT created_by_user_id FK
+        VARCHAR title
+        TEXT description
+        INT points_value
+        ENUM status
+        VARCHAR photo_url
+        TIMESTAMP completed_at
+        TIMESTAMP approved_at
+        DATE due_date
+        BOOLEAN is_recurring
+    }
+```
+
+---
+
+# Phase 17: Progress Charts - Architecture
+
+## Chart.js Integration
 
 ```mermaid
 graph TB
-    subgraph Score System
-        S1[Triggered by correct clicks]
-        S2[Increments by 1]
-        S3[Updates immediately]
-        S4[Optional animation]
-        S5[Always increases never decreases]
+    subgraph "Parent Dashboard"
+        ChartContainer[Charts Container]
+        LineChart[Line Chart<br/>Daily Progress]
+        PieChart[Pie Chart<br/>Category Breakdown]
+        BarChart[Bar Chart<br/>Games Played]
     end
-
-    subgraph Time System
-        T1[Triggered by timer every 1s]
-        T2[Increments continuously]
-        T3[Updates every second]
-        T4[No animation]
-        T5[Always increases never stops]
+    
+    subgraph "Backend"
+        AnalyticsAPI[GET /api/analytics/progress]
+        GameSessions[game_sessions table]
     end
-
-    Score[Score Display] --> S1
-    Time[Time Display] --> T1
-
-    style Score fill:#FFD700
-    style Time fill:#87CEEB
+    
+    ChartContainer --> LineChart
+    ChartContainer --> PieChart
+    ChartContainer --> BarChart
+    
+    LineChart --> AnalyticsAPI
+    PieChart --> AnalyticsAPI
+    BarChart --> AnalyticsAPI
+    
+    AnalyticsAPI --> GameSessions
+    
+    style LineChart fill:#4ECDC4
+    style PieChart fill:#FF6B9D
+    style BarChart fill:#FFD93D
 ```
 
-## Text Style Configuration
+---
+
+# Phase 18: Confusion Matrix - Architecture
+
+## Letter Confusion Tracking
 
 ```mermaid
-classDiagram
-    class ScoreTextStyle {
-        +String fontSize: "28px"
-        +String fontFamily: "Arial"
-        +String color: "#ffffff"
-        +String stroke: "#000000"
-        +Number strokeThickness: 4
-        +String fontStyle: "bold"
+erDiagram
+    game_sessions ||--o{ letter_pop_attempts : contains
+    users ||--o{ letter_pop_attempts : performs
+    
+    letter_pop_attempts {
+        BIGINT attempt_id PK
+        BIGINT session_id FK
+        INT user_id FK
+        CHAR target_letter
+        CHAR clicked_letter
+        BOOLEAN is_correct
+        INT reaction_time_ms
+        TIMESTAMP created_at
     }
-
-    class TimeTextStyle {
-        +String fontSize: "24px"
-        +String fontFamily: "Arial"
-        +String color: "#ffffff"
-        +String stroke: "#000000"
-        +Number strokeThickness: 4
-        +String fontStyle: "normal"
-    }
-
-    class TextPositioning {
-        +Number scoreX: 20
-        +Number scoreY: 20
-        +Number scoreOrigin: 0, 0
-        +Number timeX: 760
-        +Number timeY: 20
-        +Number timeOrigin: 1, 0
-        +Number depth: 1000
-    }
-
-    ScoreTextStyle --> TextPositioning
-    TimeTextStyle --> TextPositioning
 ```
 
-## Score Animation State Machine
+## Confusion Analysis Flow
 
 ```mermaid
-stateDiagram-v2
-    [*] --> Idle: Default state
-
-    Idle --> Incrementing: Correct click
-    Incrementing --> TextUpdated: Update display
-    TextUpdated --> Animating: Start tween
-
-    Animating --> ScalingUp: Scale 1.0 → 1.2
-    ScalingUp --> Holding: Hold at 1.2x for 100ms
-    Holding --> ScalingDown: Yoyo back
-    ScalingDown --> Idle: Return to 1.0x
-
-    TextUpdated --> Idle: No animation
-
-    note right of Idle
-        Scale: 1.0
-        Color: White
-    end note
-
-    note right of ScalingUp
-        Scale: 1.2
-        Duration: 100ms
-    end note
+graph LR
+    Attempts[letter_pop_attempts] --> Analyze[Confusion Analysis]
+    Analyze --> Matrix[Confusion Matrix<br/>b↔d: 8 times<br/>p↔q: 3 times]
+    Matrix --> Dashboard[Parent Dashboard]
+    
+    style Matrix fill:#FF6B9D
 ```
 
-## Notes
+---
 
-### Architecture Decisions
+# Phase 19: Real-Time Updates - WebSocket Architecture
 
-**Score Tracking**
-- Single `score` variable tracks correct clicks
-- Stored as scene property (persistent during scene)
-- Initialized to 0 in constructor
-- Only increments, never decrements (encouraging)
+## Socket.IO Implementation
 
-**UI Positioning**
-- Score: Top-left (20, 20) - standard game UI position
-- Time: Top-right (760, 20) - secondary information
-- Both use high depth (1000) to stay above game elements
-- Fixed positions (don't move with camera if added later)
+```mermaid
+graph TB
+    subgraph "Child Portal"
+        ChildGame[Game Start/End Events]
+        ChildSocket[Socket.IO Client]
+    end
+    
+    subgraph "Backend"
+        SocketServer[Socket.IO Server]
+        FamilyRooms[Family Rooms<br/>family-1, family-2, etc.]
+    end
+    
+    subgraph "Parent Portal"
+        ParentSocket[Socket.IO Client]
+        LiveBanner[Live Activity Banner]
+    end
+    
+    ChildGame --> ChildSocket
+    ChildSocket -->|emit: game-start| SocketServer
+    SocketServer --> FamilyRooms
+    FamilyRooms -->|broadcast to family-1| ParentSocket
+    ParentSocket --> LiveBanner
+    
+    style SocketServer fill:#6C5CE7
+    style LiveBanner fill:#FFD93D
+```
 
-**Text Styling**
-- White text with black stroke (readable on any background)
-- Large font size (28px score, 24px time)
-- Bold for score (primary), normal for time (secondary)
-- High stroke thickness (4px) ensures readability
+## WebSocket Message Flow
 
-**Time Tracking**
-- Optional feature (can be excluded if adds pressure)
-- Updates every 1000ms (1 second)
-- Format: "M:SS" (minutes:seconds with leading zero)
-- Uses Phaser timer event (efficient, no manual update loop)
+```mermaid
+sequenceDiagram
+    participant Child as Child Portal
+    participant Server as Socket.IO Server
+    participant Parent as Parent Portal
+    
+    Parent->>Server: join-family (familyId: 1)
+    Server->>Parent: Joined family-1 room
+    
+    Child->>Server: child-game-start<br/>{familyId: 1, childName: "Aurora", gameName: "Letter Pop"}
+    Server->>Parent: child-activity event
+    Parent->>Parent: Show banner: "🔴 Aurora is playing Letter Pop"
+    
+    Note over Parent: 5 seconds later
+    Parent->>Parent: Hide banner
+    
+    Child->>Server: child-game-end<br/>{familyId: 1, score: 180}
+    Server->>Parent: child-activity event
+    Parent->>Parent: Show banner: "✅ Aurora finished! Score: 180"
+```
 
-**Animation**
-- Score text pulses on increment (optional polish)
-- Quick animation (100ms up, 100ms down = 200ms total)
-- Non-blocking (doesn't interfere with gameplay)
-- Can be disabled if distracting
+---
 
-### Why This Design?
+# Phase 20: Achievements & Badges - Architecture
 
-**Simplicity**
-- Minimal UI (just score and time)
-- Clear labels ("Correct:", "Time:")
-- Easy to read at a glance
-- No clutter or complexity
+## Achievement System
 
-**Performance**
-- Text objects are lightweight
-- Updates only when needed (score) or every second (time)
-- No constant redraws
-- High depth prevents z-fighting
+```mermaid
+graph TB
+    subgraph "Achievement Engine"
+        Trigger[Game/Chore Event]
+        Check[Check Achievement Criteria]
+        Award[Award Badge]
+    end
+    
+    subgraph "Database"
+        Achievements[achievements table<br/>games_10, streak_5, etc.]
+        UserAchievements[user_achievements table]
+    end
+    
+    Trigger --> Check
+    Check --> Achievements
+    Check -->|Criteria met| Award
+    Award --> UserAchievements
+    Award --> Notify[Notification:<br/>🏆 Achievement Unlocked!]
+    
+    style Award fill:#FFD93D
+    style Notify fill:#FF6B9D
+```
 
-**ADHD-Friendly**
-- Score is visible but not distracting
-- Positive framing (shows success, not failures)
-- Time is informational, not pressured (no countdown)
-- Immediate feedback (score updates instantly)
-- Clear visual hierarchy (score more prominent than time)
+## Achievement ERD
 
-**Extensibility**
-- Easy to add: high score, session stats, progress bar
-- Can add backgrounds or panels if needed
-- Can animate score text differently
-- Can change format (e.g., "5 / 10" to show total)
+```mermaid
+erDiagram
+    users ||--o{ user_achievements : earns
+    achievements ||--o{ user_achievements : awarded
+    
+    achievements {
+        INT achievement_id PK
+        VARCHAR code UK
+        VARCHAR name
+        TEXT description
+        VARCHAR icon_url
+        INT points_value
+        ENUM requirement_type
+        INT requirement_value
+    }
+    
+    user_achievements {
+        BIGINT user_achievement_id PK
+        INT user_id FK
+        INT achievement_id FK
+        TIMESTAMP earned_at
+    }
+```
 
-### Component Relationships
+---
 
-1. **LetterPopScene owns UI elements**
-   - Creates score and time text objects
-   - Manages score variable
-   - Updates displays
+# Phase 21: Marketing Website - Architecture
 
-2. **Score system is reactive**
-   - Triggered by correct clicks
-   - No polling or continuous checks
-   - Updates only when needed
+## Site Structure
 
-3. **Time system is active**
-   - Timer event runs continuously
-   - Updates every second
-   - Independent of gameplay
+```mermaid
+graph TB
+    Root[adhdlearn.com] --> Hero[Hero Section<br/>What is ADHDLearn?]
+    Root --> Features[Features<br/>For Parents & Children]
+    Root --> Screenshots[Screenshots<br/>Portal Demos]
+    Root --> CTA[Call to Action<br/>parent.adhdlearn.com/register]
+    
+    style Root fill:#4ECDC4
+    style CTA fill:#FF6B9D
+```
 
-4. **UI layer is separate**
-   - High depth (1000) above game objects
-   - Fixed positions (not relative to game elements)
-   - Always visible
+---
 
-5. **Text styling is consistent**
-   - Both use white + black stroke
-   - Both use Arial font
-   - Both use similar sizing
-   - Visual consistency across UI
+# Phase 22: Age Norms Comparison - Architecture
 
-### Future Enhancements
+## Percentile Calculation
 
-**Possible additions (later phases):**
-- High score tracking (save to localStorage)
-- Session statistics (accuracy percentage)
-- Progress bar (visual score representation)
-- Combo counter (consecutive correct clicks)
-- Achievement notifications
-- Animated score particle effects
-- Background panels for UI elements
-- Responsive positioning for different screen sizes
+```mermaid
+graph LR
+    ChildData[Aurora's Scores] --> Calculate[Percentile Calculator]
+    AgeNorms[age_norms table] --> Calculate
+    Calculate --> Result[Aurora: 85th percentile<br/>for letter recognition]
+    Result --> Dashboard[Parent Dashboard]
+    
+    style Result fill:#00B894
+```
 
-This phase keeps the UI minimal and focused on essential feedback: how many correct, and how long playing. Everything else is secondary and can be added later without disrupting this foundation.
+## Age Norms ERD
+
+```mermaid
+erDiagram
+    age_norms {
+        INT norm_id PK
+        INT age_years
+        VARCHAR skill_type
+        DECIMAL percentile_10
+        DECIMAL percentile_25
+        DECIMAL percentile_50
+        DECIMAL percentile_75
+        DECIMAL percentile_90
+    }
+```
+
+---
+
+# Phase 23-26: Life Skills Categories - Architecture
+
+## Category Expansion
+
+```mermaid
+graph TB
+    Dashboard[Child Dashboard] --> Reading[Reading<br/>3 games]
+    Dashboard --> Math[Math<br/>3 games]
+    Dashboard --> Science[Science<br/>3 experiments]
+    Dashboard --> LifeSkills[Life Skills]
+    
+    LifeSkills --> Cooking[Cooking Helper]
+    LifeSkills --> Printing[3D Printing]
+    LifeSkills --> Shopping[Shopping Helper]
+    
+    style Science fill:#95E1D3
+    style LifeSkills fill:#FECA57
+```
+
+---
+
+# Phase 27: Weekly Reports - Email Architecture
+
+## Email Service Flow
+
+```mermaid
+sequenceDiagram
+    participant Cron as Cron Job<br/>(Every Sunday 8AM)
+    participant Backend as Report Generator
+    participant DB as Database
+    participant Email as SendGrid
+    participant Parent as Parent Email
+    
+    Cron->>Backend: Trigger weekly report
+    Backend->>DB: Fetch family data
+    Backend->>DB: Fetch game sessions (last 7 days)
+    Backend->>DB: Fetch achievements earned
+    Backend->>Backend: Generate HTML email
+    Backend->>Email: Send email
+    Email->>Parent: Weekly Progress Report
+```
+
+---
+
+# Phase 28: ML Pattern Detection - Architecture
+
+## Machine Learning Pipeline
+
+```mermaid
+graph TB
+    subgraph "Data Collection"
+        LetterAttempts[letter_pop_attempts]
+        GameSessions[game_sessions]
+    end
+    
+    subgraph "ML Service (Python)"
+        DataLoader[Load Data]
+        FeatureExtraction[Extract Features<br/>- Time of day<br/>- Letter pairs<br/>- Accuracy trends]
+        Model[Scikit-learn Model]
+        Insights[Generate Insights]
+    end
+    
+    subgraph "Parent Dashboard"
+        Alerts[ML Insights:<br/>"Aurora struggles with b/d<br/>in afternoons"]
+    end
+    
+    LetterAttempts --> DataLoader
+    GameSessions --> DataLoader
+    DataLoader --> FeatureExtraction
+    FeatureExtraction --> Model
+    Model --> Insights
+    Insights --> Alerts
+    
+    style Model fill:#6C5CE7
+    style Alerts fill:#FF6B9D
+```
+
+---
+
+# Phase 29: PDF Reports - Architecture
+
+## PDF Generation Flow
+
+```mermaid
+graph LR
+    Dashboard[Parent Dashboard] -->|Click "Download PDF"| Generate[PDF Generator<br/>Puppeteer]
+    Generate --> Render[Render HTML with Charts]
+    Render --> Convert[Convert to PDF]
+    Convert --> Download[Download report.pdf]
+    
+    style Generate fill:#4ECDC4
+    style Download fill:#00B894
+```
+
+---
+
+# Phase 30: Android APK - Architecture
+
+## Capacitor Wrapper
+
+```mermaid
+graph TB
+    subgraph "Child Portal (Web)"
+        React[React App]
+        Phaser[Phaser Games]
+    end
+    
+    subgraph "Capacitor"
+        CapacitorCore[Capacitor Core]
+        AndroidPlatform[Android Platform]
+    end
+    
+    subgraph "Android APK"
+        WebView[Android WebView]
+        NativeFeatures[Native Features<br/>- Offline storage<br/>- Camera<br/>- Push notifications]
+    end
+    
+    React --> CapacitorCore
+    Phaser --> CapacitorCore
+    CapacitorCore --> AndroidPlatform
+    AndroidPlatform --> WebView
+    AndroidPlatform --> NativeFeatures
+    
+    style AndroidPlatform fill:#3DDC84
+```
+
+---
+
+# Phase 31-32: Multi-User Support - Architecture
+
+## Family Structure
+
+```mermaid
+erDiagram
+    families ||--o{ users : contains
+    users ||--o{ children : parent_of
+    users ||--o{ game_sessions : plays
+    users ||--o{ chores : completes
+    
+    families {
+        INT family_id PK
+        VARCHAR family_name
+        ENUM subscription_tier
+    }
+    
+    users {
+        INT user_id PK
+        INT family_id FK
+        ENUM role
+        VARCHAR email
+        VARCHAR first_name
+    }
+```
+
+## Multi-Parent Flow
+
+```mermaid
+sequenceDiagram
+    participant Parent1 as Corey (Parent)
+    participant API as Backend
+    participant Email as Email Service
+    participant Parent2 as Partner
+    
+    Parent1->>API: POST /api/family/invite<br/>{email: "partner@example.com"}
+    API->>Email: Send invitation email
+    Email->>Parent2: Invitation link
+    Parent2->>API: GET /api/family/accept/:token
+    API->>API: Add parent to family
+    API->>Parent2: Redirect to dashboard
+    Parent2->>API: View Aurora's data
+```
+
+---
+
+# Phase 33: Parental Controls - Architecture
+
+## Screen Time Enforcement
+
+```mermaid
+graph TB
+    ChildLogin[Child Logs In] --> CheckControls[Check parental_controls]
+    CheckControls --> TimeLimit[Daily time limit?]
+    TimeLimit -->|30 min limit| StartTimer[Start session timer]
+    
+    StartTimer --> PlayGame[Aurora plays games]
+    PlayGame --> CheckTimer{Time remaining?}
+    CheckTimer -->|Time left| PlayGame
+    CheckTimer -->|Time expired| Lockout[Lock portal:<br/>"Time's up for today!"]
+    
+    style Lockout fill:#FF6B9D
+```
+
+---
+
+# Phase 34: Testing Infrastructure - Architecture
+
+## CI/CD Pipeline
+
+```mermaid
+graph LR
+    Commit[Git Commit] --> CI[GitHub Actions]
+    CI --> UnitTests[Unit Tests<br/>Jest]
+    CI --> E2ETests[E2E Tests<br/>Playwright]
+    CI --> Lint[ESLint]
+    
+    UnitTests -->|Pass| Deploy[Deploy]
+    E2ETests -->|Pass| Deploy
+    Lint -->|Pass| Deploy
+    
+    UnitTests -->|Fail| Block[Block Deployment]
+    E2ETests -->|Fail| Block
+    Lint -->|Fail| Block
+    
+    style Deploy fill:#00B894
+    style Block fill:#FF6B9D
+```
+
+---
+
+# Phase 35: Performance Optimization - Architecture
+
+## Optimization Layers
+
+```mermaid
+graph TB
+    subgraph "Frontend Optimizations"
+        CodeSplit[Code Splitting<br/>React.lazy()]
+        ImageOpt[Image Optimization<br/>WebP format]
+        LazyLoad[Lazy Loading<br/>Non-critical resources]
+    end
+    
+    subgraph "Backend Optimizations"
+        QueryOpt[Database Query Optimization<br/>Indexes, joins]
+        Cache[Redis Caching<br/>Session data, high scores]
+    end
+    
+    subgraph "Infrastructure"
+        CDN[CloudFlare CDN<br/>Static assets]
+    end
+    
+    Browser[Browser] --> CDN
+    CDN --> CodeSplit
+    CodeSplit --> ImageOpt
+    ImageOpt --> LazyLoad
+    
+    LazyLoad --> Cache
+    Cache --> QueryOpt
+    
+    style CDN fill:#4ECDC4
+    style Cache fill:#FF6B9D
+```
+
+---
+
+# Phase 36: Accessibility - Architecture
+
+## Accessibility Features
+
+```mermaid
+graph TB
+    Settings[Accessibility Settings] --> HighContrast[High Contrast Mode<br/>Black bg, white text]
+    Settings --> FontSize[Adjustable Font Size<br/>Small, Medium, Large]
+    Settings --> ScreenReader[Screen Reader Support<br/>ARIA labels]
+    Settings --> Keyboard[Keyboard Navigation<br/>Tab index, focus indicators]
+    
+    style HighContrast fill:#000000,color:#FFFFFF
+    style FontSize fill:#4ECDC4
+    style ScreenReader fill:#6C5CE7
+    style Keyboard fill:#FFD93D
+```
+
+---
+
+**UML.md Complete:** All 36 phases (0-36) with comprehensive architecture diagrams, ERDs, sequence diagrams, and technical visualizations
+

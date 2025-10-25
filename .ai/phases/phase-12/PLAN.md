@@ -1,488 +1,481 @@
-# Phase 12: Letter Pop - Complete Round Flow
+# Phase 12: Shapes Recognition Game
 
-## Goal
-Implement full start-to-finish gameplay loop: show 10 letters in sequence, end round after 10 correct answers, display results screen, enable immediate replay
+**Project:** ADHDLearn.com
+**Phase:** 12 of 36
+**Last Updated:** October 22, 2025
 
-## Context
-This phase completes the basic Letter Pop mini-game by:
-1. Implementing round-based gameplay (10 letters per round)
-2. Tracking score and time throughout the round
-3. Creating a results screen showing performance metrics
-4. Adding "Play Again" functionality for immediate replay
-5. Establishing the complete game loop for Letter Pop
+---
 
-This transforms Letter Pop from individual letter interactions into a complete, replayable game experience.
+ Shapes Recognition Game
 
-## Prerequisites
-- Phase 11 completed (letter interaction with correct/incorrect feedback)
-- LetterPopScene exists with working letter display
-- Audio feedback for correct/incorrect answers implemented
-- Basic score tracking capability exists
+**Delivers:** 2nd Math game
+**Aurora gets:** 🎮 **NEW GAME - Shapes Recognition**
+**You get:** See Aurora's shapes progress in parent dashboard
+**Deployed:** 5 total games (3 Reading + 2 Math)
 
-## Tasks
+---
 
-### 1. Implement Round State Management
-- Add round state variables to LetterPopScene
-- Track current letter index (0-9)
-- Track total correct answers in round
-- Track round start time
-- Track round completion status
-- Initialize round state in create() or startRound() method
+### What This Phase Delivers
 
-### 2. Create Letter Sequence Flow
-- Generate array of 10 random letters for each round
-- Display letters sequentially (one at a time)
-- Advance to next letter after correct answer
-- Maintain letter index throughout round
-- Handle final letter (index 9) specially
+Shapes Recognition game in Math category:
+- Identify basic 2D shapes (circle, square, triangle, rectangle, star, heart, hexagon, oval)
+- 10 questions per session
+- Multiple choice format (4 shape options)
+- Visual + audio (shape name pronunciation)
+- Scoring: 10 points per correct answer
+- Colorful animations and feedback
+- Saves to database like other games
+- Appears in Math category alongside Counting Game
 
-### 3. Implement Round End Detection
-- Check if all 10 letters have been answered correctly
-- Calculate final score (correct answers out of 10)
-- Calculate total time taken (end time - start time)
-- Trigger transition to results screen
-- Clean up current game objects
+---
 
-### 4. Create ResultsScene
-- Create new scene class `/src/scenes/ResultsScene.js`
-- Display "Round Complete!" message
-- Show score: "X out of 10 correct"
-- Show time taken: "Time: XX seconds"
-- Add visual celebration for perfect scores (10/10)
-- Calculate and display performance rating (optional)
+### Database Changes
 
-### 5. Add Play Again Button
-- Create interactive "Play Again" button in ResultsScene
-- Position button prominently (center-bottom)
-- Add hover animation (scale effect)
-- Add click sound effect
-- Transition back to LetterPopScene on click
-- Reset round state when restarting
+**No new tables** - Uses existing `game_sessions` table from Phase 3.
 
-### 6. Implement Data Passing Between Scenes
-- Pass score data from LetterPopScene to ResultsScene
-- Pass time data from LetterPopScene to ResultsScene
-- Use Phaser scene.start(key, data) method
-- Receive data in ResultsScene init() method
+**New game_name value:** `'Shapes Recognition'`
 
-## Implementation Details
+Example record:
+```sql
+INSERT INTO game_sessions (game_name, score, accuracy_percentage, correct_attempts, total_attempts, duration_seconds, mode)
+VALUES ('Shapes Recognition', 100, 100.0, 10, 10, 195, 'Easy');
+```
 
-### LetterPopScene Round State
-```javascript
-class LetterPopScene extends Phaser.Scene {
-    constructor() {
-        super({ key: 'LetterPopScene' });
-    }
+---
 
-    create() {
-        this.startRound();
-    }
+### API Endpoints
 
-    startRound() {
-        // Initialize round state
-        this.roundLetters = this.generateLetterSequence();
-        this.currentLetterIndex = 0;
-        this.correctAnswers = 0;
-        this.roundStartTime = Date.now();
-        this.roundInProgress = true;
+**No new endpoints** - Uses existing endpoints from Phase 3:
 
-        // Display first letter
-        this.displayCurrentLetter();
-    }
-
-    generateLetterSequence() {
-        // Generate 10 random letters
-        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-        const letters = [];
-        for (let i = 0; i < 10; i++) {
-            const randomLetter = Phaser.Utils.Array.GetRandom(alphabet);
-            letters.push(randomLetter);
-        }
-        return letters;
-    }
-
-    displayCurrentLetter() {
-        const currentLetter = this.roundLetters[this.currentLetterIndex];
-
-        // Clear previous letter display
-        if (this.letterText) {
-            this.letterText.destroy();
-        }
-
-        // Display current letter
-        this.letterText = this.add.text(400, 250, currentLetter, {
-            fontSize: '120px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 8
-        }).setOrigin(0.5);
-
-        // Display progress counter
-        this.updateProgressDisplay();
-    }
-
-    updateProgressDisplay() {
-        if (this.progressText) {
-            this.progressText.destroy();
-        }
-
-        this.progressText = this.add.text(400, 100,
-            `Letter ${this.currentLetterIndex + 1} of 10`, {
-            fontSize: '24px',
-            color: '#ffffff'
-        }).setOrigin(0.5);
-    }
-
-    onCorrectAnswer() {
-        this.correctAnswers++;
-
-        // Play correct sound
-        this.sound.play('correctSound');
-
-        // Check if round is complete
-        if (this.currentLetterIndex >= 9) {
-            this.endRound();
-        } else {
-            // Advance to next letter
-            this.currentLetterIndex++;
-            this.time.delayedCall(500, () => {
-                this.displayCurrentLetter();
-            });
-        }
-    }
-
-    onIncorrectAnswer() {
-        // Play incorrect sound
-        this.sound.play('incorrectSound');
-
-        // Show feedback but stay on same letter
-        // (Player must answer correctly to advance)
-        this.showIncorrectFeedback();
-    }
-
-    endRound() {
-        this.roundInProgress = false;
-
-        // Calculate round time
-        const roundEndTime = Date.now();
-        const totalTimeSeconds = Math.round((roundEndTime - this.roundStartTime) / 1000);
-
-        // Prepare data for results scene
-        const resultsData = {
-            score: this.correctAnswers,
-            totalLetters: 10,
-            timeSeconds: totalTimeSeconds
-        };
-
-        // Transition to results screen
-        this.time.delayedCall(1000, () => {
-            this.scene.start('ResultsScene', resultsData);
-        });
-    }
+#### POST /api/sessions
+**Purpose:** Save Shapes Recognition game session
+**Body:**
+```json
+{
+  "gameName": "Shapes Recognition",
+  "score": 100,
+  "accuracyPercentage": 100.0,
+  "correctAttempts": 10,
+  "totalAttempts": 10,
+  "durationSeconds": 195,
+  "mode": "Easy"
+}
+```
+**Response (201):**
+```json
+{
+  "success": true,
+  "sessionId": 78,
+  "isHighScore": true,
+  "rank": 1
 }
 ```
 
-### ResultsScene Structure
-```javascript
-class ResultsScene extends Phaser.Scene {
-    constructor() {
-        super({ key: 'ResultsScene' });
+#### GET /api/sessions/high-scores?game=Shapes Recognition
+**Purpose:** Get Shapes Recognition high scores
+**Response (200):**
+```json
+{
+  "success": true,
+  "scores": [
+    {
+      "sessionId": 78,
+      "score": 100,
+      "accuracyPercentage": 100.0,
+      "playedAt": "2025-10-22T12:00:00Z"
     }
-
-    init(data) {
-        // Receive data from LetterPopScene
-        this.score = data.score || 0;
-        this.totalLetters = data.totalLetters || 10;
-        this.timeSeconds = data.timeSeconds || 0;
-    }
-
-    create() {
-        // Background
-        this.cameras.main.setBackgroundColor('#4488ff');
-
-        // Title
-        this.add.text(400, 100, 'Round Complete!', {
-            fontSize: '48px',
-            fontFamily: 'Arial',
-            color: '#ffff00',
-            fontStyle: 'bold',
-            stroke: '#000000',
-            strokeThickness: 6
-        }).setOrigin(0.5);
-
-        // Score display
-        this.add.text(400, 220, `Score: ${this.score} out of ${this.totalLetters}`, {
-            fontSize: '36px',
-            color: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 4
-        }).setOrigin(0.5);
-
-        // Time display
-        this.add.text(400, 290, `Time: ${this.timeSeconds} seconds`, {
-            fontSize: '32px',
-            color: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 4
-        }).setOrigin(0.5);
-
-        // Performance message
-        this.displayPerformanceMessage();
-
-        // Play Again button
-        this.createPlayAgainButton();
-
-        // Celebration for perfect score
-        if (this.score === this.totalLetters) {
-            this.showCelebration();
-        }
-    }
-
-    displayPerformanceMessage() {
-        let message = '';
-        const percentage = (this.score / this.totalLetters) * 100;
-
-        if (percentage === 100) {
-            message = 'Perfect! Amazing work!';
-        } else if (percentage >= 80) {
-            message = 'Great job!';
-        } else if (percentage >= 60) {
-            message = 'Good effort!';
-        } else {
-            message = 'Keep practicing!';
-        }
-
-        this.add.text(400, 360, message, {
-            fontSize: '28px',
-            color: '#ffff00',
-            fontStyle: 'italic'
-        }).setOrigin(0.5);
-    }
-
-    createPlayAgainButton() {
-        // Button background
-        const buttonBg = this.add.rectangle(400, 480, 240, 80, 0x4CAF50);
-        buttonBg.setStrokeStyle(4, 0xffffff);
-
-        // Button text
-        const buttonText = this.add.text(400, 480, 'Play Again', {
-            fontSize: '32px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-
-        // Make interactive
-        buttonBg.setInteractive({ useHandCursor: true });
-
-        // Hover effects
-        buttonBg.on('pointerover', () => {
-            this.tweens.add({
-                targets: [buttonBg, buttonText],
-                scaleX: 1.1,
-                scaleY: 1.1,
-                duration: 200,
-                ease: 'Power2'
-            });
-        });
-
-        buttonBg.on('pointerout', () => {
-            this.tweens.add({
-                targets: [buttonBg, buttonText],
-                scaleX: 1.0,
-                scaleY: 1.0,
-                duration: 200,
-                ease: 'Power2'
-            });
-        });
-
-        // Click handler
-        buttonBg.on('pointerdown', () => {
-            this.sound.play('buttonClick');
-
-            this.tweens.add({
-                targets: [buttonBg, buttonText],
-                scaleX: 0.95,
-                scaleY: 0.95,
-                duration: 100,
-                yoyo: true,
-                onComplete: () => {
-                    this.scene.start('LetterPopScene');
-                }
-            });
-        });
-    }
-
-    showCelebration() {
-        // Add star particles or simple text celebration
-        const stars = [];
-        for (let i = 0; i < 20; i++) {
-            const x = Phaser.Math.Between(200, 600);
-            const y = Phaser.Math.Between(50, 150);
-            const star = this.add.text(x, y, '⭐', { fontSize: '24px' });
-            stars.push(star);
-
-            this.tweens.add({
-                targets: star,
-                y: y + Phaser.Math.Between(50, 150),
-                alpha: 0,
-                duration: 2000,
-                ease: 'Power2'
-            });
-        }
-    }
+  ]
 }
 ```
 
-### Updated config.js
+---
+
+### Frontend Changes
+
+**Update `child-portal/src/pages/MathCategory.jsx`:**
 ```javascript
-const config = {
-    type: Phaser.AUTO,
-    width: 800,
-    height: 600,
-    parent: 'game-container',
-    backgroundColor: '#4488ff',
-    scene: [
-        BootScene,
-        PreloadScene,
-        MainMenuScene,
-        LetterPopScene,
-        ResultsScene  // Add ResultsScene to scene array
-    ]
-};
-
-const game = new Phaser.Game(config);
+const activities = [
+  {
+    id: 1,
+    name: 'Counting Game',
+    icon: '🔢',
+    description: 'Count the objects!',
+    difficulty: '⭐',
+    path: '/activities/counting-game',
+    available: true
+  },
+  {
+    id: 2,
+    name: 'Shapes',
+    icon: '🔷',
+    description: 'Learn shapes!',
+    difficulty: '⭐⭐',
+    path: '/activities/shapes',
+    available: true
+  }
+];
 ```
 
-### Updated index.html
-```html
-<!-- Add ResultsScene script -->
-<script src="src/scenes/ResultsScene.js"></script>
+**New Files in `child-portal/src/games/shapes/`:**
+```
+shapes/
+├── ShapesGame.js            (Main Phaser scene)
+├── scenes/
+│   ├── GameScene.js         (Shapes recognition gameplay)
+│   ├── ResultsScene.js      (Shows score and high scores)
+│   └── TutorialScene.js     (First-time instructions)
+├── assets/
+│   ├── images/
+│   │   ├── circle.png
+│   │   ├── square.png
+│   │   ├── triangle.png
+│   │   ├── rectangle.png
+│   │   ├── star.png
+│   │   ├── heart.png
+│   │   ├── hexagon.png
+│   │   └── oval.png
+│   ├── audio/
+│   │   ├── circle.mp3
+│   │   ├── square.mp3
+│   │   ├── triangle.mp3
+│   │   └── ... (8 shape audio files)
+│   └── fonts/
+│       └── FredokaOne.ttf
+└── data/
+    └── shapes.js            (Shape definitions)
 ```
 
-## Acceptance Criteria
-- [ ] Round starts with 10 randomly selected letters
-- [ ] Letters display sequentially, one at a time
-- [ ] Progress indicator shows "Letter X of 10"
-- [ ] Correct answer advances to next letter
-- [ ] Incorrect answer keeps player on same letter
-- [ ] Round ends after 10th correct answer
-- [ ] ResultsScene displays with score (X/10)
-- [ ] ResultsScene displays time taken in seconds
-- [ ] Performance message appears based on score
-- [ ] "Play Again" button is visible and interactive
-- [ ] Button has hover animation (scale effect)
-- [ ] Button click returns to LetterPopScene
-- [ ] New round starts with fresh letter sequence
-- [ ] Perfect score (10/10) triggers celebration effect
-- [ ] No errors in browser console
-- [ ] Complete game loop works smoothly
+**Add route in `child-portal/src/App.jsx`:**
+```javascript
+import ShapesGame from './games/shapes/ShapesGame';
 
-## Testing Steps
-1. Load game and navigate to LetterPopScene
-2. Verify first letter displays with "Letter 1 of 10"
-3. Answer first letter correctly
-   - Verify correct sound plays
-   - Verify advances to "Letter 2 of 10"
-4. Intentionally answer a letter incorrectly
-   - Verify incorrect sound plays
-   - Verify stays on same letter
-5. Answer correctly to advance
-6. Continue through all 10 letters
-7. Verify ResultsScene appears after 10th correct answer
-8. Check score displays correctly (count your correct answers)
-9. Check time is reasonable (should be displayed in seconds)
-10. Check performance message matches your score
-11. Hover over "Play Again" button
-    - Verify cursor changes to pointer
-    - Verify button scales up
-12. Click "Play Again"
-    - Verify button click sound plays
-    - Verify returns to LetterPopScene
-13. Verify new round has different letter sequence
-14. Play perfect round (10/10) and check for celebration effect
-15. Test multiple rounds in sequence
-
-## Estimated Time
-1.5 hours
-
-## Dependencies
-- LetterPopScene with letter display functionality
-- Audio assets for correct/incorrect sounds
-- Audio asset for button click
-- Phaser tween system for animations
-
-## Risks
-- **Letter repetition**: May get same letter multiple times in sequence
-  - Mitigation: Consider ensuring variety in letter selection
-- **Time calculation accuracy**: Date.now() vs game time
-  - Mitigation: Use Date.now() for simplicity in Phase 12
-- **State reset issues**: Round state not resetting properly
-  - Mitigation: Clear all state variables in startRound()
-- **Data passing failure**: Results data not received
-  - Mitigation: Use default values in init(data) method
-- **Memory leaks**: Not destroying game objects properly
-  - Mitigation: Destroy previous objects before creating new ones
-
-## ADHD-Friendly Design Considerations
-- **Clear progress**: "Letter X of 10" shows exactly where they are
-- **Immediate feedback**: Each answer gets instant audio/visual response
-- **Fixed endpoint**: 10 letters is manageable, not overwhelming
-- **Celebration**: Perfect score gets special recognition
-- **Easy replay**: One-click to start new round, no navigation
-- **Visual variety**: Different letters keep engagement high
-- **Time tracking**: Shows accomplishment without pressure
-- **No penalties**: Incorrect answers don't end round, just require retry
-
-## Notes
-- 10 letters per round is a good starter length (not too short, not too long)
-- Time tracking adds replay value without adding pressure
-- Results screen provides sense of closure and accomplishment
-- Immediate replay option maintains engagement momentum
-- Performance messages are encouraging, never negative
-- Consider adding difficulty levels in future phases (Phase 13+)
-- Consider tracking high scores/best times in future phases
-- Letter sequence generation could be enhanced to ensure variety
-
-## State Management Flow
-```
-Start Round → Initialize State → Generate 10 Letters
-    ↓
-Display Letter 1 → Wait for Answer
-    ↓
-Correct? → Yes → Increment Index → Next Letter (repeat)
-    ↓
-    No → Show Feedback → Stay on Same Letter
-    ↓
-Index === 9 && Correct? → Yes → End Round
-    ↓
-Calculate Score & Time → Transition to Results
-    ↓
-Show Results → Play Again Button
-    ↓
-Click Play Again → Start Round (loop)
+<Route path="/activities/shapes" element={<ShapesGame />} />
 ```
 
-## Completion Checklist
-- [ ] Round state management implemented
-- [ ] Letter sequence generation working
-- [ ] Progress indicator displays correctly
-- [ ] Round end detection triggers properly
-- [ ] ResultsScene created and styled
-- [ ] Score and time display accurately
-- [ ] Performance message logic implemented
-- [ ] Play Again button created with animations
-- [ ] Scene transitions work smoothly
-- [ ] Data passing between scenes works
-- [ ] Perfect score celebration implemented
-- [ ] All acceptance criteria met
-- [ ] Tested complete game loop multiple times
-- [ ] No console errors
-- [ ] Ready to proceed to Phase 13
+**Update dashboard count in `child-portal/src/pages/ChildDashboard.jsx`:**
+```javascript
+{
+  id: 'math',
+  name: 'Math',
+  icon: '🔢',
+  unlocked: true,
+  activityCount: 2,  // Updated from 1 to 2
+  color: '#4ECDC4',
+  path: '/categories/math'
+}
+```
 
-## What's Next (Phase 13)
-- Add difficulty levels (easy/medium/hard)
-- Implement persistent high score tracking
-- Add additional game modes
-- Enhance visual effects and animations
+---
+
+### Technical Specifications
+
+**GameScene.js - Shapes Recognition Logic:**
+```javascript
+import Phaser from 'phaser';
+import shapesData from '../data/shapes';
+
+export default class GameScene extends Phaser.Scene {
+  constructor() {
+    super({ key: 'GameScene' });
+    this.score = 0;
+    this.currentQuestion = 0;
+    this.totalQuestions = 10;
+    this.correctAnswers = 0;
+    this.startTime = null;
+  }
+
+  create() {
+    this.startTime = Date.now();
+    
+    // Display UI
+    this.createUI();
+    
+    // Load first question
+    this.loadQuestion();
+  }
+
+  createUI() {
+    // Background gradient
+    this.add.rectangle(640, 360, 1280, 720, 0xE8F4F8);
+    
+    // Title
+    this.add.text(640, 50, 'Shapes 🔷', {
+      fontFamily: 'Fredoka One',
+      fontSize: '48px',
+      color: '#2D3436'
+    }).setOrigin(0.5);
+    
+    // Score
+    this.scoreText = this.add.text(100, 50, 'Score: 0', {
+      fontFamily: 'Fredoka One',
+      fontSize: '32px',
+      color: '#00B894'
+    });
+    
+    // Progress
+    this.progressText = this.add.text(1180, 50, 'Question 1 of 10', {
+      fontFamily: 'Fredoka One',
+      fontSize: '28px',
+      color: '#636E72'
+    }).setOrigin(1, 0);
+  }
+
+  loadQuestion() {
+    // Clear previous question
+    this.clearQuestion();
+    
+    // Select random shape as target
+    const targetShape = Phaser.Utils.Array.GetRandom(shapesData);
+    this.currentAnswer = targetShape.name;
+    
+    // Display question text
+    this.questionText = this.add.text(640, 120, `Find the ${targetShape.name}!`, {
+      fontFamily: 'Fredoka One',
+      fontSize: '40px',
+      color: '#2D3436'
+    }).setOrigin(0.5);
+    
+    // Play audio
+    this.sound.play(`shape_${targetShape.name.toLowerCase()}`);
+    
+    // Display target shape (large, centered)
+    this.targetShapeImage = this.add.image(640, 280, targetShape.image)
+      .setScale(1.5)
+      .setTint(targetShape.color);
+    
+    // Create answer choices (4 shapes)
+    this.createAnswerChoices(targetShape);
+    
+    // Update progress
+    this.progressText.setText(`Question ${this.currentQuestion + 1} of ${this.totalQuestions}`);
+  }
+
+  createAnswerChoices(targetShape) {
+    // Get target + 3 distractors
+    const distractors = shapesData
+      .filter(s => s.name !== targetShape.name)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3);
+    
+    const choices = [targetShape, ...distractors];
+    Phaser.Utils.Array.Shuffle(choices);
+    
+    // Display choices in 2x2 grid
+    const positions = [
+      { x: 420, y: 520 },
+      { x: 860, y: 520 },
+      { x: 420, y: 620 },
+      { x: 860, y: 620 }
+    ];
+    
+    this.choiceButtons = [];
+    
+    choices.forEach((shape, index) => {
+      const pos = positions[index];
+      const button = this.createChoiceButton(shape, pos.x, pos.y);
+      this.choiceButtons.push(button);
+    });
+  }
+
+  createChoiceButton(shape, x, y) {
+    const bg = this.add.rectangle(x, y, 180, 80, 0xFFFFFF)
+      .setStrokeStyle(4, 0xDFE6E9)
+      .setInteractive({ useHandCursor: true });
+    
+    const icon = this.add.image(x - 50, y, shape.image)
+      .setScale(0.4)
+      .setTint(shape.color);
+    
+    const text = this.add.text(x + 20, y, shape.name, {
+      fontFamily: 'Fredoka One',
+      fontSize: '24px',
+      color: '#2D3436'
+    }).setOrigin(0, 0.5);
+    
+    const container = this.add.container(x, y, [bg, icon, text]);
+    container.setData('shapeName', shape.name);
+    
+    bg.on('pointerdown', () => {
+      this.handleAnswer(shape.name, container);
+    });
+    
+    bg.on('pointerover', () => {
+      bg.setFillStyle(0xE8F4F8);
+    });
+    
+    bg.on('pointerout', () => {
+      bg.setFillStyle(0xFFFFFF);
+    });
+    
+    return container;
+  }
+
+  handleAnswer(selectedShape, selectedButton) {
+    // Disable all buttons
+    this.disableButtons();
+    
+    if (selectedShape === this.currentAnswer) {
+      // Correct answer
+      this.showCorrectFeedback(selectedButton);
+      this.score += 10;
+      this.correctAnswers++;
+      this.scoreText.setText(`Score: ${this.score}`);
+      
+      // Play shape audio again
+      this.sound.play(`shape_${this.currentAnswer.toLowerCase()}`);
+      this.sound.play('correct');
+      
+      // Move to next question after delay
+      this.time.delayedCall(1500, () => this.nextQuestion());
+    } else {
+      // Incorrect answer
+      this.showIncorrectFeedback(selectedButton);
+      
+      // Move to next question after delay
+      this.time.delayedCall(2000, () => this.nextQuestion());
+    }
+  }
+
+  showCorrectFeedback(button) {
+    const feedback = this.add.text(640, 450, '✅ Correct!', {
+      fontFamily: 'Fredoka One',
+      fontSize: '48px',
+      color: '#00B894',
+      stroke: '#FFFFFF',
+      strokeThickness: 4
+    }).setOrigin(0.5);
+    
+    // Bounce animation
+    this.tweens.add({
+      targets: feedback,
+      scale: { from: 0, to: 1.2 },
+      duration: 500,
+      ease: 'Back.easeOut'
+    });
+    
+    // Celebrate target shape
+    this.tweens.add({
+      targets: this.targetShapeImage,
+      angle: 360,
+      scale: 2.0,
+      duration: 1000,
+      ease: 'Bounce.easeOut'
+    });
+  }
+
+  showIncorrectFeedback(button) {
+    const feedback = this.add.text(640, 450, `That's a ${this.currentAnswer}! Try again!`, {
+      fontFamily: 'Fredoka One',
+      fontSize: '36px',
+      color: '#FF7675'
+    }).setOrigin(0.5);
+    
+    // Shake animation
+    this.cameras.main.shake(200, 0.005);
+  }
+
+  nextQuestion() {
+    this.currentQuestion++;
+    
+    if (this.currentQuestion < this.totalQuestions) {
+      this.loadQuestion();
+    } else {
+      this.endGame();
+    }
+  }
+
+  endGame() {
+    const durationSeconds = Math.floor((Date.now() - this.startTime) / 1000);
+    const accuracy = (this.correctAnswers / this.totalQuestions) * 100;
+    
+    const gameData = {
+      gameName: 'Shapes Recognition',
+      score: this.score,
+      accuracyPercentage: accuracy,
+      correctAttempts: this.correctAnswers,
+      totalAttempts: this.totalQuestions,
+      durationSeconds,
+      mode: 'Easy'
+    };
+    
+    this.scene.start('ResultsScene', gameData);
+  }
+
+  clearQuestion() {
+    if (this.questionText) this.questionText.destroy();
+    if (this.targetShapeImage) this.targetShapeImage.destroy();
+    if (this.choiceButtons) {
+      this.choiceButtons.forEach(btn => btn.destroy());
+    }
+  }
+
+  disableButtons() {
+    this.choiceButtons.forEach(btn => {
+      btn.list[0].disableInteractive();
+    });
+  }
+}
+
+// McCabe complexity: 5 (at limit, acceptable)
+```
+
+**shapes.js - Shape Definitions:**
+```javascript
+export default [
+  { name: 'Circle', image: 'circle', color: 0xFF6B9D },
+  { name: 'Square', image: 'square', color: 0x4ECDC4 },
+  { name: 'Triangle', image: 'triangle', color: 0xFFD93D },
+  { name: 'Rectangle', image: 'rectangle', color: 0x95E1D3 },
+  { name: 'Star', image: 'star', color: 0xFECE63 },
+  { name: 'Heart', image: 'heart', color: 0xFF6B9D },
+  { name: 'Hexagon', image: 'hexagon', color: 0x6C5CE7 },
+  { name: 'Oval', image: 'oval', color: 0xA29BFE }
+];
+```
+
+---
+
+### Acceptance Criteria
+
+- [ ] Shapes game appears in Math Adventures page
+- [ ] Math category shows "2 activities available" on dashboard
+- [ ] Game loads with first shape question
+- [ ] Target shape displays large and centered
+- [ ] Audio pronunciation plays automatically
+- [ ] 4 answer choices display in grid (1 correct, 3 wrong)
+- [ ] Hover effect works on choice buttons
+- [ ] Correct answer shows celebration animation
+- [ ] Target shape rotates and grows on correct answer
+- [ ] Incorrect answer shows friendly feedback
+- [ ] Score increases by 10 points per correct answer
+- [ ] Progress text updates (Question 1 of 10, etc.)
+- [ ] All 10 questions load sequentially
+- [ ] 8 different shapes appear throughout session
+- [ ] Results screen shows score and high scores
+- [ ] Session saves to database via POST /api/sessions
+- [ ] High scores load from database
+- [ ] Game works on touch devices
+
+---
+
+### McCabe Complexity
+
+All functions ≤ 5:
+- `loadQuestion()`: 3
+- `createAnswerChoices()`: 3
+- `handleAnswer()`: 4
+- `showCorrectFeedback()`: 2
+- `nextQuestion()`: 2
+- `endGame()`: 2
+
+---
+
+### Dependencies
+
+- Phase 3: Database and API (uses game_sessions table)
+- Phase 7: Child Login (requires child authentication)
+- Phase 11: Counting Game (Shapes appears alongside in Math category)
+
+
+---
+

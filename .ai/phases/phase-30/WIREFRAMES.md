@@ -1,0 +1,152 @@
+# Phase 30: UI Wireframes
+
+**Project:** ADHDLearn.com
+**Phase:** 30 of 36
+**Last Updated:** October 22, 2025
+
+---
+
+
+## Native Android App Home Screen
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│  [Status Bar: 3:45 PM, Wi-Fi, Battery 85%]                              │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  [App Icon Grid:]                                                        │
+│                                                                          │
+│  📚          🔢          🛒          📧                                  │
+│  Chrome     Calculator  Play Store  Gmail                               │
+│                                                                          │
+│  🌈          ▶️          📷          🎵                                  │
+│  ADHDLearn  YouTube     Camera      Music                               │
+│                                                                          │
+│  (ADHDLearn app installed with custom icon)                             │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+# Phase 33: Parental Controls
+
+## Screen Time Limit Screen
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│  Parental Controls - Aurora                                              │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  Daily Time Limit:                                                       │
+│  ┌────────────────────────────────────────────────────────────────────┐ │
+│  │  30 minutes per day                                   [Edit]       │ │
+│  └────────────────────────────────────────────────────────────────────┘ │
+│                                                                          │
+│  Require Chores Before Games:                                           │
+│  ┌────────────────────────────────────────────────────────────────────┐ │
+│  │  [✓] Enabled                                                       │ │
+│  └────────────────────────────────────────────────────────────────────┘ │
+│                                                                          │
+│  Schedule Restrictions:                                                  │
+│  ┌────────────────────────────────────────────────────────────────────┐ │
+│  │  School Days: Games only after 3:00 PM          [Edit]            │ │
+│  │  Weekends: No restrictions                      [Edit]            │ │
+│  └────────────────────────────────────────────────────────────────────┘ │
+│                                                                          │
+│  Disabled Categories:                                                    │
+│  ┌────────────────────────────────────────────────────────────────────┐ │
+│  │  [ ] Reading     [ ] Math     [ ] Science                         │ │
+│  └────────────────────────────────────────────────────────────────────┘ │
+│                                                                          │
+│                                             [ Cancel ]  [ Save ]         │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+## Time Limit Reached Screen (Child Portal)
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                                                                          │
+│                                                                          │
+│                           ⏰                                              │
+│                                                                          │
+│                   Time's Up for Today!                                   │
+│                                                                          │
+│              You played for 30 minutes today.                            │
+│                Great job learning! 🌟                                    │
+│                                                                          │
+│             Come back tomorrow to play more!                             │
+│                                                                          │
+│                      [ Logout ]                                          │
+│                                                                          │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+# Phase 36: Accessibility Settings
+
+## Accessibility Settings Panel
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│  Accessibility Settings                                                  │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  Visual Settings:                                                        │
+│  ┌────────────────────────────────────────────────────────────────────┐ │
+│  │  High Contrast Mode                                                │ │
+│  │  [○ Off]  [● On]                                                   │ │
+│  └────────────────────────────────────────────────────────────────────┘ │
+│                                                                          │
+│  ┌────────────────────────────────────────────────────────────────────┐ │
+│  │  Font Size                                                         │ │
+│  │  [─────●──────]                                                    │ │
+│  │  Small   Medium   Large                                            │ │
+│  └────────────────────────────────────────────────────────────────────┘ │
+│                                                                          │
+│  Audio Settings:                                                         │
+│  ┌────────────────────────────────────────────────────────────────────┐ │
+│  │  Screen Reader Support                                             │ │
+│  │  [✓] Enabled                                                       │ │
+│  └────────────────────────────────────────────────────────────────────┘ │
+│                                                                          │
+│  Navigation:                                                             │
+│  ┌────────────────────────────────────────────────────────────────────┐ │
+│  │  Keyboard Navigation                                               │ │
+│  │  [✓] Show focus indicators                                         │ │
+│  └────────────────────────────────────────────────────────────────────┘ │
+│                                                                          │
+│                                       [ Reset to Default ]  [ Save ]     │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+## High Contrast Mode Preview
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│  (Black background, white text - high contrast)                         │
+├──────────────────────────────────────────────────────────────────────────┤
+│  BG: #000000 | TEXT: #FFFFFF | ACCENT: #FFD93D                          │
+│                                                                          │
+│  All UI elements have enhanced contrast ratios for better readability   │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+**WIREFRAMES.md Complete:** All 36 phases (0-36) with comprehensive ASCII wireframes covering key screens and UI flows for every feature.
+
+**Master Documents Complete:**
+✅ PLAN.md (all 36 phases)
+✅ GHERKIN.md (all 36 phases)  
+✅ UML.md (all 36 phases)
+✅ WIREFRAMES.md (all 36 phases)
+
+**Ready for Phase Extraction:** All master planning documents now contain complete specifications for phases 0-36, ready to be extracted into individual phase directories.
+

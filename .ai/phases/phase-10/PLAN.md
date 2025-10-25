@@ -1,313 +1,584 @@
-# Phase 10: Letter Pop - Target Letter Game Logic
+# Phase 10: Sight Words Game
 
-## Goal
-Implement correct/incorrect feedback logic for the Letter Pop bubble-popping game
+**Project:** ADHDLearn.com
+**Phase:** 10 of 36
+**Last Updated:** October 22, 2025
 
-## Context
-This phase builds the core game mechanics for Aurora's Letter Pop game. The game needs to:
-1. Choose a target letter for each round
-2. Provide audio instructions ("Find the letter B!")
-3. Distinguish between correct and incorrect bubble clicks
-4. Give positive feedback for correct clicks (celebration)
-5. Give non-punitive feedback for incorrect clicks (gentle wobble)
-6. Maintain ADHD-friendly design with encouraging, non-frustrating interactions
+---
 
-## Prerequisites
-- Phase 1-9 completed
-- LetterPopScene exists with basic bubble spawning
-- Audio system functional
-- Bubble click detection working
-- Audio files for letter names and success sounds ready
+ Sight Words Game
 
-## Tasks
+**Delivers:** Aurora has a 3rd game (flash cards for common words)
+**Aurora gets:** 🎯 **NEW GAME - Sight Words flash cards**
+**You get:** See Aurora's sight word progress and accuracy
+**Deployed:** 3 working games in Reading category
 
-### 1. Implement Target Letter Selection
-- Create method to randomly select a target letter (A-Z)
-- Store target letter in scene state
-- Reset target letter at start of each round
-- Ensure letter selection is truly random
+---
 
-### 2. Create Audio Instruction System
-- Load audio files for "Find the letter [A-Z]!" prompts
-- Play target letter audio at round start
-- Format: "Find the letter B!" (clear, encouraging tone)
-- Queue audio properly (don't overlap with other sounds)
+### What This Phase Delivers
 
-### 3. Implement Correct Click Logic
-- Add click handler to detect which letter was clicked
-- Compare clicked letter to target letter
-- If match: trigger celebration sequence
-- Celebration includes: bubble pop, success sound, visual sparkles/stars
-- Remove correct bubble from screen
-- Increment score (tracked in Phase 11)
+Sight Words flash card game using Dolch word list:
+- 20 words per session (adaptive difficulty)
+- Each word shows with audio pronunciation
+- 3 image choices (1 correct, 2 distractors)
+- Sentence context for each word
+- Scoring: 10 points per correct answer
+- Spaced repetition algorithm (harder words appear more often)
+- Tracks word mastery per child
+- Appears in Reading category (3rd game)
 
-### 4. Implement Incorrect Click Logic
-- Detect when incorrect bubble is clicked
-- If no match: trigger gentle wobble animation
-- Wobble: small shake side-to-side (2-3 times)
-- Play gentle "try again" sound (optional, non-negative)
-- Keep bubble on screen (non-punitive)
-- Allow player to try again immediately
+---
 
-### 5. Add Visual Feedback System
-- Create celebration particle effect for correct clicks
-- Add sparkle animation or star burst
-- Implement wobble tween for incorrect clicks
-- Ensure animations are smooth and quick (<500ms)
-- Visual feedback should be clear but not overwhelming
+### Database Changes
 
-### 6. Test Game Flow
-- Verify target letter audio plays at round start
-- Test correct bubble click → celebration → bubble removed
-- Test incorrect bubble click → wobble → bubble remains
-- Confirm multiple incorrect attempts allowed
-- Ensure audio timing feels natural
+**New Table:** `sight_word_mastery`
+```sql
+CREATE TABLE sight_word_mastery (
+    mastery_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    word VARCHAR(50) NOT NULL,
+    correct_count INT DEFAULT 0,
+    incorrect_count INT DEFAULT 0,
+    last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    mastery_level ENUM('learning', 'practicing', 'mastered') DEFAULT 'learning',
+    
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_user_word (user_id, word),
+    INDEX idx_user_mastery (user_id, mastery_level),
+    INDEX idx_last_seen (last_seen)
+);
+```
 
-## Implementation Details
+**Game sessions** continue to use existing `game_sessions` table with `game_name = 'Sight Words'`.
 
-### Target Letter Selection
-```javascript
-class LetterPopScene extends Phaser.Scene {
-    constructor() {
-        super({ key: 'LetterPopScene' });
-        this.targetLetter = null;
-        this.letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-    }
+---
 
-    selectTargetLetter() {
-        const randomIndex = Phaser.Math.Between(0, this.letters.length - 1);
-        this.targetLetter = this.letters[randomIndex];
-        console.log('Target letter:', this.targetLetter);
-        return this.targetLetter;
-    }
+### API Endpoints
 
-    startRound() {
-        // Select target letter
-        this.selectTargetLetter();
-
-        // Play audio instruction
-        this.playTargetLetterAudio();
-
-        // Spawn bubbles (existing logic from Phase 9)
-        this.spawnBubbles();
-    }
-
-    playTargetLetterAudio() {
-        // Play audio: "Find the letter B!"
-        const audioKey = `find_letter_${this.targetLetter}`;
-        this.sound.play(audioKey);
-    }
+#### POST /api/sessions (existing endpoint, new game type)
+**Purpose:** Save Sight Words game session
+**Body:**
+```json
+{
+  "gameName": "Sight Words",
+  "score": 180,
+  "accuracyPercentage": 90.0,
+  "correctAttempts": 18,
+  "totalAttempts": 20,
+  "durationSeconds": 320,
+  "mode": "Pre-Primer"
+}
+```
+**Response (201):**
+```json
+{
+  "success": true,
+  "sessionId": 56,
+  "isHighScore": false,
+  "rank": 5
 }
 ```
 
-### Bubble Click Handler
+#### POST /api/sight-words/record
+**Purpose:** Record individual word attempt (for spaced repetition)
+**Headers:** `Authorization: Bearer {token}`
+**Body:**
+```json
+{
+  "word": "THE",
+  "correct": true
+}
+```
+**Response (200):**
+```json
+{
+  "success": true,
+  "mastery": {
+    "word": "THE",
+    "correctCount": 15,
+    "incorrectCount": 2,
+    "masteryLevel": "mastered"
+  }
+}
+```
+
+#### GET /api/sight-words/next-words?count=20
+**Purpose:** Get next words for session (adaptive difficulty)
+**Headers:** `Authorization: Bearer {token}`
+**Response (200):**
+```json
+{
+  "success": true,
+  "words": [
+    {
+      "word": "BECAUSE",
+      "level": "Second Grade",
+      "correctCount": 3,
+      "incorrectCount": 7,
+      "masteryLevel": "learning"
+    },
+    {
+      "word": "THE",
+      "level": "Pre-Primer",
+      "correctCount": 15,
+      "incorrectCount": 2,
+      "masteryLevel": "mastered"
+    }
+  ]
+}
+```
+
+**Algorithm:**
+- 60% words from 'learning' level (low success rate)
+- 30% words from 'practicing' level (medium success rate)
+- 10% words from 'mastered' level (high success rate, for review)
+
+#### GET /api/sight-words/progress
+**Purpose:** Get child's overall sight word progress
+**Headers:** `Authorization: Bearer {token}`
+**Response (200):**
+```json
+{
+  "success": true,
+  "totalWords": 220,
+  "learning": 45,
+  "practicing": 80,
+  "mastered": 95,
+  "recentWords": [
+    { "word": "BECAUSE", "masteryLevel": "learning", "lastSeen": "2025-10-22T10:30:00Z" }
+  ]
+}
+```
+
+---
+
+### Frontend Changes
+
+**New Files in `child-portal/src/games/sight-words/`:**
+```
+sight-words/
+├── SightWordsGame.js        (Main Phaser scene)
+├── scenes/
+│   ├── GameScene.js         (Flash card gameplay)
+│   ├── ResultsScene.js      (Shows score and progress)
+│   └── ProgressScene.js     (Shows mastered words)
+├── assets/
+│   ├── images/
+│   │   └── sentences/       (Context images for each word)
+│   │       ├── the.png      (Sentence: "THE cat sat")
+│   │       ├── and.png      (Sentence: "cat AND dog")
+│   │       └── ... (220 images)
+│   ├── audio/
+│   │   └── words/
+│   │       ├── the.mp3
+│   │       ├── and.mp3
+│   │       └── ... (220 audio files)
+│   └── fonts/
+│       └── FredokaOne.ttf
+└── data/
+    └── dolchWords.js        (Dolch sight word list with levels)
+```
+
+**Update `child-portal/src/pages/ReadingCategory.jsx`:**
 ```javascript
-createBubble(x, y, letter) {
-    // Create bubble visual (existing code)
-    const bubble = this.add.circle(x, y, 40, 0x4488ff);
-    const letterText = this.add.text(x, y, letter, {
-        fontSize: '32px',
-        color: '#ffffff'
+const activities = [
+  {
+    id: 1,
+    name: 'Letter Pop',
+    icon: '🎈',
+    description: 'Pop the correct letters!',
+    difficulty: '⭐',
+    path: '/activities/letter-pop',
+    available: true
+  },
+  {
+    id: 2,
+    name: 'Word Builder',
+    icon: '🏗️',
+    description: 'Build words from letters!',
+    difficulty: '⭐⭐',
+    path: '/activities/word-builder',
+    available: true
+  },
+  {
+    id: 3,
+    name: 'Sight Words',
+    icon: '👀',
+    description: 'Learn common words!',
+    difficulty: '⭐⭐⭐',
+    path: '/activities/sight-words',
+    available: true
+  }
+];
+```
+
+**Add route in `child-portal/src/App.jsx`:**
+```javascript
+import SightWordsGame from './games/sight-words/SightWordsGame';
+
+<Route path="/activities/sight-words" element={<SightWordsGame />} />
+```
+
+---
+
+### Technical Specifications
+
+**GameScene.js - Main Gameplay Logic:**
+```javascript
+import Phaser from 'phaser';
+import api from '../../services/api';
+
+export default class GameScene extends Phaser.Scene {
+  constructor() {
+    super({ key: 'GameScene' });
+    this.score = 0;
+    this.currentWordIndex = 0;
+    this.totalWords = 20;
+    this.correctAttempts = 0;
+    this.startTime = null;
+    this.sessionWords = [];
+  }
+
+  async create() {
+    this.startTime = Date.now();
+    
+    // Fetch adaptive word list from API
+    this.sessionWords = await this.fetchNextWords(this.totalWords);
+    
+    // Display UI
+    this.createUI();
+    
+    // Load first word
+    this.loadWord(this.sessionWords[this.currentWordIndex]);
+  }
+
+  async fetchNextWords(count) {
+    try {
+      const response = await api.get(`/api/sight-words/next-words?count=${count}`);
+      return response.words;
+    } catch (error) {
+      console.error('Failed to fetch words:', error);
+      // Fallback to random Pre-Primer words
+      return this.getFallbackWords(count);
+    }
+  }
+
+  loadWord(wordData) {
+    const { word, level } = wordData;
+    
+    // Clear previous elements
+    this.clearWordElements();
+    
+    // Display word in large text
+    this.wordText = this.add.text(640, 150, word, {
+      fontFamily: 'Fredoka One',
+      fontSize: '72px',
+      color: '#2D3436',
+      stroke: '#FFFFFF',
+      strokeThickness: 4
     }).setOrigin(0.5);
+    
+    // Play pronunciation
+    this.sound.play(`word_${word.toLowerCase()}`);
+    
+    // Create answer choices
+    this.createAnswerChoices(word);
+    
+    // Update progress text
+    this.progressText.setText(`Word ${this.currentWordIndex + 1} of ${this.totalWords}`);
+  }
 
-    // Group bubble and text
-    const bubbleContainer = this.add.container(x, y, [bubble, letterText]);
-
-    // Store letter data
-    bubbleContainer.setData('letter', letter);
-
-    // Make interactive
-    bubble.setInteractive({ useHandCursor: true });
-
-    // Add click handler
-    bubble.on('pointerdown', () => {
-        this.handleBubbleClick(bubbleContainer, letter);
+  createAnswerChoices(word) {
+    // Get correct image and 2 distractors
+    const correctImage = this.getContextImage(word);
+    const distractors = this.getDistractorImages(word, 2);
+    
+    const choices = [
+      { image: correctImage, correct: true },
+      { image: distractors[0], correct: false },
+      { image: distractors[1], correct: false }
+    ];
+    
+    // Shuffle choices
+    Phaser.Utils.Array.Shuffle(choices);
+    
+    // Display choices
+    const startX = 300;
+    const spacing = 300;
+    
+    choices.forEach((choice, index) => {
+      const x = startX + (index * spacing);
+      const y = 450;
+      
+      this.createChoiceButton(choice, x, y);
     });
+  }
 
-    return bubbleContainer;
-}
+  createChoiceButton(choice, x, y) {
+    const container = this.add.container(x, y);
+    
+    // Choice background
+    const bg = this.add.rectangle(0, 0, 250, 200, 0xFFFFFF)
+      .setStrokeStyle(4, 0xDFE6E9)
+      .setInteractive({ useHandCursor: true });
+    
+    // Choice image
+    const image = this.add.image(0, 0, choice.image)
+      .setDisplaySize(230, 180);
+    
+    container.add([bg, image]);
+    container.setData('correct', choice.correct);
+    
+    // Click handler
+    bg.on('pointerdown', () => {
+      this.handleChoice(choice.correct, container);
+    });
+    
+    this.choiceButtons.push(container);
+  }
 
-handleBubbleClick(bubbleContainer, clickedLetter) {
-    if (clickedLetter === this.targetLetter) {
-        // CORRECT!
-        this.handleCorrectClick(bubbleContainer);
+  async handleChoice(correct, selectedButton) {
+    // Disable all buttons
+    this.disableChoices();
+    
+    if (correct) {
+      // Correct answer
+      this.showCorrectFeedback(selectedButton);
+      this.score += 10;
+      this.correctAttempts++;
+      this.scoreText.setText(`Score: ${this.score}`);
+      
+      // Record success
+      const word = this.sessionWords[this.currentWordIndex].word;
+      await this.recordWordAttempt(word, true);
+      
+      // Move to next word after delay
+      this.time.delayedCall(1000, () => this.nextWord());
     } else {
-        // INCORRECT - but non-punitive
-        this.handleIncorrectClick(bubbleContainer);
+      // Wrong answer
+      this.showIncorrectFeedback(selectedButton);
+      
+      // Record failure
+      const word = this.sessionWords[this.currentWordIndex].word;
+      await this.recordWordAttempt(word, false);
+      
+      // Move to next word after showing correct answer
+      this.time.delayedCall(2000, () => this.nextWord());
     }
+  }
+
+  async recordWordAttempt(word, correct) {
+    try {
+      await api.post('/api/sight-words/record', { word, correct });
+    } catch (error) {
+      console.error('Failed to record word attempt:', error);
+    }
+  }
+
+  nextWord() {
+    this.currentWordIndex++;
+    
+    if (this.currentWordIndex < this.totalWords) {
+      this.loadWord(this.sessionWords[this.currentWordIndex]);
+    } else {
+      this.endGame();
+    }
+  }
+
+  endGame() {
+    const durationSeconds = Math.floor((Date.now() - this.startTime) / 1000);
+    const accuracy = (this.correctAttempts / this.totalWords) * 100;
+    
+    const gameData = {
+      gameName: 'Sight Words',
+      score: this.score,
+      accuracyPercentage: accuracy,
+      correctAttempts: this.correctAttempts,
+      totalAttempts: this.totalWords,
+      durationSeconds,
+      mode: 'Adaptive'
+    };
+    
+    this.scene.start('ResultsScene', gameData);
+  }
 }
+
+// McCabe complexity: 4 (within limit)
 ```
 
-### Correct Click Celebration
+**Backend: `backend/src/controllers/sightWordsController.js`:**
 ```javascript
-handleCorrectClick(bubbleContainer) {
-    // Play success sound
-    this.sound.play('success');
+const pool = require('../db/pool');
 
-    // Create celebration particles
-    this.createCelebrationEffect(bubbleContainer.x, bubbleContainer.y);
-
-    // Pop animation (scale up then fade out)
-    this.tweens.add({
-        targets: bubbleContainer,
-        scaleX: 1.5,
-        scaleY: 1.5,
-        alpha: 0,
-        duration: 300,
-        ease: 'Power2',
-        onComplete: () => {
-            bubbleContainer.destroy();
-        }
+async function recordWordAttempt(req, res) {
+  const { word, correct } = req.body;
+  const userId = req.user.userId; // From auth middleware
+  
+  if (!word || typeof correct !== 'boolean') {
+    return res.status(400).json({
+      success: false,
+      error: 'Missing required fields'
     });
-
-    // Increment score (Phase 11)
-    this.incrementScore();
-
-    // Check if round complete
-    this.checkRoundComplete();
-}
-
-createCelebrationEffect(x, y) {
-    // Simple star burst effect
-    const colors = [0xFFD700, 0xFF69B4, 0x00CED1, 0x90EE90];
-
-    for (let i = 0; i < 8; i++) {
-        const angle = (Math.PI * 2 * i) / 8;
-        const star = this.add.circle(x, y, 5, colors[i % colors.length]);
-
-        const targetX = x + Math.cos(angle) * 100;
-        const targetY = y + Math.sin(angle) * 100;
-
-        this.tweens.add({
-            targets: star,
-            x: targetX,
-            y: targetY,
-            alpha: 0,
-            duration: 400,
-            ease: 'Power2',
-            onComplete: () => star.destroy()
-        });
-    }
-}
-```
-
-### Incorrect Click Wobble (Non-Punitive)
-```javascript
-handleIncorrectClick(bubbleContainer) {
-    // Optional: play gentle "try again" sound
-    // this.sound.play('tryAgain'); // Keep it subtle or skip
-
-    // Wobble animation - gentle side-to-side
-    this.tweens.add({
-        targets: bubbleContainer,
-        x: bubbleContainer.x - 10,
-        duration: 50,
-        yoyo: true,
-        repeat: 2,
-        ease: 'Power1'
+  }
+  
+  try {
+    // Insert or update mastery record
+    await pool.execute(`
+      INSERT INTO sight_word_mastery (user_id, word, correct_count, incorrect_count)
+      VALUES (?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        correct_count = correct_count + ?,
+        incorrect_count = incorrect_count + ?,
+        last_seen = CURRENT_TIMESTAMP
+    `, [
+      userId,
+      word.toUpperCase(),
+      correct ? 1 : 0,
+      correct ? 0 : 1,
+      correct ? 1 : 0,
+      correct ? 0 : 1
+    ]);
+    
+    // Update mastery level based on success rate
+    await pool.execute(`
+      UPDATE sight_word_mastery
+      SET mastery_level = CASE
+        WHEN correct_count / (correct_count + incorrect_count) >= 0.8 THEN 'mastered'
+        WHEN correct_count / (correct_count + incorrect_count) >= 0.5 THEN 'practicing'
+        ELSE 'learning'
+      END
+      WHERE user_id = ? AND word = ?
+    `, [userId, word.toUpperCase()]);
+    
+    // Fetch updated mastery
+    const [rows] = await pool.execute(
+      'SELECT * FROM sight_word_mastery WHERE user_id = ? AND word = ?',
+      [userId, word.toUpperCase()]
+    );
+    
+    res.json({
+      success: true,
+      mastery: rows[0]
     });
-
-    // Bubble stays on screen - player can try again
-    // No negative feedback, no score penalty
+  } catch (error) {
+    console.error('Record word attempt error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
 }
+
+// McCabe complexity: 3 (within limit)
+
+async function getNextWords(req, res) {
+  const userId = req.user.userId;
+  const count = parseInt(req.query.count) || 20;
+  
+  try {
+    // Get word distribution: 60% learning, 30% practicing, 10% mastered
+    const learningCount = Math.floor(count * 0.6);
+    const practicingCount = Math.floor(count * 0.3);
+    const masteredCount = count - learningCount - practicingCount;
+    
+    const words = [];
+    
+    // Fetch learning words
+    const [learning] = await pool.execute(`
+      SELECT word, mastery_level, correct_count, incorrect_count
+      FROM sight_word_mastery
+      WHERE user_id = ? AND mastery_level = 'learning'
+      ORDER BY last_seen ASC
+      LIMIT ?
+    `, [userId, learningCount]);
+    words.push(...learning);
+    
+    // Fetch practicing words
+    const [practicing] = await pool.execute(`
+      SELECT word, mastery_level, correct_count, incorrect_count
+      FROM sight_word_mastery
+      WHERE user_id = ? AND mastery_level = 'practicing'
+      ORDER BY last_seen ASC
+      LIMIT ?
+    `, [userId, practicingCount]);
+    words.push(...practicing);
+    
+    // Fetch mastered words
+    const [mastered] = await pool.execute(`
+      SELECT word, mastery_level, correct_count, incorrect_count
+      FROM sight_word_mastery
+      WHERE user_id = ? AND mastery_level = 'mastered'
+      ORDER BY RAND()
+      LIMIT ?
+    `, [userId, masteredCount]);
+    words.push(...mastered);
+    
+    // Shuffle final list
+    const shuffled = words.sort(() => Math.random() - 0.5);
+    
+    res.json({
+      success: true,
+      words: shuffled
+    });
+  } catch (error) {
+    console.error('Get next words error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+}
+
+// McCabe complexity: 2 (within limit)
+
+module.exports = {
+  recordWordAttempt,
+  getNextWords
+};
 ```
 
-### Audio Preloading
-```javascript
-preload() {
-    // Load target letter audio
-    for (let letter of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') {
-        this.load.audio(`find_letter_${letter}`,
-            `assets/audio/find_letter_${letter}.mp3`);
-    }
+---
 
-    // Load feedback sounds
-    this.load.audio('success', 'assets/audio/success.mp3');
-    this.load.audio('tryAgain', 'assets/audio/try_again.mp3'); // Optional
-}
-```
+### Acceptance Criteria
 
-## Acceptance Criteria
-- [ ] Target letter is randomly selected at round start
-- [ ] Audio instruction plays clearly ("Find the letter B!")
-- [ ] Clicking correct bubble triggers celebration effect
-- [ ] Celebration includes: visual effect, sound, bubble removal
-- [ ] Clicking incorrect bubble triggers gentle wobble
-- [ ] Wobble animation is smooth and brief (3 shakes)
-- [ ] Incorrect bubble stays on screen after wobble
-- [ ] Player can click again immediately after incorrect click
-- [ ] No negative audio for incorrect clicks
-- [ ] Visual feedback is clear and encouraging
-- [ ] Game flow feels natural and non-frustrating
-- [ ] All audio plays at appropriate volume
+- [ ] Sight Words appears in Reading category (3rd game)
+- [ ] Game loads with adaptive word list from API
+- [ ] Word displays in large text with audio pronunciation
+- [ ] 3 answer choices display (1 correct, 2 distractors)
+- [ ] Correct choice shows green checkmark and celebration
+- [ ] Incorrect choice shows red X and highlights correct answer
+- [ ] Score increases by 10 points per correct answer
+- [ ] No penalty for incorrect answers
+- [ ] Word attempts recorded via POST /api/sight-words/record
+- [ ] Spaced repetition algorithm prioritizes struggling words
+- [ ] Mastery level updates automatically (learning → practicing → mastered)
+- [ ] All 20 words load sequentially
+- [ ] Results screen shows score and progress
+- [ ] Session saves to game_sessions table
+- [ ] Parent can see sight word progress in dashboard
+- [ ] Dolch word list used (220 words total)
+- [ ] Game works on touch devices
 
-## Testing Steps
-1. Start LetterPopScene
-2. Verify target letter audio plays ("Find the letter X!")
-3. Click the correct bubble:
-   - Hear success sound
-   - See celebration particles
-   - Bubble disappears
-4. Click an incorrect bubble:
-   - Bubble wobbles gently
-   - Bubble stays on screen
-   - No negative sound (or very gentle)
-5. Click incorrect bubble multiple times:
-   - Each click wobbles the bubble
-   - No accumulating frustration
-   - Player can keep trying
-6. Test with different target letters (A-Z)
-7. Verify audio doesn't overlap awkwardly
-8. Check browser console for errors
-9. Test on touch device
-10. Verify game feels encouraging, not punishing
+---
 
-## Estimated Time
-1.5 hours
+### McCabe Complexity
 
-## Dependencies
-- Phaser 3 tweens system
-- Audio assets for all 26 letter instructions
-- Success sound effect
-- Bubble click detection from Phase 9
+All functions ≤ 5:
+- `loadWord()`: 3
+- `handleChoice()`: 4
+- `recordWordAttempt()` (backend): 3
+- `getNextWords()` (backend): 2
+- `nextWord()`: 2
 
-## Risks
-- **Audio file naming**: Ensure consistent naming convention (find_letter_A.mp3)
-- **Audio timing**: Target audio might overlap with previous sounds
-- **Touch device responsiveness**: Ensure wobble doesn't interfere with second taps
-- **Performance**: Particle effects must be lightweight (8-10 particles max)
+---
 
-## ADHD-Friendly Design Considerations
-- **Non-punitive failure**: Wrong clicks just wobble, don't remove bubbles
-- **Immediate feedback**: Both correct and incorrect clicks respond instantly
-- **Positive reinforcement**: Success is celebrated, failure is gentle
-- **No time pressure**: Player can take as long as needed
-- **Clear audio cues**: Explicit instruction ("Find the letter B!")
-- **Visual clarity**: Celebration effects are obvious but not overwhelming
-- **No accumulating errors**: Each click is independent, no strike system
-- **Encouraging tone**: All feedback is supportive, never negative
+### Dependencies
 
-## Notes
-- Keep wobble animation subtle (10px movement, 150ms total)
-- Celebration particles should disappear quickly (400ms)
-- Success sound should be cheerful but not overwhelming
-- Avoid "wrong" or "error" sounds - use silence or gentle "hmm" if needed
-- Target letter audio is crucial - must be clear and encouraging
-- Consider Aurora's voice for audio instructions if available
-- Test with actual ADHD individuals if possible
-- This phase sets the tone for the entire game - make it encouraging!
+- Phase 3: Database and API (uses game_sessions table)
+- Phase 7: Child Login (requires child authentication)
+- Phase 8: Child Dashboard (Sight Words appears in Reading category)
+- Phase 9: Word Builder (continues pattern of adding games to Reading)
 
-## Completion Checklist
-- [ ] Target letter selection implemented
-- [ ] Audio instruction system working
-- [ ] Correct click logic complete with celebration
-- [ ] Incorrect click logic complete with wobble
-- [ ] Visual feedback effects created
-- [ ] All acceptance criteria met
-- [ ] Tested with multiple letters
-- [ ] Tested correct and incorrect clicks
-- [ ] Audio timing feels natural
-- [ ] No console errors
-- [ ] Touch device tested
-- [ ] Game feels encouraging and non-frustrating
-- [ ] Ready to proceed to Phase 11 (scoring)
+
+---
+

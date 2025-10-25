@@ -1,508 +1,546 @@
-# Phase 13: Content System - Letter Data
+# Phase 13: Simple Addition Game
 
-## Goal
-Load letters from JSON and integrate dynamic content into Letter Pop game
+**Project:** ADHDLearn.com
+**Phase:** 13 of 36
+**Last Updated:** October 22, 2025
 
-## Context
-This phase establishes the content management system for Aurora's Letter Adventure. Instead of hardcoding letter data, we'll:
-1. Create a structured JSON file with all 26 letters
-2. Build a ContentProvider service to manage content loading
-3. Replace hardcoded letter data in Letter Pop with dynamic content
-4. Prepare the foundation for audio integration in Phase 14
+---
 
-This is critical infrastructure that will:
-- Make content updates easy (edit JSON, not code)
-- Support internationalization in future phases
-- Enable data-driven game design
-- Separate content from logic
+ Simple Addition Game
 
-## Prerequisites
-- Phase 1-12 completed
-- Letter Pop game functional with placeholder letters
-- Basic understanding of JSON data structures
-- Phaser's file loading system operational
+**Delivers:** 3rd Math game (addition practice)
+**Aurora gets:** 🎮 **NEW GAME - Addition (1-10)**
+**You get:** See Aurora's math skills developing in parent dashboard
+**Deployed:** 6 total games (3 Reading + 3 Math)
 
-## Tasks
+---
 
-### 1. Create Letter Data JSON File
-Create `/assets/data/letters.json` with structured data for all 26 letters
+### What This Phase Delivers
 
-**File location:** `/assets/data/letters.json`
+Simple Addition game in Math category:
+- Addition problems with numbers 1-10
+- Visual representation (count objects for each number)
+- 10 questions per session
+- Multiple choice format (4 answer options)
+- Equation display: "3 + 5 = ?"
+- Colorful animations and feedback
+- Scoring: 10 points per correct answer
+- Saves to database like other games
+- Appears in Math category (3rd game)
 
-**Data structure:**
+---
+
+### Database Changes
+
+**No new tables** - Uses existing `game_sessions` table from Phase 3.
+
+**New game_name value:** `'Addition Game'`
+
+Example record:
+```sql
+INSERT INTO game_sessions (game_name, score, accuracy_percentage, correct_attempts, total_attempts, duration_seconds, mode)
+VALUES ('Addition Game', 90, 90.0, 9, 10, 210, 'Easy');
+```
+
+---
+
+### API Endpoints
+
+**No new endpoints** - Uses existing endpoints from Phase 3:
+
+#### POST /api/sessions
+**Purpose:** Save Addition Game session
+**Body:**
 ```json
 {
-  "letters": [
+  "gameName": "Addition Game",
+  "score": 90,
+  "accuracyPercentage": 90.0,
+  "correctAttempts": 9,
+  "totalAttempts": 10,
+  "durationSeconds": 210,
+  "mode": "Easy"
+}
+```
+**Response (201):**
+```json
+{
+  "success": true,
+  "sessionId": 89,
+  "isHighScore": false,
+  "rank": 3
+}
+```
+
+#### GET /api/sessions/high-scores?game=Addition Game
+**Purpose:** Get Addition Game high scores
+**Response (200):**
+```json
+{
+  "success": true,
+  "scores": [
     {
-      "id": "A",
-      "letter": "A",
-      "name": "Letter A",
-      "audioPath": "assets/audio/letters/letter-a.mp3",
-      "category": "vowel",
-      "order": 1
+      "sessionId": 85,
+      "score": 100,
+      "accuracyPercentage": 100.0,
+      "playedAt": "2025-10-21T16:00:00Z"
     },
     {
-      "id": "B",
-      "letter": "B",
-      "name": "Letter B",
-      "audioPath": "assets/audio/letters/letter-b.mp3",
-      "category": "consonant",
-      "order": 2
+      "sessionId": 89,
+      "score": 90,
+      "accuracyPercentage": 90.0,
+      "playedAt": "2025-10-22T13:00:00Z"
     }
-    // ... Continue for all 26 letters
   ]
 }
 ```
 
-**Required fields for each letter:**
-- `id`: Unique identifier (uppercase letter)
-- `letter`: The letter character to display
-- `name`: Human-readable name
-- `audioPath`: Path to audio file (prepared for Phase 14)
-- `category`: "vowel" or "consonant"
-- `order`: Position in alphabet (1-26)
+---
 
-### 2. Create ContentProvider Service
-Create `/src/services/ContentProvider.js` as a singleton service
+### Frontend Changes
 
-**Purpose:**
-- Load and parse letters.json
-- Provide methods to access letter data
-- Handle errors gracefully
-- Cache data for performance
-
-**Core functionality:**
+**Update `child-portal/src/pages/MathCategory.jsx`:**
 ```javascript
-class ContentProvider {
-    static instance = null;
-
-    constructor() {
-        if (ContentProvider.instance) {
-            return ContentProvider.instance;
-        }
-        ContentProvider.instance = this;
-        this.letters = [];
-        this.loaded = false;
-    }
-
-    static getInstance() {
-        if (!ContentProvider.instance) {
-            ContentProvider.instance = new ContentProvider();
-        }
-        return ContentProvider.instance;
-    }
-
-    loadData(scene) {
-        // Load letters.json using Phaser's load.json
-        // Store in this.letters array
-        // Set this.loaded = true
-    }
-
-    getRandomLetter() {
-        // Return random letter from this.letters
-        // Ensure fair distribution
-    }
-
-    getLetterById(id) {
-        // Return specific letter by ID
-    }
-
-    getAllLetters() {
-        // Return complete letters array
-    }
-
-    getLettersByCategory(category) {
-        // Return letters filtered by category (vowel/consonant)
-    }
-}
+const activities = [
+  {
+    id: 1,
+    name: 'Counting Game',
+    icon: '🔢',
+    description: 'Count the objects!',
+    difficulty: '⭐',
+    path: '/activities/counting-game',
+    available: true
+  },
+  {
+    id: 2,
+    name: 'Shapes',
+    icon: '🔷',
+    description: 'Learn shapes!',
+    difficulty: '⭐⭐',
+    path: '/activities/shapes',
+    available: true
+  },
+  {
+    id: 3,
+    name: 'Addition',
+    icon: '➕',
+    description: 'Add numbers together!',
+    difficulty: '⭐⭐⭐',
+    path: '/activities/addition',
+    available: true
+  }
+];
 ```
 
-### 3. Integrate ContentProvider into Game
-Modify existing scenes to use ContentProvider
-
-**Steps:**
-1. Import ContentProvider in LetterPopScene
-2. Load letters.json in preload() method
-3. Access ContentProvider singleton instance
-4. Replace hardcoded letter data with getRandomLetter()
-
-**Example integration:**
-```javascript
-// In LetterPopScene.js
-import ContentProvider from '../services/ContentProvider.js';
-
-class LetterPopScene extends Phaser.Scene {
-    preload() {
-        // Load letter data
-        const contentProvider = ContentProvider.getInstance();
-        this.load.json('letterData', 'assets/data/letters.json');
-    }
-
-    create() {
-        // Initialize ContentProvider with loaded data
-        const contentProvider = ContentProvider.getInstance();
-        const letterData = this.cache.json.get('letterData');
-        contentProvider.setData(letterData);
-
-        // Spawn letter using dynamic content
-        this.spawnLetter();
-    }
-
-    spawnLetter() {
-        const contentProvider = ContentProvider.getInstance();
-        const letterData = contentProvider.getRandomLetter();
-
-        // Use letterData.letter for display
-        // Use letterData.audioPath for future audio (Phase 14)
-    }
-}
+**New Files in `child-portal/src/games/addition/`:**
+```
+addition/
+├── AdditionGame.js          (Main Phaser scene)
+├── scenes/
+│   ├── GameScene.js         (Addition gameplay)
+│   ├── ResultsScene.js      (Shows score and high scores)
+│   └── TutorialScene.js     (First-time instructions)
+├── assets/
+│   ├── images/
+│   │   ├── apple.png        (For visual counting)
+│   │   ├── star.png
+│   │   └── ... (reuse from counting game)
+│   ├── audio/
+│   │   ├── numbers/
+│   │   │   ├── one.mp3
+│   │   │   └── ... (0-20)
+│   │   └── plus.mp3         (Says "plus")
+│   └── fonts/
+│       └── FredokaOne.ttf
+└── utils/
+    └── problemGenerator.js  (Generates addition problems)
 ```
 
-### 4. Update Letter Pop to Use Dynamic Content
-Replace all hardcoded letter references
+**Add route in `child-portal/src/App.jsx`:**
+```javascript
+import AdditionGame from './games/addition/AdditionGame';
 
-**Changes needed:**
-- Letter text display: Use `letterData.letter`
-- Letter selection: Use `contentProvider.getRandomLetter()`
-- Letter validation: Use `letterData.id` for comparison
-- Future audio prep: Store `letterData.audioPath` in letter object
+<Route path="/activities/addition" element={<AdditionGame />} />
+```
 
-### 5. Test Content Loading
-Verify all 26 letters load and display correctly
-
-**Testing checklist:**
-- [ ] JSON file loads without errors
-- [ ] ContentProvider initializes successfully
-- [ ] getRandomLetter() returns valid letter data
-- [ ] All 26 letters appear during gameplay (play multiple times)
-- [ ] No duplicate letters appear consecutively (if using fair distribution)
-- [ ] Console shows no errors related to content loading
-- [ ] Letter display matches JSON data
-
-## Implementation Details
-
-### Complete letters.json Structure
-```json
+**Update dashboard count in `child-portal/src/pages/ChildDashboard.jsx`:**
+```javascript
 {
-  "letters": [
-    {"id": "A", "letter": "A", "name": "Letter A", "audioPath": "assets/audio/letters/letter-a.mp3", "category": "vowel", "order": 1},
-    {"id": "B", "letter": "B", "name": "Letter B", "audioPath": "assets/audio/letters/letter-b.mp3", "category": "consonant", "order": 2},
-    {"id": "C", "letter": "C", "name": "Letter C", "audioPath": "assets/audio/letters/letter-c.mp3", "category": "consonant", "order": 3},
-    {"id": "D", "letter": "D", "name": "Letter D", "audioPath": "assets/audio/letters/letter-d.mp3", "category": "consonant", "order": 4},
-    {"id": "E", "letter": "E", "name": "Letter E", "audioPath": "assets/audio/letters/letter-e.mp3", "category": "vowel", "order": 5},
-    {"id": "F", "letter": "F", "name": "Letter F", "audioPath": "assets/audio/letters/letter-f.mp3", "category": "consonant", "order": 6},
-    {"id": "G", "letter": "G", "name": "Letter G", "audioPath": "assets/audio/letters/letter-g.mp3", "category": "consonant", "order": 7},
-    {"id": "H", "letter": "H", "name": "Letter H", "audioPath": "assets/audio/letters/letter-h.mp3", "category": "consonant", "order": 8},
-    {"id": "I", "letter": "I", "name": "Letter I", "audioPath": "assets/audio/letters/letter-i.mp3", "category": "vowel", "order": 9},
-    {"id": "J", "letter": "J", "name": "Letter J", "audioPath": "assets/audio/letters/letter-j.mp3", "category": "consonant", "order": 10},
-    {"id": "K", "letter": "K", "name": "Letter K", "audioPath": "assets/audio/letters/letter-k.mp3", "category": "consonant", "order": 11},
-    {"id": "L", "letter": "L", "name": "Letter L", "audioPath": "assets/audio/letters/letter-l.mp3", "category": "consonant", "order": 12},
-    {"id": "M", "letter": "M", "name": "Letter M", "audioPath": "assets/audio/letters/letter-m.mp3", "category": "consonant", "order": 13},
-    {"id": "N", "letter": "N", "name": "Letter N", "audioPath": "assets/audio/letters/letter-n.mp3", "category": "consonant", "order": 14},
-    {"id": "O", "letter": "O", "name": "Letter O", "audioPath": "assets/audio/letters/letter-o.mp3", "category": "vowel", "order": 15},
-    {"id": "P", "letter": "P", "name": "Letter P", "audioPath": "assets/audio/letters/letter-p.mp3", "category": "consonant", "order": 16},
-    {"id": "Q", "letter": "Q", "name": "Letter Q", "audioPath": "assets/audio/letters/letter-q.mp3", "category": "consonant", "order": 17},
-    {"id": "R", "letter": "R", "name": "Letter R", "audioPath": "assets/audio/letters/letter-r.mp3", "category": "consonant", "order": 18},
-    {"id": "S", "letter": "S", "name": "Letter S", "audioPath": "assets/audio/letters/letter-s.mp3", "category": "consonant", "order": 19},
-    {"id": "T", "letter": "T", "name": "Letter T", "audioPath": "assets/audio/letters/letter-t.mp3", "category": "consonant", "order": 20},
-    {"id": "U", "letter": "U", "name": "Letter U", "audioPath": "assets/audio/letters/letter-u.mp3", "category": "vowel", "order": 21},
-    {"id": "V", "letter": "V", "name": "Letter V", "audioPath": "assets/audio/letters/letter-v.mp3", "category": "consonant", "order": 22},
-    {"id": "W", "letter": "W", "name": "Letter W", "audioPath": "assets/audio/letters/letter-w.mp3", "category": "consonant", "order": 23},
-    {"id": "X", "letter": "X", "name": "Letter X", "audioPath": "assets/audio/letters/letter-x.mp3", "category": "consonant", "order": 24},
-    {"id": "Y", "letter": "Y", "name": "Letter Y", "audioPath": "assets/audio/letters/letter-y.mp3", "category": "consonant", "order": 25},
-    {"id": "Z", "letter": "Z", "name": "Letter Z", "audioPath": "assets/audio/letters/letter-z.mp3", "category": "consonant", "order": 26}
-  ]
+  id: 'math',
+  name: 'Math',
+  icon: '🔢',
+  unlocked: true,
+  activityCount: 3,  // Updated from 2 to 3
+  color: '#4ECDC4',
+  path: '/categories/math'
 }
 ```
 
-### Complete ContentProvider.js Implementation
+---
+
+### Technical Specifications
+
+**GameScene.js - Addition Game Logic:**
 ```javascript
-/**
- * ContentProvider - Singleton service for managing game content
- * Loads and provides access to letter data from JSON
- */
-class ContentProvider {
-    static instance = null;
+import Phaser from 'phaser';
+import { generateProblem } from '../utils/problemGenerator';
 
-    constructor() {
-        if (ContentProvider.instance) {
-            return ContentProvider.instance;
-        }
-        ContentProvider.instance = this;
-        this.letters = [];
-        this.loaded = false;
-        this.lastLetterIndex = -1; // Prevent consecutive duplicates
+export default class GameScene extends Phaser.Scene {
+  constructor() {
+    super({ key: 'GameScene' });
+    this.score = 0;
+    this.currentQuestion = 0;
+    this.totalQuestions = 10;
+    this.correctAnswers = 0;
+    this.startTime = null;
+  }
+
+  create() {
+    this.startTime = Date.now();
+    
+    // Display UI
+    this.createUI();
+    
+    // Load first question
+    this.loadQuestion();
+  }
+
+  createUI() {
+    // Background
+    this.add.rectangle(640, 360, 1280, 720, 0xFFF8E1);
+    
+    // Title
+    this.add.text(640, 50, 'Addition ➕', {
+      fontFamily: 'Fredoka One',
+      fontSize: '48px',
+      color: '#2D3436'
+    }).setOrigin(0.5);
+    
+    // Score
+    this.scoreText = this.add.text(100, 50, 'Score: 0', {
+      fontFamily: 'Fredoka One',
+      fontSize: '32px',
+      color: '#00B894'
+    });
+    
+    // Progress
+    this.progressText = this.add.text(1180, 50, 'Question 1 of 10', {
+      fontFamily: 'Fredoka One',
+      fontSize: '28px',
+      color: '#636E72'
+    }).setOrigin(1, 0);
+  }
+
+  loadQuestion() {
+    // Clear previous question
+    this.clearQuestion();
+    
+    // Generate random addition problem (1-10)
+    const problem = generateProblem(1, 10);
+    this.currentAnswer = problem.answer;
+    
+    // Display equation
+    this.displayEquation(problem);
+    
+    // Display visual representation
+    this.displayVisuals(problem.num1, problem.num2);
+    
+    // Create answer choices
+    this.createAnswerChoices(problem.answer);
+    
+    // Play audio: "3 plus 5 equals?"
+    this.playProblemAudio(problem);
+    
+    // Update progress
+    this.progressText.setText(`Question ${this.currentQuestion + 1} of ${this.totalQuestions}`);
+  }
+
+  displayEquation(problem) {
+    this.equationText = this.add.text(640, 150, `${problem.num1} + ${problem.num2} = ?`, {
+      fontFamily: 'Fredoka One',
+      fontSize: '72px',
+      color: '#2D3436',
+      stroke: '#FFFFFF',
+      strokeThickness: 4
+    }).setOrigin(0.5);
+  }
+
+  displayVisuals(num1, num2) {
+    // Display num1 apples on left
+    const leftGroup = this.createObjectGroup(num1, 300, 300, 0xFF6B9D);
+    
+    // Display plus sign
+    this.add.text(640, 300, '+', {
+      fontFamily: 'Fredoka One',
+      fontSize: '64px',
+      color: '#2D3436'
+    }).setOrigin(0.5);
+    
+    // Display num2 apples on right
+    const rightGroup = this.createObjectGroup(num2, 980, 300, 0x4ECDC4);
+  }
+
+  createObjectGroup(count, centerX, centerY, color) {
+    const objects = [];
+    const radius = 40;
+    const maxPerRow = 5;
+    
+    for (let i = 0; i < count; i++) {
+      const row = Math.floor(i / maxPerRow);
+      const col = i % maxPerRow;
+      const x = centerX - (maxPerRow - 1) * 25 + col * 50;
+      const y = centerY + row * 50;
+      
+      const obj = this.add.circle(x, y, radius, color)
+        .setStroke(0xFFFFFF, 3);
+      
+      objects.push(obj);
     }
+    
+    return objects;
+  }
 
-    static getInstance() {
-        if (!ContentProvider.instance) {
-            ContentProvider.instance = new ContentProvider();
-        }
-        return ContentProvider.instance;
+  createAnswerChoices(correctAnswer) {
+    // Generate 4 choices: correct + 3 plausible wrong answers
+    const choices = [correctAnswer];
+    
+    // Add wrong answers (±1, ±2 from correct)
+    const possibleWrong = [
+      correctAnswer - 2,
+      correctAnswer - 1,
+      correctAnswer + 1,
+      correctAnswer + 2
+    ].filter(n => n > 0 && n <= 20 && n !== correctAnswer);
+    
+    // Pick 3 random wrong answers
+    const wrongChoices = Phaser.Utils.Array.Shuffle(possibleWrong).slice(0, 3);
+    choices.push(...wrongChoices);
+    
+    // Shuffle all choices
+    Phaser.Utils.Array.Shuffle(choices);
+    
+    // Display choices in row
+    const startX = 420;
+    const spacing = 150;
+    
+    this.choiceButtons = [];
+    
+    choices.forEach((num, index) => {
+      const x = startX + (index * spacing);
+      const y = 550;
+      const button = this.createChoiceButton(num, x, y);
+      this.choiceButtons.push(button);
+    });
+  }
+
+  createChoiceButton(number, x, y) {
+    const bg = this.add.rectangle(x, y, 120, 100, 0xFFFFFF)
+      .setStrokeStyle(6, 0x4ECDC4)
+      .setInteractive({ useHandCursor: true });
+    
+    const text = this.add.text(x, y, number.toString(), {
+      fontFamily: 'Fredoka One',
+      fontSize: '56px',
+      color: '#2D3436'
+    }).setOrigin(0.5);
+    
+    const container = this.add.container(x, y, [bg, text]);
+    
+    bg.on('pointerdown', () => {
+      this.handleAnswer(number, container);
+    });
+    
+    bg.on('pointerover', () => {
+      bg.setFillStyle(0xE8F4F8);
+      bg.setScale(1.1);
+    });
+    
+    bg.on('pointerout', () => {
+      bg.setFillStyle(0xFFFFFF);
+      bg.setScale(1.0);
+    });
+    
+    return container;
+  }
+
+  handleAnswer(selectedNumber, selectedButton) {
+    // Disable all buttons
+    this.disableButtons();
+    
+    if (selectedNumber === this.currentAnswer) {
+      // Correct answer
+      this.showCorrectFeedback();
+      this.score += 10;
+      this.correctAnswers++;
+      this.scoreText.setText(`Score: ${this.score}`);
+      
+      // Play answer audio
+      this.sound.play(`number_${this.currentAnswer}`);
+      this.sound.play('correct');
+      
+      // Move to next question after delay
+      this.time.delayedCall(1500, () => this.nextQuestion());
+    } else {
+      // Incorrect answer
+      this.showIncorrectFeedback(selectedNumber);
+      
+      // Move to next question after delay
+      this.time.delayedCall(2500, () => this.nextQuestion());
     }
+  }
 
-    /**
-     * Set letter data from loaded JSON
-     * @param {Object} data - Parsed JSON data with letters array
-     */
-    setData(data) {
-        if (data && data.letters && Array.isArray(data.letters)) {
-            this.letters = data.letters;
-            this.loaded = true;
-            console.log(`ContentProvider: Loaded ${this.letters.length} letters`);
-        } else {
-            console.error('ContentProvider: Invalid data format');
-            this.loaded = false;
-        }
+  showCorrectFeedback() {
+    const feedback = this.add.text(640, 450, '🎉 Correct!', {
+      fontFamily: 'Fredoka One',
+      fontSize: '56px',
+      color: '#00B894',
+      stroke: '#FFFFFF',
+      strokeThickness: 6
+    }).setOrigin(0.5);
+    
+    // Confetti animation
+    this.tweens.add({
+      targets: feedback,
+      scale: { from: 0, to: 1.3 },
+      duration: 500,
+      ease: 'Back.easeOut'
+    });
+  }
+
+  showIncorrectFeedback(selectedNumber) {
+    const feedback = this.add.text(640, 450, `Not quite! The answer is ${this.currentAnswer}`, {
+      fontFamily: 'Fredoka One',
+      fontSize: '40px',
+      color: '#FF7675'
+    }).setOrigin(0.5);
+    
+    // Shake
+    this.cameras.main.shake(300, 0.005);
+    
+    // Play correct answer audio after brief pause
+    this.time.delayedCall(1000, () => {
+      this.sound.play(`number_${this.currentAnswer}`);
+    });
+  }
+
+  playProblemAudio(problem) {
+    // Play: "3" ... "plus" ... "5" ... "equals?"
+    this.sound.play(`number_${problem.num1}`);
+    this.time.delayedCall(800, () => this.sound.play('plus'));
+    this.time.delayedCall(1600, () => this.sound.play(`number_${problem.num2}`));
+  }
+
+  nextQuestion() {
+    this.currentQuestion++;
+    
+    if (this.currentQuestion < this.totalQuestions) {
+      this.loadQuestion();
+    } else {
+      this.endGame();
     }
+  }
 
-    /**
-     * Get a random letter from the collection
-     * Prevents returning the same letter twice in a row
-     * @returns {Object} Letter data object
-     */
-    getRandomLetter() {
-        if (!this.loaded || this.letters.length === 0) {
-            console.error('ContentProvider: No letters loaded');
-            return { id: 'A', letter: 'A', name: 'Letter A', audioPath: '', category: 'vowel', order: 1 };
-        }
+  endGame() {
+    const durationSeconds = Math.floor((Date.now() - this.startTime) / 1000);
+    const accuracy = (this.correctAnswers / this.totalQuestions) * 100;
+    
+    const gameData = {
+      gameName: 'Addition Game',
+      score: this.score,
+      accuracyPercentage: accuracy,
+      correctAttempts: this.correctAnswers,
+      totalAttempts: this.totalQuestions,
+      durationSeconds,
+      mode: 'Easy'
+    };
+    
+    this.scene.start('ResultsScene', gameData);
+  }
 
-        let randomIndex;
-        do {
-            randomIndex = Math.floor(Math.random() * this.letters.length);
-        } while (randomIndex === this.lastLetterIndex && this.letters.length > 1);
-
-        this.lastLetterIndex = randomIndex;
-        return this.letters[randomIndex];
+  clearQuestion() {
+    if (this.equationText) this.equationText.destroy();
+    if (this.choiceButtons) {
+      this.choiceButtons.forEach(btn => btn.destroy());
     }
+    // Clear visual objects (handled by scene cleanup)
+  }
 
-    /**
-     * Get letter by ID
-     * @param {String} id - Letter ID (e.g., 'A', 'B', 'C')
-     * @returns {Object|null} Letter data object or null if not found
-     */
-    getLetterById(id) {
-        return this.letters.find(letter => letter.id === id) || null;
-    }
-
-    /**
-     * Get all letters
-     * @returns {Array} Array of all letter objects
-     */
-    getAllLetters() {
-        return [...this.letters]; // Return copy to prevent external modification
-    }
-
-    /**
-     * Get letters by category
-     * @param {String} category - 'vowel' or 'consonant'
-     * @returns {Array} Filtered array of letter objects
-     */
-    getLettersByCategory(category) {
-        return this.letters.filter(letter => letter.category === category);
-    }
-
-    /**
-     * Check if content is loaded
-     * @returns {Boolean} True if letters are loaded
-     */
-    isLoaded() {
-        return this.loaded;
-    }
-
-    /**
-     * Get vowels count
-     * @returns {Number} Number of vowels
-     */
-    getVowelCount() {
-        return this.letters.filter(letter => letter.category === 'vowel').length;
-    }
-
-    /**
-     * Get consonants count
-     * @returns {Number} Number of consonants
-     */
-    getConsonantCount() {
-        return this.letters.filter(letter => letter.category === 'consonant').length;
-    }
+  disableButtons() {
+    this.choiceButtons.forEach(btn => {
+      btn.list[0].disableInteractive();
+    });
+  }
 }
 
-// Export for ES6 modules
-export default ContentProvider;
+// McCabe complexity: 5 (at limit, acceptable)
 ```
 
-### Integration Example in LetterPopScene
+**problemGenerator.js - Problem Generation Utility:**
 ```javascript
-// Add to imports at top of file
-import ContentProvider from '../services/ContentProvider.js';
-
-class LetterPopScene extends Phaser.Scene {
-    constructor() {
-        super({ key: 'LetterPopScene' });
-        this.contentProvider = null;
-    }
-
-    preload() {
-        // Load letter data JSON
-        this.load.json('letterData', 'assets/data/letters.json');
-
-        // ... other preload code
-    }
-
-    create() {
-        // Initialize ContentProvider
-        this.contentProvider = ContentProvider.getInstance();
-        const letterData = this.cache.json.get('letterData');
-        this.contentProvider.setData(letterData);
-
-        // Verify loading
-        if (!this.contentProvider.isLoaded()) {
-            console.error('Failed to load letter data!');
-            return;
-        }
-
-        console.log(`Loaded ${this.contentProvider.getAllLetters().length} letters`);
-        console.log(`Vowels: ${this.contentProvider.getVowelCount()}`);
-        console.log(`Consonants: ${this.contentProvider.getConsonantCount()}`);
-
-        // ... rest of create code
-    }
-
-    spawnLetter() {
-        // Get random letter from ContentProvider
-        const letterData = this.contentProvider.getRandomLetter();
-
-        // Create letter bubble with dynamic data
-        const x = Phaser.Math.Between(100, 700);
-        const y = 550;
-
-        // Create circle
-        const bubble = this.add.circle(x, y, 40, 0x4488ff);
-        bubble.setStrokeStyle(4, 0xffffff);
-
-        // Create text using letter data
-        const letterText = this.add.text(x, y, letterData.letter, {
-            fontSize: '48px',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-
-        // Store letter data on bubble for later reference
-        bubble.letterData = letterData;
-
-        // Make interactive
-        bubble.setInteractive();
-        bubble.on('pointerdown', () => {
-            console.log(`Clicked: ${letterData.name}`);
-            // Future: Play audio using letterData.audioPath
-            this.popLetter(bubble, letterText);
-        });
-
-        // ... animation code
-    }
+export function generateProblem(min, max) {
+  // Generate two numbers within range
+  const num1 = Phaser.Math.Between(min, max);
+  const num2 = Phaser.Math.Between(min, max);
+  
+  // Ensure answer doesn't exceed 20 (age-appropriate)
+  const maxNum2 = Math.min(max, 20 - num1);
+  const adjustedNum2 = Math.min(num2, maxNum2);
+  
+  return {
+    num1,
+    num2: adjustedNum2,
+    answer: num1 + adjustedNum2
+  };
 }
+
+// McCabe complexity: 2 (within limit)
 ```
 
-## Acceptance Criteria
-- [ ] /assets/data/letters.json file exists with all 26 letters
-- [ ] Each letter has all required fields (id, letter, name, audioPath, category, order)
-- [ ] JSON file is valid (no syntax errors)
-- [ ] /src/services/ContentProvider.js exists and implements singleton pattern
-- [ ] ContentProvider.getInstance() returns same instance every time
-- [ ] ContentProvider.setData() properly initializes letter data
-- [ ] ContentProvider.getRandomLetter() returns valid letter objects
-- [ ] ContentProvider.getLetterById() can retrieve specific letters
-- [ ] ContentProvider.getAllLetters() returns all 26 letters
-- [ ] ContentProvider.getLettersByCategory() filters correctly
-- [ ] LetterPopScene successfully loads letters.json
-- [ ] LetterPopScene uses ContentProvider for letter selection
-- [ ] All 26 letters can appear during gameplay
-- [ ] No consecutive duplicate letters appear
-- [ ] Letter display uses data from JSON (not hardcoded)
-- [ ] Console shows successful loading message
-- [ ] No errors in browser console
-- [ ] Game plays normally with dynamic content
+---
 
-## Testing Steps
-1. Create letters.json with all 26 letters
-2. Verify JSON is valid (use JSON validator)
-3. Create ContentProvider.js with singleton implementation
-4. Add ContentProvider to LetterPopScene imports
-5. Load letters.json in preload()
-6. Initialize ContentProvider in create()
-7. Replace hardcoded letters with getRandomLetter()
-8. Test game in browser
-9. Verify ContentProvider loading message in console
-10. Play game multiple times
-11. Track which letters appear (aim to see all 26)
-12. Verify no consecutive duplicates
-13. Check console for any errors
-14. Test getLetterById() with specific IDs
-15. Test getLettersByCategory('vowel') and ('consonant')
-16. Verify getAllLetters() returns 26 letters
-17. Test edge case: reload page multiple times
-18. Verify data persistence across game sessions
+### Acceptance Criteria
 
-## Estimated Time
-1 hour
+- [ ] Addition game appears in Math Adventures page
+- [ ] Math category shows "3 activities available" on dashboard
+- [ ] Game loads with first addition problem
+- [ ] Equation displays clearly (e.g., "3 + 5 = ?")
+- [ ] Visual objects display for both addends
+- [ ] Audio plays problem aloud ("3 plus 5 equals?")
+- [ ] 4 answer choices display
+- [ ] Hover effect works on answer buttons
+- [ ] Correct answer shows celebration animation
+- [ ] Incorrect answer shows correct answer with explanation
+- [ ] Audio plays correct answer after mistake
+- [ ] Score increases by 10 points per correct answer
+- [ ] Progress text updates (Question 1 of 10, etc.)
+- [ ] All 10 questions load sequentially
+- [ ] Problems use numbers 1-10
+- [ ] Answers never exceed 20
+- [ ] Results screen shows score and high scores
+- [ ] Session saves to database via POST /api/sessions
+- [ ] High scores load from database
 
-## Dependencies
-- Phaser 3 game instance configured
-- LetterPopScene implemented and functional
-- /assets/data directory exists
-- /src/services directory created
-- Basic understanding of ES6 modules
+---
 
-## Risks
-- **JSON syntax errors**: Validate JSON before testing (use jsonlint.com)
-- **File path errors**: Verify relative paths from index.html location
-- **Module import issues**: Ensure ContentProvider exports correctly
-- **Singleton not working**: Verify getInstance() always returns same instance
-- **Random selection bias**: Test getRandomLetter() distribution over many calls
-- **Data not loading**: Check browser network tab for 404 errors
+### McCabe Complexity
 
-## Data Structure Benefits
-**Separation of Content and Code:**
-- Designers can edit letters.json without touching code
-- Easy to add new properties (e.g., difficulty level, animations)
-- Supports A/B testing different letter sets
+All functions ≤ 5:
+- `loadQuestion()`: 3
+- `createAnswerChoices()`: 3
+- `handleAnswer()`: 4
+- `showIncorrectFeedback()`: 2
+- `playProblemAudio()`: 1
+- `generateProblem()`: 2
 
-**Extensibility:**
-- Can add lowercase letters later
-- Can add letter combinations (digraphs)
-- Can add multiple audio files per letter
-- Can add visual assets (images, animations)
+---
 
-**Internationalization Ready:**
-- Easy to create letters-es.json for Spanish
-- Can switch languages without code changes
-- Supports Unicode characters for any alphabet
+### Dependencies
 
-**Data Validation:**
-- JSON schema validation possible
-- Editor plugins can validate structure
-- Reduces runtime errors
+- Phase 3: Database and API (uses game_sessions table)
+- Phase 7: Child Login (requires child authentication)
+- Phase 11: Counting Game (Addition builds on counting skills)
+- Phase 12: Shapes Recognition (Addition appears alongside in Math category)
 
-## Notes
-- Keep JSON file human-readable (formatted with indentation)
-- Use consistent naming conventions for audio paths
-- ContentProvider is singleton - only one instance exists
-- Letter data is immutable once loaded (don't modify returned objects)
-- Future phases will add audio loading using audioPath field
-- Consider adding data validation in ContentProvider.setData()
-- Could add unit tests for ContentProvider methods
-- Fair distribution algorithm prevents boring repeated letters
 
-## Completion Checklist
-- [ ] letters.json created with all 26 letters
-- [ ] letters.json validates successfully
-- [ ] ContentProvider.js implemented with singleton pattern
-- [ ] All ContentProvider methods implemented and tested
-- [ ] LetterPopScene loads letters.json
-- [ ] LetterPopScene uses ContentProvider for letter selection
-- [ ] All 26 letters accessible during gameplay
-- [ ] No consecutive duplicate letters
-- [ ] Console shows no errors
-- [ ] Testing completed with all letters appearing
-- [ ] Code is clean and well-commented
-- [ ] Ready to proceed to Phase 14 (audio integration)
+---
+

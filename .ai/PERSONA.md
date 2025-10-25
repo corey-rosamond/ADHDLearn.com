@@ -43,11 +43,59 @@
 2. **All code committed to git** - No uncommitted changes
 3. **Documentation updated** - START.md, README.md, MEMORY.md current
 4. **McCabe Complexity ≤ 5** - ALL functions must have cyclomatic complexity of 5 or less
-   - Run McCabe analysis: `python3 /tmp/mccabe_kotlin.py core/src/main/kotlin/`
+
+   **For JavaScript/React/Node.js:**
+   ```bash
+   # Install complexity-report globally
+   npm install -g complexity-report
+
+   # Analyze source files
+   cr src/ --format json > .ai/reports/mccabe-phase-XX.json
+   cr backend/ --format json >> .ai/reports/mccabe-phase-XX.json
+
+   # Review results - look for "cyclomatic" field
+   cat .ai/reports/mccabe-phase-XX.json | grep -A5 cyclomatic
+   ```
+
    - Any function > 5 complexity MUST be refactored before phase completion
    - No exceptions - complexity debt is technical debt
 
 **If McCabe metrics show any function > 5, the phase is NOT complete.**
+
+### McCabe Refactoring Examples
+
+**Bad (complexity = 7):**
+```javascript
+function validateUser(user) {
+  if (!user) return false;
+  if (!user.email) return false;
+  if (!user.email.includes('@')) return false;
+  if (user.age < 18) return false;
+  if (!user.name) return false;
+  if (user.name.length < 2) return false;
+  return true;
+}
+```
+
+**Good (complexity = 3):**
+```javascript
+function validateUser(user) {
+  if (!user) return false;
+  return isValidEmail(user.email) && isValidAge(user.age) && isValidName(user.name);
+}
+
+function isValidEmail(email) {
+  return email && email.includes('@');
+}
+
+function isValidAge(age) {
+  return age >= 18;
+}
+
+function isValidName(name) {
+  return name && name.length >= 2;
+}
+```
 
 ### Problem-Solving Approach
 - **Never overstate accomplishments** - Honest assessment of progress

@@ -1,28 +1,47 @@
 # Development Guardrails
 
 ## Purpose
-This document defines code quality standards, best practices, and common pitfalls to avoid when developing Aurora's Reading Adventure. These guardrails ensure the codebase remains clean, maintainable, and aligned with the project's ADHD-friendly educational goals.
+This document defines code quality standards, best practices, and common pitfalls to avoid when developing ADHDLearn.com. These guardrails ensure the codebase remains clean, maintainable, and aligned with the project's ADHD-friendly educational goals.
 
 ---
 
-## 📝 Note on Code Examples
+## ⚠️ TECHNOLOGY STACK NOTE
 
-**Current Technology:** Kotlin + libGDX (native Android)
-**Archived Version:** Phaser.js (web) - located in `archive/phaser-web/`
+**Last Updated:** October 25, 2025
 
-Many code examples in this document use JavaScript/Phaser syntax from the original web version. **The principles apply to both versions**, but the specific API calls differ:
+**CURRENT STACK:** React + Phaser 3 + Node.js + MySQL
 
-- **Phaser examples** → Illustrate the principle
-- **Kotlin/libGDX** → Apply the same principle with libGDX API
+This document contains code examples for the current technology stack. All examples use:
+- **JavaScript/React** for frontend components
+- **Phaser 3** for games
+- **Node.js + Express** for backend API
+- **MySQL** for database
 
-**General principles** (SOLID, ADHD-friendly design, testing methodology) are **technology-agnostic** and apply fully to the current Kotlin implementation.
+**EXPLICITLY NOT USING:**
+- ❌ **Kotlin** - Abandoned October 2025 (GWT incompatibility)
+- ❌ **libGDX** - Kotlin + Web doesn't work
+- ❌ **Java/Gradle**
 
-**For Kotlin/libGDX-specific patterns:**
-- See `core/src/main/kotlin/` for reference implementations
-- See Phase 2.7.x documentation for current architecture
-- Follow libGDX patterns, not Phaser patterns
+**For complete technology details, see `.ai/TECHNOLOGY_STACK.md`**
 
 ---
+
+## Quick Reference
+
+**Frontend:**
+- React 18 + Vite + Tailwind CSS (parent portal)
+- React 18 + Vite + Phaser 3.80.1 (child portal with games)
+
+**Backend:**
+- Node.js 18+ + Express + Socket.io
+
+**Database:**
+- MySQL 8.0 (160.153.180.159)
+
+**Deployment:**
+- Apache + Let's Encrypt SSL
+- 8 virtual hosts (staging + production × 4 subdomains)
+- Capacitor for Android APK
 
 ---
 
@@ -313,6 +332,333 @@ class LetterPopScene extends Phaser.Scene {
 
     // No shutdown method - memory leaks!
 }
+```
+
+---
+
+## React Best Practices
+
+### Use Functional Components with Hooks
+**✅ GOOD:**
+```javascript
+import { useState, useEffect } from 'react';
+
+function ChildDashboard({ childId }) {
+  const [games, setGames] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch games when component mounts or childId changes
+    async function fetchGames() {
+      try {
+        const response = await fetch(`/api/children/${childId}/games`);
+        const data = await response.json();
+        setGames(data.games);
+      } catch (error) {
+        console.error('Failed to fetch games:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchGames();
+  }, [childId]); // Re-fetch when childId changes
+
+  if (loading) return <div>Loading...</div>;
+
+  return (
+    <div className="dashboard">
+      {games.map(game => (
+        <GameCard key={game.id} game={game} />
+      ))}
+    </div>
+  );
+}
+```
+
+**❌ BAD:**
+```javascript
+// Class component - avoid
+class ChildDashboard extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { games: [], loading: true };
+  }
+
+  componentDidMount() {
+    // Harder to read and maintain
+    fetch(`/api/children/${this.props.childId}/games`)
+      .then(res => res.json())
+      .then(data => this.setState({ games: data.games, loading: false }));
+  }
+
+  render() {
+    // ...
+  }
+}
+```
+
+### Avoid Infinite Render Loops
+**✅ GOOD:**
+```javascript
+function ScoreDisplay({ sessionId }) {
+  const [score, setScore] = useState(null);
+
+  useEffect(() => {
+    // Only runs when sessionId changes
+    fetchScore(sessionId).then(setScore);
+  }, [sessionId]); // Proper dependency array
+
+  return <div>Score: {score}</div>;
+}
+```
+
+**❌ BAD:**
+```javascript
+function ScoreDisplay({ sessionId }) {
+  const [score, setScore] = useState(null);
+
+  useEffect(() => {
+    fetchScore(sessionId).then(setScore);
+  }); // Missing dependency array - runs every render!
+
+  return <div>Score: {score}</div>;
+}
+```
+
+### Prop Validation (Optional but Recommended)
+```javascript
+import PropTypes from 'prop-types';
+
+function GameCard({ game, onPlay }) {
+  return (
+    <div onClick={() => onPlay(game.id)}>
+      <h3>{game.title}</h3>
+      <p>{game.description}</p>
+    </div>
+  );
+}
+
+GameCard.propTypes = {
+  game: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    title: PropTypes.string.isRequired,
+    description: PropTypes.string
+  }).isRequired,
+  onPlay: PropTypes.func.isRequired
+};
+```
+
+### Context for Global State (Avoid Prop Drilling)
+**✅ GOOD:**
+```javascript
+// AuthContext.jsx
+import { createContext, useContext, useState } from 'react';
+
+const AuthContext = createContext();
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('token'));
+
+  const login = async (email, password) => {
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await response.json();
+    setToken(data.token);
+    setUser(data.user);
+    localStorage.setItem('token', data.token);
+  };
+
+  const logout = () => {
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem('token');
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, token, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  return useContext(AuthContext);
+}
+
+// Usage in any component
+function Header() {
+  const { user, logout } = useAuth();
+  return <button onClick={logout}>Logout {user.name}</button>;
+}
+```
+
+---
+
+## Express/Backend Best Practices
+
+### Proper Route Organization
+**✅ GOOD:**
+```javascript
+// routes/children.js
+const express = require('express');
+const router = express.Router();
+const { authenticate } = require('../middleware/auth');
+const db = require('../db');
+
+// List children for authenticated parent
+router.get('/', authenticate, async (req, res) => {
+  try {
+    const [children] = await db.query(
+      'SELECT id, name, birth_date, avatar FROM children WHERE family_id = ?',
+      [req.user.family_id]
+    );
+    res.json({ success: true, children });
+  } catch (error) {
+    console.error('Error fetching children:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Get specific child
+router.get('/:id', authenticate, async (req, res) => {
+  try {
+    const [children] = await db.query(
+      'SELECT * FROM children WHERE id = ? AND family_id = ?',
+      [req.params.id, req.user.family_id]
+    );
+
+    if (children.length === 0) {
+      return res.status(404).json({ success: false, message: 'Child not found' });
+    }
+
+    res.json({ success: true, child: children[0] });
+  } catch (error) {
+    console.error('Error fetching child:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+module.exports = router;
+```
+
+### Input Validation
+**✅ GOOD:**
+```javascript
+const { body, validationResult } = require('express-validator');
+
+router.post('/register',
+  // Validation middleware
+  body('email').isEmail().normalizeEmail(),
+  body('password').isLength({ min: 8 }),
+  body('name').trim().notEmpty(),
+
+  async (req, res) => {
+    // Check validation results
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+
+    // Proceed with registration
+    const { email, password, name } = req.body;
+    // ... hash password, insert to DB, etc.
+  }
+);
+```
+
+**❌ BAD:**
+```javascript
+router.post('/register', async (req, res) => {
+  // No validation - accepts any input
+  const { email, password, name } = req.body;
+  // Direct insertion - SQL injection risk!
+  await db.query(`INSERT INTO users VALUES ('${email}', '${password}', '${name}')`);
+});
+```
+
+### Authentication Middleware
+**✅ GOOD:**
+```javascript
+// middleware/auth.js
+const jwt = require('jsonwebtoken');
+
+function authenticate(req, res, next) {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: 'No token provided'
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; // Attach user to request
+    next(); // Continue to route handler
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid token'
+    });
+  }
+}
+
+module.exports = { authenticate };
+```
+
+### Database Connection Pooling
+**✅ GOOD:**
+```javascript
+// db.js
+const mysql = require('mysql2/promise');
+
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || '160.153.180.159',
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: 'adhdlearn',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
+
+module.exports = pool;
+
+// Usage in routes
+const db = require('./db');
+const [rows] = await db.query('SELECT * FROM users WHERE id = ?', [userId]);
+```
+
+### Environment Variables
+**✅ GOOD:**
+```javascript
+// Load at app start
+require('dotenv').config();
+
+const PORT = process.env.PORT || 5000;
+const JWT_SECRET = process.env.JWT_SECRET;
+const DB_HOST = process.env.DB_HOST;
+
+if (!JWT_SECRET) {
+  console.error('JWT_SECRET not set in environment');
+  process.exit(1);
+}
+```
+
+**❌ BAD:**
+```javascript
+// Hardcoded secrets - NEVER do this
+const JWT_SECRET = 'my-secret-key-123';
+const DB_PASSWORD = 'password123';
 ```
 
 ---
@@ -1071,6 +1417,72 @@ spawnBubble(letter) {
 
 ---
 
+---
+
+## Code Complexity Requirements
+
+### McCabe Cyclomatic Complexity ≤ 5
+
+**MANDATORY:** All functions must have McCabe complexity of 5 or less.
+
+**For JavaScript/Node.js:**
+```bash
+# Install complexity-report globally
+npm install -g complexity-report
+
+# Analyze all JavaScript files
+cr src/ --format json > .ai/reports/mccabe-phase-XX.json
+
+# Check specific file
+cr src/components/GameCard.jsx
+```
+
+**If any function exceeds complexity 5:**
+1. Extract conditions into helper functions
+2. Use early returns to reduce nesting
+3. Break complex functions into smaller pieces
+4. Re-run analysis until all functions ≤ 5
+
+**Example Refactoring:**
+```javascript
+// ❌ BAD: Complexity = 8
+function processGameResult(score, timeLeft, mistakes) {
+  if (score > 0) {
+    if (timeLeft > 0) {
+      if (mistakes < 3) {
+        return { stars: 3, message: 'Perfect!' };
+      } else if (mistakes < 6) {
+        return { stars: 2, message: 'Great job!' };
+      } else {
+        return { stars: 1, message: 'Good try!' };
+      }
+    } else {
+      return { stars: 0, message: 'Time is up!' };
+    }
+  } else {
+    return { stars: 0, message: 'No score' };
+  }
+}
+
+// ✅ GOOD: Complexity = 2
+function processGameResult(score, timeLeft, mistakes) {
+  if (score === 0) return { stars: 0, message: 'No score' };
+  if (timeLeft === 0) return { stars: 0, message: 'Time is up!' };
+
+  return calculateStars(mistakes);
+}
+
+function calculateStars(mistakes) {
+  if (mistakes < 3) return { stars: 3, message: 'Perfect!' };
+  if (mistakes < 6) return { stars: 2, message: 'Great job!' };
+  return { stars: 1, message: 'Good try!' };
+}
+```
+
+**No exceptions. Complexity debt is technical debt.**
+
+---
+
 ## Git Commit Standards
 
 ### Commit After Each Phase Completion
@@ -1082,10 +1494,13 @@ git commit -m "Complete Phase X: [Phase Name]
 - Implemented [feature 2]
 - All acceptance criteria met
 - Manual testing completed
+- McCabe complexity ≤ 5 verified
 - Ready for Phase X+1
 
-Authored-By: Corey Rosamond <rosamond.corey@gmail.com>"
-git push
+🤖 Generated with Claude Code
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+git push origin staging
 ```
 
 ### Update README.md After Each Phase
@@ -1097,18 +1512,33 @@ Keep README.md current with what's implemented.
 
 These guardrails ensure:
 - **Clean, maintainable code** following SOLID principles
-- **Proper Phaser 3 usage** with best practices
+- **React best practices** with functional components and hooks
+- **Express/Node.js security** with proper validation and auth
+- **Phaser 3 performance** with best practices for games
 - **ADHD-friendly design** with immediate, non-punitive feedback
-- **Performance optimization** through pooling and limits
+- **Performance optimization** through pooling, caching, and limits
 - **Comprehensive testing** with BDD scenarios
+- **McCabe complexity ≤ 5** for all functions (no exceptions)
 - **Clear documentation** so future developers (or future you) understand the code
 
-**Remember:** The goal isn't perfection. The goal is building a game that helps Aurora learn while maintaining a codebase we can confidently modify and expand.
+**Technology Stack:**
+- Frontend: React + Vite, Phaser 3, Tailwind CSS
+- Backend: Node.js + Express, MySQL 8.0, Socket.io
+- Deployment: Apache + SSL, Capacitor (Android)
+
+**Remember:** The goal isn't perfection. The goal is building a platform that helps Aurora learn while maintaining a codebase we can confidently modify and expand.
 
 If something isn't in the guardrails and you're unsure, ask yourself:
 1. Is it simple and clear?
 2. Would I understand this code in 6 months?
 3. Does it help Aurora learn?
 4. Can it be easily tested?
+5. Is the McCabe complexity ≤ 5?
 
-If yes to all four, you're probably on the right track.
+If yes to all five, you're probably on the right track.
+
+---
+
+**Last Updated:** October 22, 2025
+**Current Stack:** React + Phaser + Node.js + MySQL
+**For detailed tech decisions:** See `.ai/TECHNOLOGY_STACK.md`

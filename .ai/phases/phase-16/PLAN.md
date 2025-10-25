@@ -1,544 +1,238 @@
-# Phase 16: Encouragement Audio System
+# Phase 16: Chore System - Child Side
 
-## Goal
-Implement a positive verbal reinforcement system that plays varied encouragement audio when Aurora answers correctly, creating an emotionally supportive learning environment
+**Project:** ADHDLearn.com
+**Phase:** 16 of 36
+**Last Updated:** October 22, 2025
 
-## Context
-This phase enhances Letter Pop with audio encouragement:
-1. Creating an audio queue system for variety
-2. Playing random encouragement clips on correct answers
-3. Ensuring different encouragement each time to prevent repetition
-4. Coordinating timing with letter audio and particle effects
-5. Building a supportive, confidence-boosting audio experience
+---
 
-This adds verbal positive reinforcement that makes Aurora feel celebrated and encouraged, especially important for ADHD learners who thrive on frequent, varied positive feedback.
+ Chore System - Child Side
 
-## Prerequisites
-- Phase 11 completed (correct/incorrect answer detection)
-- Phase 15 completed (particle effects on correct answers)
-- User has generated 10 encouragement audio files
-- Audio files placed in `/public/assets/audio/encouragement/` directory
-- Basic Phaser audio system working
+**Delivers:** Aurora can see and complete chores
+**Aurora gets:** 📋 **Chore List - Complete chores, earn points**
+**You get:** Notifications when Aurora completes chores
+**Deployed:** Full chore system working end-to-end
 
-## Tasks
+---
 
-### 1. Generate Encouragement Audio Assets
-- User generates 10 short encouragement audio clips
-- Suggested phrases:
-  - "Great job!"
-  - "Awesome!"
-  - "You're amazing!"
-  - "Well done!"
-  - "Fantastic!"
-  - "You got it!"
-  - "Wonderful!"
-  - "Keep it up!"
-  - "You're doing great!"
-  - "Perfect!"
-- Save as MP3 or OGG format
-- Keep duration short (1-2 seconds each)
-- Save to `/public/assets/audio/encouragement/` directory
+### What This Phase Delivers
 
-### 2. Preload Encouragement Audio Files
-- Add encouragement audio loading to PreloadScene
-- Load all 10 encouragement files with unique keys
-- Use naming convention: 'encouragement-1' through 'encouragement-10'
-- Verify all files load successfully
-- Handle loading errors gracefully
+Chore UI for children:
+- Chore list in child portal
+- View assigned chores
+- Mark chore as complete
+- Optional photo proof upload
+- See points earned per chore
+- Chores appear on child dashboard
 
-### 3. Create Encouragement Queue Manager
-- Build EncouragementQueue class or system
-- Track which encouragements have been played recently
-- Implement shuffled queue to ensure variety
-- Prevent same encouragement playing twice in a row
-- Automatically refill queue when depleted
+---
 
-### 4. Integrate with Correct Answer Handler
-- Hook encouragement system into existing correct answer event
-- Trigger encouragement audio on correct bubble click
-- Coordinate timing with existing correct sound effect
-- Coordinate timing with particle burst
-- Coordinate timing with letter audio (if present)
+### Database Changes
 
-### 5. Implement Audio Timing and Coordination
-- Ensure encouragement doesn't overlap with letter audio
-- Play encouragement after letter audio completes (if present)
-- Use Phaser audio event listeners for timing
-- Handle cases where letter audio may not be present
-- Allow encouragement and particle effects to overlap (non-blocking)
+**No new tables** - Uses `chores` table from Phase 14.
 
-### 6. Test Audio Queue Variety
-- Play through multiple rounds
-- Verify different encouragements each time
-- Test queue refill logic
-- Verify no immediate repetition
-- Ensure random selection feels natural
+---
 
-## Implementation Details
+### API Endpoints
 
-### PreloadScene Audio Loading
-```javascript
-class PreloadScene extends Phaser.Scene {
-    constructor() {
-        super({ key: 'PreloadScene' });
-    }
+**Uses existing endpoints from Phase 14:**
+- GET /api/chores?assignedTo={userId}&status=pending
+- PATCH /api/chores/:id/complete
 
-    preload() {
-        // Existing audio loading...
-        this.load.audio('correctSound', 'assets/audio/correct.mp3');
-        this.load.audio('incorrectSound', 'assets/audio/incorrect.mp3');
+**New endpoint for photo upload:**
 
-        // Load encouragement audio files
-        const encouragementCount = 10;
-        for (let i = 1; i <= encouragementCount; i++) {
-            this.load.audio(
-                `encouragement-${i}`,
-                `assets/audio/encouragement/encouragement-${i}.mp3`
-            );
-        }
-
-        // Progress bar for loading
-        this.createLoadingBar();
-    }
-
-    createLoadingBar() {
-        const width = 400;
-        const height = 30;
-        const x = (this.cameras.main.width - width) / 2;
-        const y = this.cameras.main.height / 2;
-
-        const progressBar = this.add.graphics();
-        const progressBox = this.add.graphics();
-        progressBox.fillStyle(0x222222, 0.8);
-        progressBox.fillRect(x, y, width, height);
-
-        const loadingText = this.add.text(
-            this.cameras.main.width / 2,
-            y - 40,
-            'Loading...',
-            { fontSize: '24px', color: '#ffffff' }
-        ).setOrigin(0.5);
-
-        this.load.on('progress', (value) => {
-            progressBar.clear();
-            progressBar.fillStyle(0xffffff, 1);
-            progressBar.fillRect(x + 10, y + 10, (width - 20) * value, height - 20);
-        });
-
-        this.load.on('complete', () => {
-            progressBar.destroy();
-            progressBox.destroy();
-            loadingText.destroy();
-        });
-    }
-
-    create() {
-        this.scene.start('MainMenuScene');
-    }
+#### POST /api/chores/upload-photo
+**Purpose:** Upload photo proof (optional S3 integration)
+**Headers:** `Authorization: Bearer {token}`
+**Body:** `multipart/form-data` with photo file
+**Response (200):**
+```json
+{
+  "success": true,
+  "photoUrl": "https://s3.amazonaws.com/adhdlearn/chores/photo_123.jpg"
 }
 ```
 
-### Encouragement Queue System
-```javascript
-class EncouragementQueue {
-    constructor(scene) {
-        this.scene = scene;
-        this.totalEncouragements = 10;
-        this.queue = [];
-        this.lastPlayed = null;
-        this.refillQueue();
-    }
+---
 
-    refillQueue() {
-        // Create array of all encouragement keys
-        const all = [];
-        for (let i = 1; i <= this.totalEncouragements; i++) {
-            all.push(`encouragement-${i}`);
-        }
+### Frontend Changes
 
-        // Shuffle array for random order
-        this.queue = Phaser.Utils.Array.Shuffle(all);
-
-        // If there's a lastPlayed, ensure it's not first in new queue
-        if (this.lastPlayed && this.queue[0] === this.lastPlayed) {
-            // Swap first and last
-            const temp = this.queue[0];
-            this.queue[0] = this.queue[this.queue.length - 1];
-            this.queue[this.queue.length - 1] = temp;
-        }
-    }
-
-    getNext() {
-        // If queue is empty, refill it
-        if (this.queue.length === 0) {
-            this.refillQueue();
-        }
-
-        // Pop next encouragement from queue
-        const next = this.queue.shift();
-        this.lastPlayed = next;
-
-        return next;
-    }
-
-    playNext() {
-        const key = this.getNext();
-        this.scene.sound.play(key);
-        return key;
-    }
-}
+**New Files in `child-portal/src/pages/`:**
+```
+pages/
+├── ChoresList.jsx           (Chore list page)
+└── ChoreCard.jsx            (Individual chore card)
 ```
 
-### Integration with LetterPopScene
+**Add route in `child-portal/src/App.jsx`:**
 ```javascript
-class LetterPopScene extends Phaser.Scene {
-    constructor() {
-        super({ key: 'LetterPopScene' });
-    }
+import ChoresList from './pages/ChoresList';
 
-    create() {
-        // Existing setup...
-        this.createParticleEmitter();
-
-        // Create encouragement queue
-        this.encouragementQueue = new EncouragementQueue(this);
-
-        // Setup game objects...
-        this.displayCurrentLetter();
-    }
-
-    onCorrectAnswer(bubble) {
-        const bubbleX = bubble.x;
-        const bubbleY = bubble.y;
-
-        // Trigger particle burst
-        this.particleEmitter.setPosition(bubbleX, bubbleY);
-        this.particleEmitter.explode();
-        this.starEmitter.setPosition(bubbleX, bubbleY);
-        this.starEmitter.explode();
-
-        // Play correct sound immediately
-        this.sound.play('correctSound');
-
-        // Play encouragement after short delay
-        this.time.delayedCall(300, () => {
-            this.encouragementQueue.playNext();
-        });
-
-        // Tween bubble out
-        this.tweens.add({
-            targets: bubble,
-            scaleX: 1.3,
-            scaleY: 1.3,
-            alpha: 0,
-            duration: 300,
-            ease: 'Power2',
-            onComplete: () => {
-                bubble.destroy();
-                this.advanceToNextLetter();
-            }
-        });
-    }
-
-    advanceToNextLetter() {
-        this.correctAnswers++;
-
-        if (this.currentLetterIndex >= 9) {
-            // Delay end round to allow encouragement to finish
-            this.time.delayedCall(1500, () => {
-                this.endRound();
-            });
-        } else {
-            this.currentLetterIndex++;
-            this.time.delayedCall(1000, () => {
-                this.displayCurrentLetter();
-            });
-        }
-    }
-}
+<Route path="/chores" element={<ChoresList />} />
 ```
 
-### Advanced Timing Coordination
+**Update dashboard in `child-portal/src/pages/ChildDashboard.jsx`:**
 ```javascript
-class LetterPopScene extends Phaser.Scene {
-    onCorrectAnswerWithLetterAudio(bubble) {
-        const bubbleX = bubble.x;
-        const bubbleY = bubble.y;
-
-        // Trigger visual effects immediately
-        this.particleEmitter.setPosition(bubbleX, bubbleY);
-        this.particleEmitter.explode();
-        this.starEmitter.setPosition(bubbleX, bubbleY);
-        this.starEmitter.explode();
-
-        // Play correct sound
-        const correctSound = this.sound.play('correctSound');
-
-        // If letter audio exists, play it after correct sound
-        if (this.currentLetterAudio) {
-            correctSound.once('complete', () => {
-                const letterSound = this.sound.play(this.currentLetterAudio);
-
-                // Play encouragement after letter audio completes
-                letterSound.once('complete', () => {
-                    this.encouragementQueue.playNext();
-                });
-            });
-        } else {
-            // No letter audio, play encouragement after correct sound
-            correctSound.once('complete', () => {
-                this.encouragementQueue.playNext();
-            });
-        }
-
-        // Continue with bubble animation
-        this.tweens.add({
-            targets: bubble,
-            scaleX: 1.3,
-            scaleY: 1.3,
-            alpha: 0,
-            duration: 300,
-            ease: 'Power2',
-            onComplete: () => {
-                bubble.destroy();
-                this.advanceToNextLetter();
-            }
-        });
-    }
-}
+// Add chores widget to dashboard
+<div className="chores-widget">
+  <h3>My Chores 📋</h3>
+  <p>{pendingChoresCount} chores to do</p>
+  <Link to="/chores">View All</Link>
+</div>
 ```
 
-### Alternative Simpler Timing Approach
+---
+
+### Technical Specifications
+
+**ChoresList.jsx:**
 ```javascript
-class LetterPopScene extends Phaser.Scene {
-    onCorrectAnswer(bubble) {
-        // Visual effects immediately
-        this.particleEmitter.setPosition(bubble.x, bubble.y);
-        this.particleEmitter.explode();
-        this.starEmitter.setPosition(bubble.x, bubble.y);
-        this.starEmitter.explode();
+import React, { useState, useEffect } from 'react';
+import api from '../services/api';
+import ChoreCard from './ChoreCard';
+import './ChoresList.css';
 
-        // Audio sequence
-        this.playCorrectAudioSequence();
+export default function ChoresList() {
+  const [chores, setChores] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-        // Bubble animation
-        this.tweens.add({
-            targets: bubble,
-            scaleX: 1.3,
-            scaleY: 1.3,
-            alpha: 0,
-            duration: 300,
-            ease: 'Power2',
-            onComplete: () => {
-                bubble.destroy();
-                this.advanceToNextLetter();
-            }
-        });
+  useEffect(() => {
+    fetchChores();
+  }, []);
+
+  async function fetchChores() {
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const response = await api.get(`/api/chores?assignedTo=${user.userId}&status=pending`);
+      setChores(response.chores);
+    } catch (error) {
+      console.error('Failed to fetch chores:', error);
+    } finally {
+      setLoading(false);
     }
+  }
 
-    playCorrectAudioSequence() {
-        // Play correct sound
-        this.sound.play('correctSound');
-
-        // Play encouragement after 400ms delay
-        // This allows correct sound to be heard clearly
-        this.time.delayedCall(400, () => {
-            this.encouragementQueue.playNext();
-        });
+  async function handleComplete(choreId, photoUrl) {
+    try {
+      await api.patch(`/api/chores/${choreId}/complete`, { photoUrl });
+      fetchChores(); // Refresh list
+    } catch (error) {
+      console.error('Failed to complete chore:', error);
     }
+  }
+
+  if (loading) return <div className="loading">Loading chores...</div>;
+
+  return (
+    <div className="chores-list-page">
+      <h1>My Chores 📋</h1>
+      
+      {chores.length === 0 ? (
+        <div className="empty-state">
+          <p>No chores right now!</p>
+          <p>Go play some games! 🎮</p>
+        </div>
+      ) : (
+        <div className="chores-grid">
+          {chores.map(chore => (
+            <ChoreCard
+              key={chore.choreId}
+              chore={chore}
+              onComplete={handleComplete}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
+
+// McCabe complexity: 2 (within limit)
 ```
 
-### Queue Testing and Debugging
+**ChoreCard.jsx (Child Portal):**
 ```javascript
-class EncouragementQueue {
-    constructor(scene) {
-        this.scene = scene;
-        this.totalEncouragements = 10;
-        this.queue = [];
-        this.lastPlayed = null;
-        this.playHistory = []; // For debugging
-        this.refillQueue();
+import React, { useState } from 'react';
+import './ChoreCard.css';
+
+export default function ChoreCard({ chore, onComplete }) {
+  const [showCamera, setShowCamera] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState('');
+
+  function handleMarkComplete() {
+    if (confirm(`Mark "${chore.title}" as complete?`)) {
+      onComplete(chore.choreId, photoUrl);
     }
+  }
 
-    playNext() {
-        const key = this.getNext();
-
-        // Track play history (for testing)
-        this.playHistory.push(key);
-        if (this.playHistory.length > 20) {
-            this.playHistory.shift(); // Keep last 20
-        }
-
-        // Log for debugging
-        console.log('Playing:', key, '| Queue remaining:', this.queue.length);
-
-        this.scene.sound.play(key);
-        return key;
-    }
-
-    getPlayHistory() {
-        return this.playHistory;
-    }
-
-    checkForImmediateRepetition() {
-        // Debugging helper
-        for (let i = 1; i < this.playHistory.length; i++) {
-            if (this.playHistory[i] === this.playHistory[i - 1]) {
-                console.warn('Immediate repetition detected:', this.playHistory[i]);
-            }
-        }
-    }
+  return (
+    <div className="chore-card child">
+      <div className="chore-header">
+        <h3>{chore.title}</h3>
+        <span className="points">+{chore.pointsValue} pts</span>
+      </div>
+      
+      {chore.description && (
+        <p className="description">{chore.description}</p>
+      )}
+      
+      {chore.dueDate && (
+        <p className="due-date">Due: {new Date(chore.dueDate).toLocaleDateString()}</p>
+      )}
+      
+      <div className="actions">
+        <button onClick={() => setShowCamera(!showCamera)} className="photo-btn">
+          📷 Add Photo
+        </button>
+        <button onClick={handleMarkComplete} className="complete-btn">
+          ✅ Mark Complete
+        </button>
+      </div>
+      
+      {photoUrl && (
+        <img src={photoUrl} alt="Proof" className="proof-preview" />
+      )}
+    </div>
+  );
 }
+
+// McCabe complexity: 2 (within limit)
 ```
 
-## Acceptance Criteria
-- [ ] 10 encouragement audio files generated by user
-- [ ] Audio files saved to correct directory
-- [ ] All 10 files load successfully in PreloadScene
-- [ ] EncouragementQueue class created and functional
-- [ ] Queue shuffles encouragements for variety
-- [ ] Queue prevents immediate repetition
-- [ ] Queue refills automatically when empty
-- [ ] Encouragement plays on every correct answer
-- [ ] Different encouragement each time (no back-to-back repeats)
-- [ ] Encouragement timing doesn't overlap with letter audio
-- [ ] Encouragement plays after correct sound effect
-- [ ] Timing feels natural and not rushed
-- [ ] Audio doesn't cut off abruptly
-- [ ] Encouragement enhances positive feeling
-- [ ] Volume levels are balanced
-- [ ] No audio glitches or stuttering
-- [ ] System works over multiple rounds
-- [ ] Testing confirms variety over 20+ correct answers
+---
 
-## Testing Steps
-1. Generate or obtain 10 encouragement audio files
-2. Place files in `/public/assets/audio/encouragement/`
-3. Name files: `encouragement-1.mp3` through `encouragement-10.mp3`
-4. Load game and check browser console for loading errors
-5. Navigate to LetterPopScene
-6. Answer first letter correctly
-   - Verify encouragement plays
-   - Note which encouragement (e.g., "Great job!")
-7. Answer second letter correctly
-   - Verify different encouragement plays
-   - Verify not the same as first
-8. Answer 10 letters in a round
-   - Track which encouragements play
-   - Verify variety (at least 8-10 different ones)
-9. Play second round
-   - Verify queue refilled
-   - Verify encouragements still varied
-10. Test timing
-    - Verify correct sound plays first
-    - Verify encouragement follows (not simultaneous)
-    - Verify smooth transition between sounds
-11. Test rapid answers
-    - Answer 3 letters quickly
-    - Verify all encouragements play
-    - Verify no audio overlap/cutting off
-12. Play 3 complete rounds
-    - Track all encouragements over 30 correct answers
-    - Verify no immediate repetitions
-    - Verify good distribution of variety
+### Acceptance Criteria
 
-## Estimated Time
-1 hour
+- [ ] Chores page accessible from child dashboard
+- [ ] Child sees only chores assigned to them
+- [ ] Only pending chores display
+- [ ] Chore card shows title, description, points, due date
+- [ ] Child can mark chore as complete
+- [ ] Optional photo upload works
+- [ ] Completed chore disappears from list
+- [ ] Dashboard widget shows pending chores count
+- [ ] Empty state displays when no chores exist
+- [ ] Points display prominently on each chore
+- [ ] UI is touch-friendly for children
 
-## Dependencies
-- 10 encouragement audio files (user-generated)
-- Text-to-speech tool or recording setup for user
-- Phaser audio system
-- LetterPopScene with correct answer detection
-- Phase 15 particle effects (for integration testing)
+---
 
-## Risks
-- **Audio overlap**: Encouragement plays over letter audio
-  - Mitigation: Use audio event listeners or timed delays
-- **Repetition**: Same encouragement plays multiple times in a row
-  - Mitigation: Queue system with shuffle and anti-repetition logic
-- **Audio quality**: Generated audio sounds robotic or unclear
-  - Mitigation: Test different TTS voices, consider recording real voice
-- **Loading failures**: Audio files don't load properly
-  - Mitigation: Proper error handling, fallback to particle effects only
-- **Timing feels off**: Encouragement too early or too late
-  - Mitigation: Adjustable delays, playtesting with target user
-- **Volume imbalance**: Encouragement too loud or too quiet
-  - Mitigation: Normalize audio files, test volume levels
+### McCabe Complexity
 
-## ADHD-Friendly Design Considerations
-- **Frequent positive reinforcement**: Every correct answer gets verbal praise
-- **Variety prevents habituation**: Different phrases maintain engagement
-- **Immediate feedback**: Encouragement plays within 1 second of correct answer
-- **Natural timing**: Doesn't feel rushed or robotic
-- **Builds confidence**: Verbal praise reinforces sense of accomplishment
-- **No negative audio**: No discouragement on incorrect answers
-- **Short and sweet**: 1-2 second clips maintain focus
-- **Emotionally supportive**: Creates safe, encouraging environment
-- **Dopamine boost**: Varied rewards activate reward pathways
+All functions ≤ 5:
+- ChoresList component: 2
+- ChoreCard component: 2
+- `handleComplete()`: 1
+- `handleMarkComplete()`: 1
 
-## Notes
-- Encouragement audio is critical for emotional engagement
-- Variety is essential - repetition kills the magic
-- Timing must feel natural, not mechanical
-- User-generated audio allows personalization (parent's voice, etc.)
-- Queue system ensures fair distribution of all encouragements
-- Shuffle + anti-repetition = best variety experience
-- Consider volume normalization across all audio files
-- Future: Could add "combo" encouragements for streaks
-- Future: Could add extra-special encouragement for perfect rounds
+---
 
-## Audio File Suggestions for User
+### Dependencies
 
-### Encouragement Phrases (10 clips):
-1. "Great job!"
-2. "Awesome!"
-3. "You're amazing!"
-4. "Well done!"
-5. "Fantastic!"
-6. "You got it!"
-7. "Wonderful!"
-8. "Keep it up!"
-9. "You're doing great!"
-10. "Perfect!"
+- Phase 7: Child Login (requires child authentication)
+- Phase 14: Chore System - Backend (requires chore API)
+- Phase 15: Chore System - Parent Side (parents must create chores first)
 
-### Audio Generation Options:
-- **Text-to-Speech**: Use online TTS tools (Google TTS, Microsoft Azure)
-- **Recording**: Record parent/teacher voice for personal touch
-- **Voice Selection**: Choose friendly, enthusiastic voice
-- **Format**: MP3 or OGG, 44.1kHz, mono is fine
-- **Editing**: Trim silence, normalize volume, add slight reverb (optional)
 
-### Recommended TTS Tools:
-- Google Cloud Text-to-Speech (high quality)
-- Microsoft Azure Speech Service
-- Amazon Polly
-- Natural Reader
-- TTSMaker (free online tool)
+---
 
-## Completion Checklist
-- [ ] User has generated 10 encouragement audio files
-- [ ] Audio files placed in correct directory
-- [ ] PreloadScene loads all encouragement files
-- [ ] EncouragementQueue class implemented
-- [ ] Queue shuffle logic working
-- [ ] Queue anti-repetition logic working
-- [ ] Queue auto-refill working
-- [ ] Integration with correct answer handler complete
-- [ ] Timing coordination with other audio working
-- [ ] Timing coordination with visual effects working
-- [ ] All acceptance criteria met
-- [ ] Tested over multiple rounds
-- [ ] No immediate repetitions confirmed
-- [ ] Variety confirmed over 20+ correct answers
-- [ ] Timing feels natural
-- [ ] Volume levels balanced
-- [ ] No console errors
-- [ ] Ready to proceed to Phase 17
-
-## What's Next (Phase 17)
-- Consider adding combo/streak system
-- Consider adding special encouragement for milestones
-- Consider adding difficulty-based encouragement
-- Potential feature: Let user upload custom audio

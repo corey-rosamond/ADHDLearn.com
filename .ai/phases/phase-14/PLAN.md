@@ -1,599 +1,376 @@
-# Phase 14: Audio Content - Letter Recordings
+# Phase 14: Chore System - Backend
 
-## Goal
-Integrate ElevenLabs-generated audio files for all 26 letters into the Letter Pop game
+**Project:** ADHDLearn.com
+**Phase:** 14 of 36
+**Last Updated:** October 22, 2025
 
-## Context
-This phase brings Aurora's Letter Adventure to life with high-quality audio. Instead of silent letters, each letter will have:
-1. Professional voice recording saying the letter name
-2. Clear, child-friendly pronunciation
-3. Consistent audio quality across all letters
-4. Proper audio loading and playback
+---
 
-This phase focuses ONLY on integration - the user will generate the audio files externally using ElevenLabs. Our job is to:
-- Guide proper file placement
-- Load audio files efficiently
-- Play audio on letter click
-- Handle missing audio gracefully
-- Ensure high audio quality experience
+ Chore System - Backend
 
-**Key Point:** We're integrating audio, not generating it. Audio generation is the user's responsibility using ElevenLabs.
+**Delivers:** Chore infrastructure ready (backend only)
+**Aurora gets:** Nothing yet
+**You get:** Nothing visible yet (infrastructure)
+**Deployed:** Chore API endpoints ready
 
-## Prerequisites
-- Phase 13 completed (ContentProvider working with letters.json)
-- User has ElevenLabs account (free or paid)
-- User can generate 26 audio files
-- /assets/audio/letters/ directory exists
-- letters.json has correct audioPath values
+---
 
-## Tasks
+### What This Phase Delivers
 
-### 1. User Task: Generate Audio Files with ElevenLabs
+Backend foundation for chore system:
+- Database table for chores
+- API endpoints: create, list, update, mark complete, approve
+- Chore assignment to children
+- Points reward system
+- Photo proof upload capability (optional)
+- Status tracking (pending, completed, approved)
 
-**User generates 26 audio files (A-Z) using ElevenLabs:**
+---
 
-**Recommended Settings:**
-- Voice: Child-friendly, clear female voice (e.g., "Bella", "Rachel")
-- Model: Eleven Multilingual v2 (best quality)
-- Stability: 50-60% (natural variation)
-- Clarity: 70-80% (clear pronunciation)
-- Style: 0% (simple letter pronunciation)
+### Database Changes
 
-**Text Prompts for Each Letter:**
-```
-Letter A: "The letter A"
-Letter B: "The letter B"
-Letter C: "The letter C"
-... (continue for all 26 letters)
-```
-
-**File Naming Convention (CRITICAL):**
-```
-letter-a.mp3
-letter-b.mp3
-letter-c.mp3
-letter-d.mp3
-letter-e.mp3
-... (continue through)
-letter-z.mp3
-```
-
-**Requirements:**
-- Format: MP3 (best browser compatibility)
-- Sample Rate: 44.1kHz or 48kHz
-- Bit Rate: 128kbps or higher
-- Mono or Stereo: Either is fine
-- Duration: 1-3 seconds per letter
-- No silence padding at start/end
-- Consistent volume across all files
-
-**File Location:**
-Place all 26 files in: `/assets/audio/letters/`
-
-### 2. Verify Audio File Placement
-
-**Check that all required files exist:**
-```
-/assets/audio/letters/letter-a.mp3
-/assets/audio/letters/letter-b.mp3
-/assets/audio/letters/letter-c.mp3
-... (all 26 letters)
-/assets/audio/letters/letter-z.mp3
+**New Table:** `chores`
+```sql
+CREATE TABLE chores (
+    chore_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    family_id INT NOT NULL,
+    assigned_to_user_id INT,              -- Child user_id
+    created_by_user_id INT NOT NULL,      -- Parent user_id
+    
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    points_value INT NOT NULL DEFAULT 10,
+    
+    status ENUM('pending', 'completed', 'approved', 'rejected') DEFAULT 'pending',
+    
+    -- Proof tracking
+    photo_url VARCHAR(500),
+    completed_at TIMESTAMP NULL,
+    approved_at TIMESTAMP NULL,
+    approved_by_user_id INT,
+    
+    -- Scheduling
+    due_date DATE,
+    is_recurring BOOLEAN DEFAULT FALSE,
+    recurrence_pattern ENUM('daily', 'weekly', 'monthly') NULL,
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (family_id) REFERENCES families(family_id) ON DELETE CASCADE,
+    FOREIGN KEY (assigned_to_user_id) REFERENCES users(user_id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by_user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (approved_by_user_id) REFERENCES users(user_id) ON DELETE SET NULL,
+    
+    INDEX idx_family (family_id),
+    INDEX idx_assigned (assigned_to_user_id, status),
+    INDEX idx_due_date (due_date),
+    INDEX idx_status (status)
+);
 ```
 
-**Validation checklist:**
-- [ ] All 26 files present (no missing letters)
-- [ ] File names all lowercase with hyphens
-- [ ] All files are .mp3 format
-- [ ] File sizes reasonable (typically 20-50KB each)
-- [ ] No corrupted files
-- [ ] Files play correctly in media player
+---
 
-### 3. Update ContentProvider for Audio Loading
+### API Endpoints
 
-**Modify ContentProvider to support audio preloading:**
-
-Add method to get all audio paths:
-```javascript
-getAllAudioPaths() {
-    return this.letters.map(letter => ({
-        key: `letter-${letter.id.toLowerCase()}`,
-        path: letter.audioPath
-    }));
+#### POST /api/chores
+**Purpose:** Create new chore
+**Headers:** `Authorization: Bearer {token}` (Parent role required)
+**Body:**
+```json
+{
+  "title": "Make your bed",
+  "description": "Straighten sheets and fluff pillows",
+  "assignedToUserId": 2,
+  "pointsValue": 5,
+  "dueDate": "2025-10-23",
+  "isRecurring": true,
+  "recurrencePattern": "daily"
+}
+```
+**Response (201):**
+```json
+{
+  "success": true,
+  "chore": {
+    "choreId": 1,
+    "title": "Make your bed",
+    "assignedToUserId": 2,
+    "pointsValue": 5,
+    "status": "pending",
+    "dueDate": "2025-10-23",
+    "createdAt": "2025-10-22T14:00:00Z"
+  }
 }
 ```
 
-### 4. Preload Audio in LetterPopScene
-
-**Add audio loading to preload() method:**
-
-```javascript
-preload() {
-    // Load letter data JSON
-    this.load.json('letterData', 'assets/data/letters.json');
-
-    // Load all letter audio files
-    const contentProvider = ContentProvider.getInstance();
-
-    // After JSON loads, we'll load audio in create()
-    // OR use setPath for cleaner code:
-    this.load.setPath('assets/audio/letters/');
-
-    for (let i = 0; i < 26; i++) {
-        const letter = String.fromCharCode(65 + i); // A-Z
-        this.load.audio(`letter-${letter}`, `letter-${letter.toLowerCase()}.mp3`);
+#### GET /api/chores?assignedTo={userId}&status={status}
+**Purpose:** Get chores list (filtered)
+**Headers:** `Authorization: Bearer {token}`
+**Query Parameters:**
+- `assignedTo` (optional): Filter by child user_id
+- `status` (optional): Filter by status (pending, completed, approved)
+**Response (200):**
+```json
+{
+  "success": true,
+  "chores": [
+    {
+      "choreId": 1,
+      "title": "Make your bed",
+      "description": "Straighten sheets and fluff pillows",
+      "assignedToUserId": 2,
+      "assignedToName": "Aurora",
+      "pointsValue": 5,
+      "status": "pending",
+      "dueDate": "2025-10-23",
+      "createdAt": "2025-10-22T14:00:00Z"
     }
+  ]
 }
 ```
 
-**Alternative approach using ContentProvider:**
-```javascript
-create() {
-    // Initialize ContentProvider first
-    const contentProvider = ContentProvider.getInstance();
-    const letterData = this.cache.json.get('letterData');
-    contentProvider.setData(letterData);
-
-    // Now load audio based on letter data
-    const audioPaths = contentProvider.getAllAudioPaths();
-
-    // Check if audio is already loaded
-    if (!this.audioLoaded) {
-        this.loadAudio(audioPaths);
-    }
+#### PATCH /api/chores/:choreId/complete
+**Purpose:** Mark chore as completed (child action)
+**Headers:** `Authorization: Bearer {token}` (Child role)
+**Body:**
+```json
+{
+  "photoUrl": "https://s3.amazonaws.com/adhdlearn/chores/photo_123.jpg"
+}
+```
+**Response (200):**
+```json
+{
+  "success": true,
+  "chore": {
+    "choreId": 1,
+    "status": "completed",
+    "completedAt": "2025-10-23T08:30:00Z",
+    "photoUrl": "https://s3.amazonaws.com/adhdlearn/chores/photo_123.jpg"
+  }
 }
 ```
 
-### 5. Play Audio on Letter Click
+#### PATCH /api/chores/:choreId/approve
+**Purpose:** Approve completed chore (parent action)
+**Headers:** `Authorization: Bearer {token}` (Parent role required)
+**Body:**
+```json
+{
+  "approved": true
+}
+```
+**Response (200):**
+```json
+{
+  "success": true,
+  "chore": {
+    "choreId": 1,
+    "status": "approved",
+    "approvedAt": "2025-10-23T18:00:00Z",
+    "approvedByUserId": 1,
+    "pointsAwarded": 5
+  },
+  "child": {
+    "userId": 2,
+    "totalPoints": 455
+  }
+}
+```
 
-**Update letter click handler to play audio:**
+**Note:** When approved, points are added to child's `total_points` in users table.
 
+#### DELETE /api/chores/:choreId
+**Purpose:** Delete chore
+**Headers:** `Authorization: Bearer {token}` (Parent role required)
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Chore deleted"
+}
+```
+
+---
+
+### Frontend Changes
+
+**None** - This phase is backend-only infrastructure.
+
+---
+
+### Technical Specifications
+
+**Backend: `backend/src/controllers/choresController.js`:**
 ```javascript
-spawnLetter() {
-    const contentProvider = ContentProvider.getInstance();
-    const letterData = contentProvider.getRandomLetter();
+const pool = require('../db/pool');
 
-    // Create bubble and text (existing code)
-    const bubble = this.add.circle(x, y, 40, 0x4488ff);
-    const letterText = this.add.text(x, y, letterData.letter, {...});
-
-    // Store letter data
-    bubble.letterData = letterData;
-
-    // Make interactive with audio playback
-    bubble.setInteractive();
-    bubble.on('pointerdown', () => {
-        // Play letter audio
-        const audioKey = `letter-${letterData.id}`;
-
-        if (this.sound.get(audioKey)) {
-            this.sound.play(audioKey);
-        } else {
-            console.warn(`Audio not found: ${audioKey}`);
-        }
-
-        // Pop the letter
-        this.popLetter(bubble, letterText);
+async function createChore(req, res) {
+  const { title, description, assignedToUserId, pointsValue, dueDate, isRecurring, recurrencePattern } = req.body;
+  const createdByUserId = req.user.userId;
+  const familyId = req.user.familyId;
+  
+  // Validate parent role
+  if (req.user.role !== 'parent') {
+    return res.status(403).json({
+      success: false,
+      error: 'Only parents can create chores'
     });
-}
-```
-
-### 6. Handle Audio Loading Errors
-
-**Add error handling for missing or failed audio:**
-
-```javascript
-preload() {
-    // Enable error handling
-    this.load.on('loaderror', (file) => {
-        console.error(`Failed to load: ${file.key} - ${file.src}`);
-        // Track missing audio
-        if (!this.missingAudio) this.missingAudio = [];
-        this.missingAudio.push(file.key);
+  }
+  
+  if (!title || !pointsValue) {
+    return res.status(400).json({
+      success: false,
+      error: 'Missing required fields'
     });
-
-    // Load audio files
-    this.loadAllLetterAudio();
+  }
+  
+  try {
+    const [result] = await pool.execute(
+      `INSERT INTO chores (family_id, assigned_to_user_id, created_by_user_id, title, description, points_value, due_date, is_recurring, recurrence_pattern)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [familyId, assignedToUserId || null, createdByUserId, title, description || null, pointsValue, dueDate || null, isRecurring || false, recurrencePattern || null]
+    );
+    
+    const [chores] = await pool.execute(
+      'SELECT * FROM chores WHERE chore_id = ?',
+      [result.insertId]
+    );
+    
+    res.status(201).json({
+      success: true,
+      chore: chores[0]
+    });
+  } catch (error) {
+    console.error('Create chore error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
 }
 
-create() {
-    // Check for missing audio
-    if (this.missingAudio && this.missingAudio.length > 0) {
-        console.warn(`Missing audio files: ${this.missingAudio.join(', ')}`);
-        // Game continues, just without audio for those letters
+// McCabe complexity: 4 (within limit)
+
+async function approveChore(req, res) {
+  const { choreId } = req.params;
+  const { approved } = req.body;
+  const approvedByUserId = req.user.userId;
+  
+  // Validate parent role
+  if (req.user.role !== 'parent') {
+    return res.status(403).json({
+      success: false,
+      error: 'Only parents can approve chores'
+    });
+  }
+  
+  try {
+    // Get chore details
+    const [chores] = await pool.execute(
+      'SELECT * FROM chores WHERE chore_id = ?',
+      [choreId]
+    );
+    
+    if (chores.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Chore not found'
+      });
     }
+    
+    const chore = chores[0];
+    const newStatus = approved ? 'approved' : 'rejected';
+    
+    // Update chore status
+    await pool.execute(
+      `UPDATE chores 
+       SET status = ?, approved_at = CURRENT_TIMESTAMP, approved_by_user_id = ?
+       WHERE chore_id = ?`,
+      [newStatus, approvedByUserId, choreId]
+    );
+    
+    // If approved, award points to child
+    if (approved && chore.assigned_to_user_id) {
+      await pool.execute(
+        'UPDATE users SET total_points = total_points + ? WHERE user_id = ?',
+        [chore.points_value, chore.assigned_to_user_id]
+      );
+    }
+    
+    // Fetch updated child info
+    const [children] = await pool.execute(
+      'SELECT user_id, total_points FROM users WHERE user_id = ?',
+      [chore.assigned_to_user_id]
+    );
+    
+    res.json({
+      success: true,
+      chore: {
+        choreId,
+        status: newStatus,
+        approvedAt: new Date(),
+        approvedByUserId,
+        pointsAwarded: approved ? chore.points_value : 0
+      },
+      child: children[0]
+    });
+  } catch (error) {
+    console.error('Approve chore error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
 }
+
+// McCabe complexity: 5 (at limit, acceptable)
+
+module.exports = {
+  createChore,
+  approveChore,
+  // ... other exports
+};
 ```
 
-### 7. Add Audio Quality Settings (Optional)
+---
 
-**Add volume control and audio configuration:**
+### Acceptance Criteria
 
-```javascript
-create() {
-    // Set default volume for letter sounds
-    this.sound.volume = 0.8; // 80% volume
+- [ ] Chores table created in database
+- [ ] POST /api/chores creates new chore
+- [ ] Only parents can create chores (403 for non-parents)
+- [ ] GET /api/chores returns chores list
+- [ ] Filtering by assignedTo works
+- [ ] Filtering by status works
+- [ ] PATCH /api/chores/:id/complete marks chore completed
+- [ ] Photo URL saved with completion
+- [ ] PATCH /api/chores/:id/approve approves chore
+- [ ] Approving chore adds points to child's total_points
+- [ ] Only parents can approve chores
+- [ ] DELETE /api/chores/:id deletes chore
+- [ ] Recurring chores supported in database
+- [ ] All API endpoints return proper error codes
+- [ ] API validates user roles correctly
 
-    // Configure audio settings
-    this.letterAudioConfig = {
-        volume: 0.8,
-        rate: 1.0, // Playback speed (1.0 = normal)
-        detune: 0,
-        seek: 0,
-        loop: false,
-        delay: 0
-    };
-}
+---
 
-playLetterAudio(letterData) {
-    const audioKey = `letter-${letterData.id}`;
-    this.sound.play(audioKey, this.letterAudioConfig);
-}
-```
+### McCabe Complexity
 
-### 8. Test All 26 Letter Audios
+All functions ≤ 5:
+- `createChore()`: 4
+- `approveChore()`: 5
+- `getChores()`: 3
+- `completeChore()`: 3
 
-**Testing checklist:**
-- [ ] Click letter A - audio plays
-- [ ] Click letter B - audio plays
-- [ ] Continue testing all 26 letters
-- [ ] Verify audio quality is clear
-- [ ] Verify volume is consistent
-- [ ] Check for audio delays or glitches
-- [ ] Test rapid clicking (audio shouldn't overlap badly)
-- [ ] Test with browser muted (visual feedback still works)
-- [ ] Test on different devices/browsers
+---
 
-## Implementation Details
+### Dependencies
 
-### Complete Audio Loading Implementation
+- Phase 4: Parent Registration + Login (requires parent authentication)
+- Phase 7: Child Login (requires child authentication for completion)
 
-```javascript
-class LetterPopScene extends Phaser.Scene {
-    constructor() {
-        super({ key: 'LetterPopScene' });
-        this.contentProvider = null;
-        this.missingAudio = [];
-    }
 
-    preload() {
-        // Load letter data
-        this.load.json('letterData', 'assets/data/letters.json');
+---
 
-        // Track loading errors
-        this.load.on('loaderror', (file) => {
-            console.error(`Failed to load: ${file.key}`);
-            this.missingAudio.push(file.key);
-        });
-
-        // Load all letter audio files
-        this.load.setPath('assets/audio/letters/');
-
-        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-        letters.forEach(letter => {
-            this.load.audio(
-                `letter-${letter}`,
-                `letter-${letter.toLowerCase()}.mp3`
-            );
-        });
-
-        this.load.setPath(''); // Reset path
-    }
-
-    create() {
-        // Initialize ContentProvider
-        this.contentProvider = ContentProvider.getInstance();
-        const letterData = this.cache.json.get('letterData');
-        this.contentProvider.setData(letterData);
-
-        // Check audio loading status
-        if (this.missingAudio.length > 0) {
-            console.warn(`Missing audio for: ${this.missingAudio.join(', ')}`);
-        } else {
-            console.log('All 26 letter audio files loaded successfully!');
-        }
-
-        // Set audio configuration
-        this.sound.volume = 0.8;
-
-        // Continue with game setup
-        this.setupGame();
-    }
-
-    spawnLetter() {
-        const letterData = this.contentProvider.getRandomLetter();
-
-        // Position and create bubble
-        const x = Phaser.Math.Between(100, 700);
-        const y = 550;
-
-        const bubble = this.add.circle(x, y, 40, 0x4488ff);
-        bubble.setStrokeStyle(4, 0xffffff);
-
-        const letterText = this.add.text(x, y, letterData.letter, {
-            fontSize: '48px',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-
-        // Store data
-        bubble.letterData = letterData;
-
-        // Make interactive
-        bubble.setInteractive({ useHandCursor: true });
-
-        bubble.on('pointerdown', () => {
-            // Play audio
-            this.playLetterAudio(letterData);
-
-            // Visual feedback
-            this.popLetter(bubble, letterText);
-        });
-
-        // Float upward animation
-        this.tweens.add({
-            targets: [bubble, letterText],
-            y: -100,
-            duration: 5000,
-            ease: 'Linear',
-            onComplete: () => {
-                bubble.destroy();
-                letterText.destroy();
-                this.spawnLetter(); // Spawn next letter
-            }
-        });
-    }
-
-    playLetterAudio(letterData) {
-        const audioKey = `letter-${letterData.id}`;
-
-        // Check if audio exists
-        if (this.sound.get(audioKey)) {
-            this.sound.play(audioKey, {
-                volume: 0.8,
-                rate: 1.0
-            });
-        } else {
-            console.warn(`Audio not loaded: ${audioKey}`);
-            // Game continues without audio
-        }
-    }
-
-    popLetter(bubble, letterText) {
-        // Stop movement tween
-        this.tweens.killTweensOf([bubble, letterText]);
-
-        // Pop animation
-        this.tweens.add({
-            targets: [bubble, letterText],
-            scaleX: 1.5,
-            scaleY: 1.5,
-            alpha: 0,
-            duration: 300,
-            ease: 'Power2',
-            onComplete: () => {
-                bubble.destroy();
-                letterText.destroy();
-            }
-        });
-    }
-}
-```
-
-### Audio File Naming Reference
-
-```
-Letter | Audio Key      | File Name
--------|----------------|------------------
-A      | letter-A       | letter-a.mp3
-B      | letter-B       | letter-b.mp3
-C      | letter-C       | letter-c.mp3
-D      | letter-D       | letter-d.mp3
-E      | letter-E       | letter-e.mp3
-F      | letter-F       | letter-f.mp3
-G      | letter-G       | letter-g.mp3
-H      | letter-H       | letter-h.mp3
-I      | letter-I       | letter-i.mp3
-J      | letter-J       | letter-j.mp3
-K      | letter-K       | letter-k.mp3
-L      | letter-L       | letter-l.mp3
-M      | letter-M       | letter-m.mp3
-N      | letter-N       | letter-n.mp3
-O      | letter-O       | letter-o.mp3
-P      | letter-P       | letter-p.mp3
-Q      | letter-Q       | letter-q.mp3
-R      | letter-R       | letter-r.mp3
-S      | letter-S       | letter-s.mp3
-T      | letter-T       | letter-t.mp3
-U      | letter-U       | letter-u.mp3
-V      | letter-V       | letter-v.mp3
-W      | letter-W       | letter-w.mp3
-X      | letter-X       | letter-x.mp3
-Y      | letter-Y       | letter-y.mp3
-Z      | letter-Z       | letter-z.mp3
-```
-
-## Acceptance Criteria
-- [ ] User has generated all 26 audio files using ElevenLabs
-- [ ] All 26 .mp3 files placed in /assets/audio/letters/
-- [ ] File names follow lowercase convention (letter-a.mp3, etc.)
-- [ ] All audio files are valid MP3 format
-- [ ] LetterPopScene preloads all 26 audio files
-- [ ] Audio loading completes without errors
-- [ ] Clicking letter A plays "The letter A" audio
-- [ ] Clicking letter B plays "The letter B" audio
-- [ ] All 26 letters play correct audio when clicked
-- [ ] Audio quality is high and clear
-- [ ] Audio volume is consistent across all letters
-- [ ] No missing file errors in console
-- [ ] No audio glitches or distortion
-- [ ] Audio playback doesn't block game interaction
-- [ ] Rapid clicking doesn't cause audio issues
-- [ ] Game continues if audio fails to load (graceful degradation)
-- [ ] Audio works in Chrome, Firefox, and Edge
-- [ ] Audio plays on mobile devices
-
-## Testing Steps
-1. **User generates 26 audio files:**
-   - Go to ElevenLabs
-   - Generate audio for "The letter A" through "The letter Z"
-   - Download all 26 MP3 files
-   - Rename files to match convention
-
-2. **Place audio files:**
-   - Create /assets/audio/letters/ directory if needed
-   - Copy all 26 MP3 files into directory
-   - Verify all files present
-
-3. **Test audio loading:**
-   - Open game in browser
-   - Open browser console
-   - Check for "All 26 letter audio files loaded successfully!"
-   - Verify no 404 errors for audio files
-
-4. **Test audio playback:**
-   - Play game
-   - Click on letter A - verify audio plays
-   - Click on letter B - verify different audio plays
-   - Continue testing all 26 letters
-
-5. **Test audio quality:**
-   - Listen for clarity
-   - Check volume consistency
-   - Verify no distortion or clipping
-   - Test on different devices
-
-6. **Test edge cases:**
-   - Rapid click same letter multiple times
-   - Click multiple different letters quickly
-   - Mute browser - verify visual feedback works
-   - Test with slow network (throttling)
-
-7. **Test error handling:**
-   - Temporarily rename one audio file
-   - Reload game
-   - Verify graceful error handling
-   - Check game still playable
-   - Restore file
-
-8. **Cross-browser testing:**
-   - Test in Chrome
-   - Test in Firefox
-   - Test in Edge
-   - Test on mobile (iOS Safari, Chrome Mobile)
-
-## Estimated Time
-30 minutes (integration only - not counting user's audio generation time)
-
-**Breakdown:**
-- 5 min: Verify audio files placed correctly
-- 10 min: Implement audio loading in preload()
-- 10 min: Add audio playback on letter click
-- 5 min: Test all 26 letters
-
-**User's time (separate):**
-- 30-60 min: Generate 26 audio files in ElevenLabs
-- 10 min: Rename and organize files
-- 5 min: Copy files to project directory
-
-## Dependencies
-- Phase 13 completed (ContentProvider working)
-- ElevenLabs account (user's responsibility)
-- 26 audio files generated (user's task)
-- Browser supports MP3 playback (all modern browsers)
-- Phaser audio system functional
-
-## Risks
-- **Missing audio files**: User forgets to generate some letters
-  - Mitigation: Checklist, error detection, graceful handling
-- **Incorrect file naming**: Files named wrong (Letter-A.mp3 vs letter-a.mp3)
-  - Mitigation: Clear documentation, validation script
-- **Audio quality issues**: Poor voice quality or background noise
-  - Mitigation: User regenerates with better settings
-- **File format issues**: Wrong format (WAV instead of MP3)
-  - Mitigation: Documentation specifies MP3
-- **Large file sizes**: Audio files too large, slow loading
-  - Mitigation: Recommend 128kbps MP3 compression
-- **Browser audio policy**: Browsers block audio without user interaction
-  - Mitigation: Audio plays on click (user interaction)
-- **Mobile audio issues**: iOS requires specific handling
-  - Mitigation: Test on iOS, use proper audio context
-
-## Audio Generation Guide for User
-
-### Step-by-Step ElevenLabs Instructions:
-
-1. **Sign up/Login to ElevenLabs:**
-   - Go to elevenlabs.io
-   - Create free account or login
-
-2. **Choose a Voice:**
-   - Click "Voices"
-   - Recommended: "Bella" or "Rachel" (clear, friendly)
-   - Preview voice to ensure quality
-
-3. **Generate Each Letter:**
-   - Go to "Text to Speech"
-   - Select your chosen voice
-   - Settings:
-     - Model: Eleven Multilingual v2
-     - Stability: 50-60%
-     - Clarity: 70-80%
-   - Enter text: "The letter A"
-   - Click "Generate"
-   - Download MP3
-
-4. **Repeat for All Letters:**
-   - Generate B through Z
-   - Keep voice and settings consistent
-   - Download each as MP3
-
-5. **Rename Files:**
-   - Rename "The letter A.mp3" → "letter-a.mp3"
-   - Use lowercase letters
-   - Use hyphens, not spaces
-   - Repeat for all 26 files
-
-6. **Place Files in Project:**
-   - Copy all 26 files
-   - Paste into: /assets/audio/letters/
-   - Verify all files present
-
-### Batch Generation Tips:
-- Generate multiple letters in one session
-- Keep browser tab open to maintain settings
-- Download all before renaming
-- Use batch rename tool if available
-
-### Quality Check:
-- Play each file in media player
-- Verify audio is clear
-- Check no background noise
-- Ensure consistent volume
-- Confirm ~1-3 second duration
-
-## Notes
-- This phase is INTEGRATION only - user generates audio
-- MP3 format for best browser compatibility
-- Consistent naming critical for loading
-- Graceful degradation if audio missing
-- Audio enhances learning but isn't required for gameplay
-- Future phases can add phonics (letter sounds, not names)
-- Consider adding visual indicator that audio is playing
-- Could add setting to toggle audio on/off
-
-## Completion Checklist
-- [ ] User has generated all 26 audio files
-- [ ] All files placed in /assets/audio/letters/
-- [ ] File names verified (letter-a.mp3 through letter-z.mp3)
-- [ ] Audio loading implemented in preload()
-- [ ] Audio playback implemented on letter click
-- [ ] All 26 letters tested individually
-- [ ] Audio quality confirmed high and clear
-- [ ] Volume consistency verified
-- [ ] Error handling tested (missing file scenario)
-- [ ] Console shows no audio loading errors
-- [ ] Cross-browser testing completed
-- [ ] Mobile testing completed (if available)
-- [ ] Game plays smoothly with audio
-- [ ] Ready to proceed to Phase 15
