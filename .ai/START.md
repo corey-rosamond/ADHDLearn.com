@@ -231,6 +231,22 @@ Current metrics on Samsung Galaxy Tab S7 FE:
 - ✅ Firewall active (only ports 22, 80, 443 open)
 - ✅ PM2 installed and configured
 
+### Next: Phase 1 - Project Foundation
+
+**To begin Phase 1, read these files in order:**
+
+1. `.ai/phases/phase-01/PLAN.md` - Implementation plan
+2. `.ai/phases/phase-01/GHERKIN.md` - Acceptance criteria & testing scenarios
+3. `.ai/phases/phase-01/UML.md` - Architecture diagrams
+4. `.ai/phases/phase-01/WIREFRAMES.md` - Design specifications
+
+**Phase 1 delivers:**
+- Local development environment setup
+- Project directory structure
+- Git repository configuration
+- Build scripts and tooling
+- Development server setup
+
 ---
 
 ## Development Roadmap
