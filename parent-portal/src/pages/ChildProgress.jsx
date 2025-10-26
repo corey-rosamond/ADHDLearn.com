@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getChildSessions, getChildAnalytics } from '../services/children';
+import StatsCard from '../components/StatsCard';
+import SessionTable from '../components/SessionTable';
+import SessionDetailsModal from '../components/SessionDetailsModal';
 
-// ChildProgress page
+// ChildProgress page (refactored with components)
 // McCabe complexity: all functions ≤ 4
 export default function ChildProgress() {
   const { childId } = useParams();
@@ -10,6 +13,7 @@ export default function ChildProgress() {
   const [sessions, setSessions] = useState([]);
   const [stats, setStats] = useState(null);
   const [analytics, setAnalytics] = useState(null);
+  const [selectedSession, setSelectedSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -36,25 +40,15 @@ export default function ChildProgress() {
     }
   }
 
-  // McCabe: 2
-  function formatDate(dateString) {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit'
-    });
-  }
+  // McCabe: 1
+  const handleSessionClick = (session) => {
+    setSelectedSession(session);
+  };
 
-  // McCabe: 2
-  function formatDuration(seconds) {
-    if (!seconds) return '0s';
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return minutes > 0 ? `${minutes}m ${secs}s` : `${secs}s`;
-  }
+  // McCabe: 1
+  const handleCloseModal = () => {
+    setSelectedSession(null);
+  };
 
   if (loading) {
     return <div style={styles.loading}>Loading child data...</div>;
@@ -90,70 +84,70 @@ export default function ChildProgress() {
       <div style={styles.content}>
         {/* Stats Overview */}
         <div style={styles.statsGrid}>
-          <div style={styles.statCard}>
-            <div style={styles.statIcon}>📚</div>
-            <div style={styles.statLabel}>Total Sessions</div>
-            <div style={styles.statValue}>{stats?.totalSessions || 0}</div>
-          </div>
-          <div style={styles.statCard}>
-            <div style={styles.statIcon}>⏱️</div>
-            <div style={styles.statLabel}>Total Time</div>
-            <div style={styles.statValue}>{stats?.totalTimeMinutes || 0} min</div>
-          </div>
-          <div style={styles.statCard}>
-            <div style={styles.statIcon}>📈</div>
-            <div style={styles.statLabel}>Avg Score</div>
-            <div style={styles.statValue}>{stats?.averageScore || 0}</div>
-          </div>
-          <div style={styles.statCard}>
-            <div style={styles.statIcon}>🎯</div>
-            <div style={styles.statLabel}>Avg Accuracy</div>
-            <div style={styles.statValue}>{stats?.averageAccuracy || 0}%</div>
-          </div>
+          <StatsCard icon="📚" label="Total Sessions" value={stats?.totalSessions || 0} />
+          <StatsCard icon="⏱️" label="Total Time" value={`${stats?.totalTimeMinutes || 0} min`} />
+          <StatsCard icon="📈" label="Avg Score" value={stats?.averageScore || 0} />
+          <StatsCard icon="🎯" label="Avg Accuracy" value={`${stats?.averageAccuracy || 0}%`} />
         </div>
 
-        {/* Favorite Activity */}
-        {analytics?.favoriteActivity && (
+        {/* Favorite Activity & Streaks */}
+        {(analytics?.favoriteActivity || analytics?.currentStreak > 0) && (
           <div style={styles.infoCard}>
-            <h3 style={styles.cardTitle}>Favorite Activity</h3>
-            <p style={styles.favoriteText}>{analytics.favoriteActivity}</p>
+            <h3 style={styles.cardTitle}>Quick Stats</h3>
+            <div style={styles.infoGrid}>
+              {analytics?.favoriteActivity && (
+                <div>
+                  <span style={styles.infoLabel}>Favorite Activity:</span>
+                  <span style={styles.favoriteText}> {analytics.favoriteActivity}</span>
+                </div>
+              )}
+              {analytics?.currentStreak > 0 && (
+                <div>
+                  <span style={styles.infoLabel}>Current Streak:</span>
+                  <span style={styles.favoriteText}> {analytics.currentStreak} days 🔥</span>
+                </div>
+              )}
+              {analytics?.longestStreak > 0 && (
+                <div>
+                  <span style={styles.infoLabel}>Longest Streak:</span>
+                  <span style={styles.favoriteText}> {analytics.longestStreak} days ⭐</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Confusion Pairs */}
+        {analytics?.confusionPairs && analytics.confusionPairs.length > 0 && (
+          <div style={styles.infoCard}>
+            <h3 style={styles.cardTitle}>Most Common Mistakes</h3>
+            <div style={styles.confusionList}>
+              {analytics.confusionPairs.map((pair, index) => (
+                <div key={index} style={styles.confusionItem}>
+                  <span style={styles.confusionLetters}>{pair.letter1} ↔ {pair.letter2}</span>
+                  <span style={styles.confusionCount}>{pair.count} times ({pair.percentage}%)</span>
+                </div>
+              ))}
+            </div>
+            {analytics.confusionPairs[0] && (
+              <p style={styles.insight}>
+                💡 Insight: {child.firstName} frequently confuses {analytics.confusionPairs[0].letter1} and {analytics.confusionPairs[0].letter2} ({analytics.confusionPairs[0].count} times).
+                This is common in early readers. Consider focused practice on these letters.
+              </p>
+            )}
           </div>
         )}
 
         {/* Session History */}
         <div style={styles.tableCard}>
           <h3 style={styles.cardTitle}>Recent Sessions</h3>
-
-          {sessions.length === 0 ? (
-            <p style={styles.emptyText}>No sessions recorded yet</p>
-          ) : (
-            <div style={styles.tableWrapper}>
-              <table style={styles.table}>
-                <thead>
-                  <tr>
-                    <th style={styles.th}>Date</th>
-                    <th style={styles.th}>Game</th>
-                    <th style={styles.th}>Score</th>
-                    <th style={styles.th}>Accuracy</th>
-                    <th style={styles.th}>Duration</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sessions.map((session, index) => (
-                    <tr key={session.sessionId} style={index % 2 === 0 ? styles.trEven : styles.trOdd}>
-                      <td style={styles.td}>{formatDate(session.playedAt)}</td>
-                      <td style={styles.td}>{session.gameName}</td>
-                      <td style={styles.td}>{session.score}</td>
-                      <td style={styles.td}>{session.accuracyPercentage}%</td>
-                      <td style={styles.td}>{formatDuration(session.durationSeconds)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <SessionTable sessions={sessions} onSessionClick={handleSessionClick} />
         </div>
       </div>
+
+      {selectedSession && (
+        <SessionDetailsModal session={selectedSession} onClose={handleCloseModal} />
+      )}
     </div>
   );
 }
@@ -216,27 +210,6 @@ const styles = {
     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
     gap: '16px'
   },
-  statCard: {
-    background: '#fff',
-    borderRadius: '12px',
-    padding: '24px',
-    textAlign: 'center',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-  },
-  statIcon: {
-    fontSize: '32px',
-    marginBottom: '8px'
-  },
-  statLabel: {
-    fontSize: '14px',
-    color: '#666',
-    marginBottom: '8px'
-  },
-  statValue: {
-    fontSize: '28px',
-    fontWeight: 'bold',
-    color: '#667eea'
-  },
   infoCard: {
     background: '#fff',
     borderRadius: '12px',
@@ -249,10 +222,51 @@ const styles = {
     color: '#333',
     margin: '0 0 16px'
   },
+  infoGrid: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px'
+  },
+  infoLabel: {
+    fontSize: '14px',
+    color: '#666',
+    fontWeight: '600'
+  },
   favoriteText: {
-    fontSize: '18px',
+    fontSize: '16px',
     color: '#667eea',
-    fontWeight: '600',
+    fontWeight: '600'
+  },
+  confusionList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+    marginBottom: '16px'
+  },
+  confusionItem: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    padding: '12px',
+    background: '#f9f9f9',
+    borderRadius: '8px'
+  },
+  confusionLetters: {
+    fontSize: '18px',
+    fontWeight: 'bold',
+    color: '#333'
+  },
+  confusionCount: {
+    fontSize: '14px',
+    color: '#666'
+  },
+  insight: {
+    padding: '16px',
+    background: '#fff4e1',
+    borderLeft: '4px solid #ffa500',
+    borderRadius: '8px',
+    fontSize: '14px',
+    color: '#666',
+    lineHeight: '1.6',
     margin: 0
   },
   tableCard: {
@@ -260,37 +274,5 @@ const styles = {
     borderRadius: '12px',
     padding: '24px',
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-  },
-  emptyText: {
-    textAlign: 'center',
-    color: '#999',
-    padding: '40px',
-    margin: 0
-  },
-  tableWrapper: {
-    overflowX: 'auto'
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse'
-  },
-  th: {
-    padding: '12px',
-    textAlign: 'left',
-    borderBottom: '2px solid #eee',
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#666'
-  },
-  td: {
-    padding: '12px',
-    fontSize: '14px',
-    color: '#333'
-  },
-  trEven: {
-    background: '#f9f9f9'
-  },
-  trOdd: {
-    background: '#fff'
   }
 };

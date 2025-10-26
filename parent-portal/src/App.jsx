@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/DashboardNew';
 import ChildProgress from './pages/ChildProgress';
+import ActivityAnalytics from './pages/ActivityAnalytics';
 
 // Protected route component
 // McCabe complexity: 2
@@ -40,6 +41,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ChildProgress />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/children/:childId/activities/:activityName"
+            element={
+              <ProtectedRoute>
+                <ActivityAnalytics />
               </ProtectedRoute>
             }
           />

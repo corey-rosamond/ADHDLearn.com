@@ -17,13 +17,16 @@ router.get('/families/:familyId/children', async (req, res) => {
   try {
     const { familyId } = req.params;
 
-    // Query children from the family
+    // Query children from the family with last active date
     const [children] = await pool.execute(
-      `SELECT user_id, first_name, last_name, avatar_url, birth_date,
-              total_points, current_streak, longest_streak, created_at
-       FROM users
-       WHERE family_id = ? AND role = 'child' AND is_active = TRUE
-       ORDER BY created_at ASC`,
+      `SELECT u.user_id, u.first_name, u.last_name, u.avatar_url, u.birth_date,
+              u.total_points, u.current_streak, u.longest_streak, u.created_at,
+              MAX(gs.played_at) as last_active
+       FROM users u
+       LEFT JOIN game_sessions gs ON u.user_id = gs.user_id
+       WHERE u.family_id = ? AND u.role = 'child' AND u.is_active = TRUE
+       GROUP BY u.user_id
+       ORDER BY u.created_at ASC`,
       [familyId]
     );
 
@@ -38,7 +41,8 @@ router.get('/families/:familyId/children', async (req, res) => {
         totalPoints: child.total_points,
         currentStreak: child.current_streak,
         longestStreak: child.longest_streak,
-        createdAt: child.created_at
+        createdAt: child.created_at,
+        lastActive: child.last_active
       }))
     });
   } catch (error) {
@@ -61,6 +65,21 @@ router.get('/children/:childId/sessions', async (req, res) => {
     const gameName = req.query.game;
     const limit = Math.min(parseInt(req.query.limit) || 50, 100);
     const offset = parseInt(req.query.offset) || 0;
+
+    // Get child info first
+    const [children] = await pool.execute(
+      `SELECT user_id, first_name, avatar_url FROM users WHERE user_id = ?`,
+      [childId]
+    );
+
+    if (children.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Child not found'
+      });
+    }
+
+    const child = children[0];
 
     // Build query dynamically based on filters
     let query = `
@@ -105,6 +124,11 @@ router.get('/children/:childId/sessions', async (req, res) => {
 
     res.json({
       success: true,
+      child: {
+        userId: child.user_id,
+        firstName: child.first_name,
+        avatar: child.avatar_url
+      },
       sessions: sessions.map(s => ({
         sessionId: s.session_id,
         gameName: s.game_name,
@@ -137,6 +161,61 @@ router.get('/children/:childId/sessions', async (req, res) => {
     });
   }
 });
+
+// Helper function to calculate streaks
+// McCabe complexity: 5
+function calculateStreaks(sessionDates) {
+  if (sessionDates.length === 0) {
+    return { currentStreak: 0, longestStreak: 0 };
+  }
+
+  // Get unique dates (YYYY-MM-DD format)
+  const uniqueDates = [...new Set(sessionDates.map(d =>
+    new Date(d).toISOString().split('T')[0]
+  ))].sort().reverse();
+
+  let currentStreak = 0;
+  let longestStreak = 0;
+  let tempStreak = 1;
+
+  const today = new Date().toISOString().split('T')[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+  // Calculate current streak (must include today or yesterday)
+  if (uniqueDates[0] === today || uniqueDates[0] === yesterday) {
+    currentStreak = 1;
+    for (let i = 1; i < uniqueDates.length; i++) {
+      const prevDate = new Date(uniqueDates[i - 1]);
+      const currDate = new Date(uniqueDates[i]);
+      const dayDiff = (prevDate - currDate) / 86400000;
+
+      if (dayDiff === 1) {
+        currentStreak++;
+      } else {
+        break;
+      }
+    }
+  }
+
+  // Calculate longest streak
+  longestStreak = tempStreak;
+  for (let i = 1; i < uniqueDates.length; i++) {
+    const prevDate = new Date(uniqueDates[i - 1]);
+    const currDate = new Date(uniqueDates[i]);
+    const dayDiff = (prevDate - currDate) / 86400000;
+
+    if (dayDiff === 1) {
+      tempStreak++;
+      if (tempStreak > longestStreak) {
+        longestStreak = tempStreak;
+      }
+    } else {
+      tempStreak = 1;
+    }
+  }
+
+  return { currentStreak, longestStreak };
+}
 
 // =============================================================================
 // GET /api/children/:childId/analytics
@@ -175,6 +254,52 @@ router.get('/children/:childId/analytics', async (req, res) => {
 
     const favoriteActivity = favorites.length > 0 ? favorites[0].game_name : null;
 
+    // Get all session dates for streak calculation
+    const [sessionDates] = await pool.execute(
+      `SELECT played_at FROM game_sessions WHERE user_id = ? ORDER BY played_at DESC`,
+      [childId]
+    );
+
+    const streaks = calculateStreaks(sessionDates.map(s => s.played_at));
+
+    // Get confusion pairs (letters child mixes up)
+    const [confusions] = await pool.execute(
+      `SELECT
+        LEAST(letter_shown, letter_selected) as letter1,
+        GREATEST(letter_shown, letter_selected) as letter2,
+        COUNT(*) as count
+       FROM letter_attempts
+       WHERE session_id IN (
+         SELECT session_id FROM game_sessions WHERE user_id = ?
+       )
+       AND is_correct = 0
+       AND letter_shown != letter_selected
+       GROUP BY letter1, letter2
+       ORDER BY count DESC
+       LIMIT 10`,
+      [childId]
+    );
+
+    // Calculate total mistakes for percentage
+    const [totalMistakes] = await pool.execute(
+      `SELECT COUNT(*) as total
+       FROM letter_attempts
+       WHERE session_id IN (
+         SELECT session_id FROM game_sessions WHERE user_id = ?
+       )
+       AND is_correct = 0`,
+      [childId]
+    );
+
+    const total = totalMistakes[0]?.total || 1;
+
+    const confusionPairs = confusions.map(c => ({
+      letter1: c.letter1,
+      letter2: c.letter2,
+      count: c.count,
+      percentage: Math.round((c.count / total) * 100)
+    }));
+
     res.json({
       success: true,
       child: {
@@ -182,10 +307,10 @@ router.get('/children/:childId/analytics', async (req, res) => {
         firstName: child.first_name,
         avatar: child.avatar_url
       },
-      confusionPairs: [], // TODO: Implement in later phase when we track incorrect answers
+      confusionPairs,
       favoriteActivity,
-      currentStreak: 0, // TODO: Calculate from session dates
-      longestStreak: 0  // TODO: Calculate from session history
+      currentStreak: streaks.currentStreak,
+      longestStreak: streaks.longestStreak
     });
   } catch (error) {
     console.error('Error fetching child analytics:', error);

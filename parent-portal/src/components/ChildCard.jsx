@@ -15,6 +15,23 @@ export default function ChildCard({ child }) {
     ? Math.floor((Date.now() - new Date(child.birthDate)) / (365.25 * 24 * 60 * 60 * 1000))
     : null;
 
+  // Format last active time
+  const formatLastActive = (dateString) => {
+    if (!dateString) return 'Never';
+
+    const now = new Date();
+    const lastActive = new Date(dateString);
+    const diffMs = now - lastActive;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 60) return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+    return lastActive.toLocaleDateString();
+  };
+
   return (
     <div style={styles.card}>
       <div style={styles.header}>
@@ -24,6 +41,7 @@ export default function ChildCard({ child }) {
         <div style={styles.info}>
           <h3 style={styles.name}>{child.firstName} {child.lastName}</h3>
           {age && <p style={styles.age}>Age: {age} years old</p>}
+          <p style={styles.lastActive}>Last active: {formatLastActive(child.lastActive)}</p>
         </div>
       </div>
 
@@ -85,6 +103,11 @@ const styles = {
     margin: '4px 0 0',
     fontSize: '14px',
     color: '#666'
+  },
+  lastActive: {
+    margin: '4px 0 0',
+    fontSize: '12px',
+    color: '#999'
   },
   stats: {
     display: 'grid',

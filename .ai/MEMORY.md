@@ -8,9 +8,44 @@
 
 ## Current Phase Status
 
-**Phase:** 3 (Database + Backend + Score Persistence)
+**Phase:** 5 (Parent Dashboard - View Children & Sessions)
 **Status:** COMPLETED ✅
 **Blockers:** None
+
+**Phase 5 Accomplishments (100% COMPLETE):**
+
+**Database:**
+- ✅ Added user_id to game_sessions with foreign key
+- ✅ Created letter_attempts table for confusion tracking
+- ✅ Sample data: 60 letter attempts with B↔D, P↔Q, M↔N confusions
+
+**Backend API (all McCabe ≤ 5):**
+- ✅ GET /api/families/:familyId/children - includes last_active
+- ✅ GET /api/children/:childId/sessions - includes child object
+- ✅ GET /api/children/:childId/analytics - confusion pairs + streaks
+- ✅ Streak calculation algorithm (currentStreak, longestStreak)
+
+**Frontend (parent-portal):**
+- ✅ SessionTable.jsx component (McCabe: 3)
+- ✅ StatsCard.jsx component (McCabe: 1)
+- ✅ SessionDetailsModal.jsx component (McCabe: 3)
+- ✅ ActivityAnalytics.jsx page (McCabe: 4)
+- ✅ ChildCard with last active (McCabe: 4)
+- ✅ ChildProgress refactored with components (McCabe: 4)
+- ✅ Route: /children/:childId/activities/:activityName
+
+**Features:**
+- ✅ Confusion pairs with percentages and insights
+- ✅ Session details modal (click session row)
+- ✅ Last active time display
+- ✅ Game-specific analytics page
+- ✅ All components properly separated per PLAN.md
+
+**Phase 4 Accomplishments:**
+
+- ✅ Parent registration and login endpoints
+- ✅ JWT authentication
+- ✅ Protected routes in parent portal
 
 **Phase 3 Accomplishments:**
 
