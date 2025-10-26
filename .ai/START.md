@@ -60,12 +60,14 @@ Before doing ANYTHING, you MUST read these files in order:
   - All components separated per PLAN.md
   - Deployed: https://parent-staging.adhdlearn.com
   - API: https://api.adhdlearn.com
-- ✅ Phase 6: Family Management - 100% PLAN.md Coverage ✅
+- ✅ Phase 6: Family Management - 12/12 tests ✅
   - Add child with name, birth date, avatar, PIN
   - Edit child information (optional PIN change)
   - Delete child (soft delete, keeps all data)
   - PIN validation (4 digits, no 0000/1111, unique per family)
   - Avatar picker (26 emoji options)
+  - E2E testing with Playwright (12/12 GHERKIN scenarios passing)
+  - Test infrastructure: helpers.js with reusable test utilities
   - All McCabe complexity ≤ 5
   - Components: AddChildModal, EditChildModal, DeleteConfirmationModal, PinInput, AvatarPicker
   - Backend: POST/PUT/DELETE /api/children endpoints
