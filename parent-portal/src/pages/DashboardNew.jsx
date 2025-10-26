@@ -93,7 +93,7 @@ export default function DashboardNew() {
           ) : (
             <div style={styles.childrenGrid}>
               {children.map(child => (
-                <ChildCard key={child.userId} child={child} />
+                <ChildCard key={child.userId} child={child} onUpdate={loadChildren} />
               ))}
             </div>
           )}

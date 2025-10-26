@@ -1,13 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import EditChildModal from './EditChildModal';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 // ChildCard component
-// McCabe complexity: 2
-export default function ChildCard({ child }) {
+// McCabe complexity: 3
+export default function ChildCard({ child, onUpdate }) {
   const navigate = useNavigate();
+  const [showEdit, setShowEdit] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
 
   const handleViewProgress = () => {
     navigate(`/children/${child.userId}/progress`);
+  };
+
+  const handleEdit = () => {
+    setShowEdit(true);
+  };
+
+  const handleDelete = () => {
+    setShowDelete(true);
+  };
+
+  const handleUpdateSuccess = () => {
+    setShowEdit(false);
+    if (onUpdate) onUpdate();
+  };
+
+  const handleDeleteSuccess = () => {
+    setShowDelete(false);
+    if (onUpdate) onUpdate();
   };
 
   // Calculate age from birth date
@@ -56,9 +78,33 @@ export default function ChildCard({ child }) {
         </div>
       </div>
 
-      <button onClick={handleViewProgress} style={styles.button}>
-        View Progress
-      </button>
+      <div style={styles.buttonGroup}>
+        <button onClick={handleViewProgress} style={styles.button}>
+          View Progress
+        </button>
+        <button onClick={handleEdit} style={styles.editButton}>
+          Edit
+        </button>
+        <button onClick={handleDelete} style={styles.deleteButton}>
+          Delete
+        </button>
+      </div>
+
+      {showEdit && (
+        <EditChildModal
+          child={child}
+          onClose={() => setShowEdit(false)}
+          onSuccess={handleUpdateSuccess}
+        />
+      )}
+
+      {showDelete && (
+        <DeleteConfirmationModal
+          child={child}
+          onClose={() => setShowDelete(false)}
+          onSuccess={handleDeleteSuccess}
+        />
+      )}
     </div>
   );
 }
@@ -130,13 +176,40 @@ const styles = {
     fontWeight: '600',
     color: '#667eea'
   },
+  buttonGroup: {
+    display: 'flex',
+    gap: '8px'
+  },
   button: {
+    flex: 1,
     padding: '12px',
     background: '#667eea',
     color: '#fff',
     border: 'none',
     borderRadius: '8px',
-    fontSize: '16px',
+    fontSize: '14px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.2s'
+  },
+  editButton: {
+    padding: '12px 16px',
+    background: '#f5f5f5',
+    color: '#666',
+    border: '1px solid #ddd',
+    borderRadius: '8px',
+    fontSize: '14px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.2s'
+  },
+  deleteButton: {
+    padding: '12px 16px',
+    background: '#ffe6e6',
+    color: '#d32f2f',
+    border: '1px solid #ffcccc',
+    borderRadius: '8px',
+    fontSize: '14px',
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.2s'
