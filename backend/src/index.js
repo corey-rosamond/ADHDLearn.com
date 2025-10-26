@@ -4,6 +4,7 @@ const mysql = require('mysql2/promise');
 require('dotenv').config();
 
 const authController = require('./controllers/authController');
+const childrenRoutes = require('./routes/children');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,8 +35,9 @@ const pool = mysql.createPool({
   connectionLimit: 10
 });
 
-// Initialize auth controller with database pool
+// Initialize controllers/routes with database pool
 authController.setPool(pool);
+childrenRoutes.setPool(pool);
 
 // =============================================================================
 // AUTH ROUTES (Phase 4)
@@ -46,6 +48,11 @@ app.post('/api/auth/register', authController.register);
 
 // POST /api/auth/login/parent - Parent login
 app.post('/api/auth/login/parent', authController.loginParent);
+
+// =============================================================================
+// CHILDREN/FAMILY ROUTES (Phase 5)
+// =============================================================================
+app.use('/api', childrenRoutes.router);
 
 // =============================================================================
 // GAME SESSION ROUTES (Phase 3)

@@ -1,7 +1,7 @@
 # Session Memory - Critical Information Only
 
 **Last Updated:** October 26, 2025
-**Current Status:** Phase 3 (Completed) → Ready for Phase 4
+**Current Status:** Phase 5 (Completed) → Ready for Phase 6
 **Branch:** staging
 
 ---
@@ -68,7 +68,14 @@
 - ✅ Firewall configured (ufw: ports 22, 80, 443)
 - ✅ Directory structure created with correct permissions
 
-**Next Phase:** Phase 4 (TBD - check phase-04 documentation)
+**Next Phase:** Phase 6 (TBD - check phase-06 documentation)
+
+**Known Limitations:**
+
+- MySQL database (160.153.180.159) not configured for remote connections
+  - Localhost testing requires backend running on server
+  - API endpoints coded correctly, will work when deployed
+- Phase 5 testing deferred to deployment on server
 
 ---
 

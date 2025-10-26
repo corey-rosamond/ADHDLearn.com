@@ -3,7 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
+import Dashboard from './pages/DashboardNew';
+import ChildProgress from './pages/ChildProgress';
 
 // Protected route component
 // McCabe complexity: 2
@@ -31,6 +32,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/children/:childId/progress"
+            element={
+              <ProtectedRoute>
+                <ChildProgress />
               </ProtectedRoute>
             }
           />
