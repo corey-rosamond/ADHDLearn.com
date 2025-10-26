@@ -39,7 +39,7 @@ export default function AvatarPicker({ value, onChange }) {
   ];
 
   return (
-    <div style={styles.grid}>
+    <div style={styles.grid} data-testid="avatar-picker">
       {avatars.map((avatar) => (
         <button
           key={avatar.emoji}

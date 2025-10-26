@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { getChildren } from '../services/children';
 import ChildCard from '../components/ChildCard';
 import AddChildModal from '../components/AddChildModal';
+import Toast from '../components/Toast';
 
 // Dashboard page with children list
 // McCabe complexity: 4
@@ -14,10 +15,20 @@ export default function DashboardNew() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAddChild, setShowAddChild] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [pendingToast, setPendingToast] = useState(null);
 
   useEffect(() => {
     loadChildren();
   }, []);
+
+  // Show pending toast after children load
+  useEffect(() => {
+    if (pendingToast && !loading) {
+      setToast(pendingToast);
+      setPendingToast(null);
+    }
+  }, [children, loading, pendingToast]);
 
   // McCabe: 3
   async function loadChildren() {
@@ -43,6 +54,11 @@ export default function DashboardNew() {
     navigate('/login');
   };
 
+  // McCabe: 1
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+  };
+
   if (loading) {
     return <div style={styles.loading}>Loading...</div>;
   }
@@ -57,6 +73,23 @@ export default function DashboardNew() {
       </div>
 
       <div style={styles.content}>
+        {toast && (
+          <div
+            data-testid="success-toast"
+            style={{
+              background: '#10b981',
+              color: 'white',
+              padding: '16px',
+              borderRadius: '8px',
+              marginBottom: '20px',
+              textAlign: 'center',
+              fontSize: '18px',
+              fontWeight: '600'
+            }}>
+            {toast.message}
+          </div>
+        )}
+
         <div style={styles.welcomeCard}>
           <h2 style={styles.welcomeTitle}>
             Welcome back, {user?.firstName}! 👋
@@ -93,7 +126,12 @@ export default function DashboardNew() {
           ) : (
             <div style={styles.childrenGrid}>
               {children.map(child => (
-                <ChildCard key={child.userId} child={child} onUpdate={loadChildren} />
+                <ChildCard
+                  key={child.userId}
+                  child={child}
+                  onUpdate={loadChildren}
+                  onShowToast={showToast}
+                />
               ))}
             </div>
           )}
@@ -104,9 +142,10 @@ export default function DashboardNew() {
         <AddChildModal
           familyId={user?.familyId}
           onClose={() => setShowAddChild(false)}
-          onSuccess={() => {
-            loadChildren();
+          onSuccess={async (childName) => {
             setShowAddChild(false);
+            setPendingToast({ message: `${childName} added successfully!`, type: 'success' });
+            await loadChildren();
           }}
         />
       )}

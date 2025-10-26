@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 
 // PinInput component - 4-digit PIN input with auto-advance
 // McCabe complexity: 5
-export default function PinInput({ value, onChange, error }) {
+export default function PinInput({ value, onChange, error, testId = 'pin-input' }) {
   const inputRefs = useRef([]);
 
   // Handle digit input
@@ -36,7 +36,7 @@ export default function PinInput({ value, onChange, error }) {
 
   return (
     <div>
-      <div style={styles.container}>
+      <div style={styles.container} data-testid={testId}>
         {[0, 1, 2, 3].map((index) => (
           <input
             key={index}

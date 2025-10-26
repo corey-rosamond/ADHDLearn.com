@@ -15,8 +15,8 @@ export default function DeleteConfirmationModal({ child, onClose, onSuccess }) {
 
     try {
       await deleteChild(child.userId);
-      onSuccess();
-      onClose();
+      onSuccess(child.firstName);
+      // onClose is handled by parent's onSuccess callback
     } catch (err) {
       setError(err.message);
     } finally {

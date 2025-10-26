@@ -5,7 +5,7 @@ import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 // ChildCard component
 // McCabe complexity: 3
-export default function ChildCard({ child, onUpdate }) {
+export default function ChildCard({ child, onUpdate, onShowToast }) {
   const navigate = useNavigate();
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -22,14 +22,22 @@ export default function ChildCard({ child, onUpdate }) {
     setShowDelete(true);
   };
 
-  const handleUpdateSuccess = () => {
+  const handleUpdateSuccess = async (childName) => {
     setShowEdit(false);
-    if (onUpdate) onUpdate();
+    // Show toast before update to avoid timing issues
+    if (onShowToast) onShowToast(`${childName}'s profile updated successfully!`);
+    // Small delay to ensure toast is set before update
+    await new Promise(resolve => setTimeout(resolve, 50));
+    if (onUpdate) await onUpdate();
   };
 
-  const handleDeleteSuccess = () => {
+  const handleDeleteSuccess = async (childName) => {
     setShowDelete(false);
-    if (onUpdate) onUpdate();
+    // Show toast before update to avoid timing issues
+    if (onShowToast) onShowToast(`${childName} removed from family successfully!`);
+    // Small delay to ensure toast is set before update
+    await new Promise(resolve => setTimeout(resolve, 50));
+    if (onUpdate) await onUpdate();
   };
 
   // Calculate age from birth date

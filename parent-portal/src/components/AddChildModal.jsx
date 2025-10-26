@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PinInput from './PinInput';
 import AvatarPicker from './AvatarPicker';
 import { addChild } from '../services/children';
@@ -12,8 +12,44 @@ export default function AddChildModal({ familyId, onClose, onSuccess }) {
   const [avatar, setAvatar] = useState('');
   const [pinCode, setPinCode] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
+  const [pinError, setPinError] = useState('');
+  const [confirmPinError, setConfirmPinError] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Real-time PIN validation
+  // McCabe complexity: 3
+  useEffect(() => {
+    if (!pinCode) {
+      setPinError('');
+      return;
+    }
+
+    if (pinCode.length < 4) {
+      setPinError('PIN must be exactly 4 digits');
+    } else if (!/^\d{4}$/.test(pinCode)) {
+      setPinError('PIN must be numeric');
+    } else if (pinCode === '0000' || pinCode === '1111') {
+      setPinError('PIN is too simple. Choose a different PIN for security.');
+    } else {
+      setPinError('');
+    }
+  }, [pinCode]);
+
+  // Real-time confirm PIN validation
+  // McCabe complexity: 2
+  useEffect(() => {
+    if (!confirmPin || confirmPin.length < 4) {
+      setConfirmPinError('');
+      return;
+    }
+
+    if (pinCode !== confirmPin) {
+      setConfirmPinError('PINs do not match');
+    } else {
+      setConfirmPinError('');
+    }
+  }, [pinCode, confirmPin]);
 
   // Validate PIN inputs
   // McCabe complexity: 4
@@ -67,8 +103,8 @@ export default function AddChildModal({ familyId, onClose, onSuccess }) {
         pinCode
       });
 
-      onSuccess(result.child);
-      onClose();
+      onSuccess(firstName);
+      // onClose is handled by parent's onSuccess callback
     } catch (err) {
       setError(err.message);
     } finally {
@@ -91,6 +127,7 @@ export default function AddChildModal({ familyId, onClose, onSuccess }) {
             </label>
             <input
               type="text"
+              name="firstName"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               placeholder="Aurora"
@@ -103,6 +140,7 @@ export default function AddChildModal({ familyId, onClose, onSuccess }) {
             <label style={styles.label}>Last Name (optional)</label>
             <input
               type="text"
+              name="lastName"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               placeholder="(optional)"
@@ -116,6 +154,7 @@ export default function AddChildModal({ familyId, onClose, onSuccess }) {
             </label>
             <input
               type="date"
+              name="birthDate"
               value={birthDate}
               onChange={(e) => setBirthDate(e.target.value)}
               style={styles.input}
@@ -137,7 +176,8 @@ export default function AddChildModal({ familyId, onClose, onSuccess }) {
             <PinInput
               value={pinCode}
               onChange={setPinCode}
-              error={error && error.includes('PIN') && !error.includes('match') ? error : ''}
+              error={pinError}
+              testId="pin-input"
             />
           </div>
 
@@ -148,11 +188,12 @@ export default function AddChildModal({ familyId, onClose, onSuccess }) {
             <PinInput
               value={confirmPin}
               onChange={setConfirmPin}
-              error={error && error.includes('match') ? error : ''}
+              error={confirmPinError}
+              testId="confirm-pin-input"
             />
           </div>
 
-          {error && !error.includes('PIN') && (
+          {error && (
             <div style={styles.errorMessage}>{error}</div>
           )}
 
@@ -167,8 +208,9 @@ export default function AddChildModal({ familyId, onClose, onSuccess }) {
             </button>
             <button
               type="submit"
+              data-testid="submit-add-child"
               style={styles.submitButton}
-              disabled={loading || !firstName || !birthDate || !avatar || pinCode.length !== 4 || confirmPin.length !== 4}
+              disabled={loading || !firstName || !birthDate || !avatar || pinCode.length !== 4 || confirmPin.length !== 4 || pinError || confirmPinError}
             >
               {loading ? 'Adding...' : 'Add Child'}
             </button>

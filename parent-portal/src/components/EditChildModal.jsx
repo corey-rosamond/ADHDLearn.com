@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PinInput from './PinInput';
 import AvatarPicker from './AvatarPicker';
 import { updateChild } from '../services/children';
@@ -13,8 +13,44 @@ export default function EditChildModal({ child, onClose, onSuccess }) {
   const [changePin, setChangePin] = useState(false);
   const [newPin, setNewPin] = useState('');
   const [confirmNewPin, setConfirmNewPin] = useState('');
+  const [pinError, setPinError] = useState('');
+  const [confirmPinError, setConfirmPinError] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Real-time PIN validation (only when changing PIN)
+  // McCabe complexity: 3
+  useEffect(() => {
+    if (!changePin || !newPin) {
+      setPinError('');
+      return;
+    }
+
+    if (newPin.length < 4) {
+      setPinError('PIN must be exactly 4 digits');
+    } else if (!/^\d{4}$/.test(newPin)) {
+      setPinError('PIN must be numeric');
+    } else if (newPin === '0000' || newPin === '1111') {
+      setPinError('PIN is too simple. Choose a different PIN for security.');
+    } else {
+      setPinError('');
+    }
+  }, [changePin, newPin]);
+
+  // Real-time confirm PIN validation
+  // McCabe complexity: 2
+  useEffect(() => {
+    if (!changePin || !confirmNewPin || confirmNewPin.length < 4) {
+      setConfirmPinError('');
+      return;
+    }
+
+    if (newPin !== confirmNewPin) {
+      setConfirmPinError('PINs do not match');
+    } else {
+      setConfirmPinError('');
+    }
+  }, [changePin, newPin, confirmNewPin]);
 
   // Validate PIN inputs if changing PIN
   // McCabe complexity: 4
@@ -77,8 +113,8 @@ export default function EditChildModal({ child, onClose, onSuccess }) {
       }
 
       await updateChild(child.userId, updateData);
-      onSuccess();
-      onClose();
+      onSuccess(firstName);
+      // onClose is handled by parent's onSuccess callback
     } catch (err) {
       setError(err.message);
     } finally {
@@ -101,6 +137,7 @@ export default function EditChildModal({ child, onClose, onSuccess }) {
             </label>
             <input
               type="text"
+              name="firstName"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               placeholder="Aurora"
@@ -113,6 +150,7 @@ export default function EditChildModal({ child, onClose, onSuccess }) {
             <label style={styles.label}>Last Name (optional)</label>
             <input
               type="text"
+              name="lastName"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               placeholder="(optional)"
@@ -126,6 +164,7 @@ export default function EditChildModal({ child, onClose, onSuccess }) {
             </label>
             <input
               type="date"
+              name="birthDate"
               value={birthDate}
               onChange={(e) => setBirthDate(e.target.value)}
               style={styles.input}
@@ -161,7 +200,8 @@ export default function EditChildModal({ child, onClose, onSuccess }) {
                 <PinInput
                   value={newPin}
                   onChange={setNewPin}
-                  error={error && error.includes('PIN') && !error.includes('match') ? error : ''}
+                  error={pinError}
+                  testId="new-pin-input"
                 />
               </div>
 
@@ -172,13 +212,14 @@ export default function EditChildModal({ child, onClose, onSuccess }) {
                 <PinInput
                   value={confirmNewPin}
                   onChange={setConfirmNewPin}
-                  error={error && error.includes('match') ? error : ''}
+                  error={confirmPinError}
+                  testId="confirm-new-pin-input"
                 />
               </div>
             </>
           )}
 
-          {error && !error.includes('PIN') && (
+          {error && (
             <div style={styles.errorMessage}>{error}</div>
           )}
 
@@ -193,8 +234,9 @@ export default function EditChildModal({ child, onClose, onSuccess }) {
             </button>
             <button
               type="submit"
+              data-testid="submit-edit-child"
               style={styles.submitButton}
-              disabled={loading || !firstName || !birthDate || !avatar || (changePin && (newPin.length !== 4 || confirmNewPin.length !== 4))}
+              disabled={loading || !firstName || !birthDate || !avatar || (changePin && (newPin.length !== 4 || confirmNewPin.length !== 4 || pinError || confirmPinError))}
             >
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
