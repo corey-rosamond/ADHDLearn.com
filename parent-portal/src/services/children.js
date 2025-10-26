@@ -1,7 +1,7 @@
 // Children API service
 // McCabe complexity: all functions ≤ 3
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE ? `${import.meta.env.VITE_API_BASE}/api` : 'http://localhost:3000/api';
 
 /**
  * Get all children in a family
