@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getChildren } from '../services/children';
 import ChildCard from '../components/ChildCard';
+import AddChildModal from '../components/AddChildModal';
 
 // Dashboard page with children list
 // McCabe complexity: 4
@@ -12,6 +13,7 @@ export default function DashboardNew() {
   const [children, setChildren] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showAddChild, setShowAddChild] = useState(false);
 
   useEffect(() => {
     loadChildren();
@@ -71,13 +73,21 @@ export default function DashboardNew() {
         )}
 
         <div style={styles.section}>
-          <h2 style={styles.sectionTitle}>Your Children</h2>
+          <div style={styles.sectionHeader}>
+            <h2 style={styles.sectionTitle}>Your Children</h2>
+            <button
+              onClick={() => setShowAddChild(true)}
+              style={styles.addButton}
+            >
+              + Add Child
+            </button>
+          </div>
 
           {children.length === 0 ? (
             <div style={styles.emptyState}>
               <p style={styles.emptyText}>No children added yet</p>
               <p style={styles.emptyHint}>
-                Children will be added in Phase 6
+                Click "Add Child" to get started
               </p>
             </div>
           ) : (
@@ -89,6 +99,17 @@ export default function DashboardNew() {
           )}
         </div>
       </div>
+
+      {showAddChild && (
+        <AddChildModal
+          familyId={user?.familyId}
+          onClose={() => setShowAddChild(false)}
+          onSuccess={() => {
+            loadChildren();
+            setShowAddChild(false);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -172,11 +193,27 @@ const styles = {
     padding: '32px',
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
   },
+  sectionHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '24px'
+  },
   sectionTitle: {
     fontSize: '24px',
     fontWeight: '600',
     color: '#333',
-    margin: '0 0 24px'
+    margin: 0
+  },
+  addButton: {
+    padding: '12px 24px',
+    fontSize: '16px',
+    fontWeight: '600',
+    color: '#fff',
+    background: '#667eea',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer'
   },
   childrenGrid: {
     display: 'grid',

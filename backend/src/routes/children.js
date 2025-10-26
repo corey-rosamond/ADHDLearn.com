@@ -1,11 +1,47 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcrypt');
 
 let pool;
 
 // Setter for dependency injection
 function setPool(dbPool) {
   pool = dbPool;
+}
+
+// Helper: Validate PIN input
+// McCabe complexity: 3
+function validatePin(pinCode) {
+  if (!pinCode || pinCode.length !== 4) {
+    return { valid: false, error: 'PIN must be exactly 4 digits' };
+  }
+
+  if (!/^\d{4}$/.test(pinCode)) {
+    return { valid: false, error: 'PIN must be numeric' };
+  }
+
+  if (pinCode === '0000' || pinCode === '1111') {
+    return { valid: false, error: 'PIN is too simple. Choose a different PIN for security.' };
+  }
+
+  return { valid: true };
+}
+
+// Helper: Validate child input
+// McCabe complexity: 2
+function validateChildInput(data) {
+  const { firstName, birthDate, pinCode } = data;
+
+  if (!firstName || !birthDate || !pinCode) {
+    return { valid: false, error: 'Missing required fields' };
+  }
+
+  const pinValidation = validatePin(pinCode);
+  if (!pinValidation.valid) {
+    return pinValidation;
+  }
+
+  return { valid: true };
 }
 
 // =============================================================================
@@ -47,6 +83,81 @@ router.get('/families/:familyId/children', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching children:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// =============================================================================
+// POST /api/families/:familyId/children
+// Add a new child to the family
+// McCabe complexity: 5
+// =============================================================================
+router.post('/families/:familyId/children', async (req, res) => {
+  try {
+    const { familyId } = req.params;
+    const { firstName, lastName, birthDate, avatar, pinCode } = req.body;
+
+    // Validate input
+    const validation = validateChildInput(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({
+        success: false,
+        error: validation.error
+      });
+    }
+
+    // Check for duplicate PIN within family
+    const [existing] = await pool.execute(
+      `SELECT user_id, pin_code FROM users
+       WHERE family_id = ? AND pin_code IS NOT NULL AND role = 'child' AND is_active = TRUE`,
+      [familyId]
+    );
+
+    // Check if any existing child has the same PIN
+    for (const child of existing) {
+      const match = await bcrypt.compare(pinCode, child.pin_code || '');
+      if (match) {
+        return res.status(409).json({
+          success: false,
+          error: 'This PIN is already used by another child. Choose a different PIN.'
+        });
+      }
+    }
+
+    // Hash PIN
+    const pinHash = await bcrypt.hash(pinCode, 10);
+
+    // Insert child
+    const [result] = await pool.execute(
+      `INSERT INTO users (family_id, role, first_name, last_name, birth_date, avatar_url, pin_code)
+       VALUES (?, 'child', ?, ?, ?, ?, ?)`,
+      [familyId, firstName, lastName || null, birthDate, avatar || null, pinHash]
+    );
+
+    const userId = result.insertId;
+
+    // Calculate age
+    const birthYear = new Date(birthDate).getFullYear();
+    const currentYear = new Date().getFullYear();
+    const age = currentYear - birthYear;
+
+    res.status(201).json({
+      success: true,
+      child: {
+        userId,
+        familyId: parseInt(familyId),
+        firstName,
+        lastName,
+        birthDate,
+        avatar,
+        age
+      }
+    });
+  } catch (error) {
+    console.error('Error adding child:', error);
     res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -314,6 +425,124 @@ router.get('/children/:childId/analytics', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching child analytics:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// =============================================================================
+// PUT /api/children/:childId
+// Update child information
+// McCabe complexity: 5
+// =============================================================================
+router.put('/children/:childId', async (req, res) => {
+  try {
+    const { childId } = req.params;
+    const { firstName, lastName, birthDate, avatar, pinCode } = req.body;
+
+    // Get current child data
+    const [children] = await pool.execute(
+      'SELECT family_id, pin_code FROM users WHERE user_id = ? AND role = \'child\'',
+      [childId]
+    );
+
+    if (children.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Child not found'
+      });
+    }
+
+    const child = children[0];
+
+    // If PIN is being changed, validate and check for duplicates
+    let pinHash = child.pin_code;
+    if (pinCode) {
+      const pinValidation = validatePin(pinCode);
+      if (!pinValidation.valid) {
+        return res.status(400).json({
+          success: false,
+          error: pinValidation.error
+        });
+      }
+
+      // Check for duplicate PIN within family (excluding current child)
+      const [existing] = await pool.execute(
+        `SELECT user_id, pin_code FROM users
+         WHERE family_id = ? AND user_id != ? AND pin_code IS NOT NULL AND role = 'child' AND is_active = TRUE`,
+        [child.family_id, childId]
+      );
+
+      for (const existingChild of existing) {
+        const match = await bcrypt.compare(pinCode, existingChild.pin_code || '');
+        if (match) {
+          return res.status(409).json({
+            success: false,
+            error: 'This PIN is already used by another child. Choose a different PIN.'
+          });
+        }
+      }
+
+      pinHash = await bcrypt.hash(pinCode, 10);
+    }
+
+    // Update child record
+    await pool.execute(
+      `UPDATE users
+       SET first_name = ?, last_name = ?, birth_date = ?, avatar_url = ?, pin_code = ?
+       WHERE user_id = ?`,
+      [firstName, lastName || null, birthDate, avatar || null, pinHash, childId]
+    );
+
+    res.json({
+      success: true,
+      message: 'Child updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating child:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// =============================================================================
+// DELETE /api/children/:childId
+// Soft delete a child (set is_active = FALSE)
+// McCabe complexity: 2
+// =============================================================================
+router.delete('/children/:childId', async (req, res) => {
+  try {
+    const { childId } = req.params;
+
+    // Check if child exists
+    const [children] = await pool.execute(
+      'SELECT user_id FROM users WHERE user_id = ? AND role = \'child\'',
+      [childId]
+    );
+
+    if (children.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Child not found'
+      });
+    }
+
+    // Soft delete (keep all data)
+    await pool.execute(
+      'UPDATE users SET is_active = FALSE WHERE user_id = ?',
+      [childId]
+    );
+
+    res.json({
+      success: true,
+      message: 'Child removed from family'
+    });
+  } catch (error) {
+    console.error('Error deleting child:', error);
     res.status(500).json({
       success: false,
       error: 'Internal server error'

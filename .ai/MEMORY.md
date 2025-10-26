@@ -1,16 +1,28 @@
 # Session Memory - Critical Information Only
 
 **Last Updated:** October 26, 2025
-**Current Status:** Phase 5 (Completed) → Ready for Phase 6
+**Current Status:** Phase 6 (Family Management) - IN PROGRESS
 **Branch:** staging
 
 ---
 
 ## Current Phase Status
 
-**Phase:** 5 (Parent Dashboard - View Children & Sessions)
-**Status:** COMPLETED ✅
+**Phase:** 6 (Family Management)
+**Status:** IN PROGRESS 🔄
 **Blockers:** None
+
+**Phase 6 Progress:**
+- ✅ Backend API endpoints (POST/PUT/DELETE children)
+- ✅ PinInput component (4-digit validation)
+- ✅ AvatarPicker component (26 emoji options)
+- ✅ AddChildModal component
+- ✅ Integrated into DashboardNew with "Add Child" button
+- ✅ Built and deployed to staging
+- ⏳ Testing GHERKIN scenarios
+
+**Phase 5 Status:**
+**Status:** COMPLETED ✅
 
 **Phase 5 Accomplishments (100% COMPLETE):**
 
@@ -140,6 +152,71 @@
 - **SSL:** Let's Encrypt
 - **Domains:** 8 vhosts (staging + prod × 4 subdomains)
 - **Android:** Capacitor wrapper
+
+---
+
+## 🚨 SSH/DEPLOYMENT SOLUTION (CRITICAL - READ THIS FIRST!)
+
+**Server:** 160.153.180.159
+**Username:** corey
+**Password:** 81naryS0lut10ns!
+
+### THE PROBLEM:
+- `sshpass -p 'password'` does NOT work reliably
+- SSH keys have passphrases and cannot be used
+- Server has rate limiting (5-10 second delays required between commands)
+
+### THE SOLUTION (ALWAYS USE THIS):
+
+```bash
+# SSH Command:
+printf '%s' '81naryS0lut10ns!' | sshpass ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no corey@160.153.180.159 "command"
+
+# SCP Command:
+printf '%s' '81naryS0lut10ns!' | sshpass scp -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no /local/file corey@160.153.180.159:/remote/path
+
+# IMPORTANT: Wait 5-10 seconds between commands to avoid rate limiting!
+```
+
+### Helper Scripts (Recommended):
+
+```bash
+# /tmp/ssh-helper.sh
+#!/bin/bash
+sleep 5  # Wait to avoid rate limiting
+printf '%s' '81naryS0lut10ns!' | sshpass ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no corey@160.153.180.159 "$@"
+
+# /tmp/scp-helper.sh
+#!/bin/bash
+sleep 5  # Wait to avoid rate limiting
+printf '%s' '81naryS0lut10ns!' | sshpass scp -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no "$1" "corey@160.153.180.159:$2"
+```
+
+### Server Directory Structure:
+
+- **Backend (Production):** `/var/www/api.adhdlearn.com/production/`
+- **Parent Portal (Staging):** `/var/www/adhdlearn.com/staging/parent/`
+- **Child Portal (Staging):** `/var/www/adhdlearn.com/staging/child/`
+- **PM2 Process:** `adhdlearn-api` (restart with `pm2 restart adhdlearn-api`)
+
+### Deployment Workflow:
+
+```bash
+# 1. Build frontend
+cd parent-portal && npm run build
+
+# 2. Create tarball
+tar czf /tmp/parent-portal-dist.tar.gz dist/
+
+# 3. Copy to server (wait 5s first)
+printf '%s' '81naryS0lut10ns!' | sshpass scp -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no /tmp/parent-portal-dist.tar.gz corey@160.153.180.159:/tmp/
+
+# 4. Extract on server (wait 5s)
+printf '%s' '81naryS0lut10ns!' | sshpass ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no corey@160.153.180.159 "cd /var/www/adhdlearn.com/staging/parent && rm -rf * && tar xzf /tmp/parent-portal-dist.tar.gz --strip-components=1"
+
+# 5. Restart backend if needed (wait 5s)
+printf '%s' '81naryS0lut10ns!' | sshpass ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no corey@160.153.180.159 "pm2 restart adhdlearn-api"
+```
 
 ---
 

@@ -77,3 +77,82 @@ export async function getChildAnalytics(childId) {
 
   return await response.json();
 }
+
+/**
+ * Add a new child to the family
+ * @param {number} familyId - Family ID
+ * @param {Object} childData - Child information
+ * @returns {Promise<{success: boolean, child: Object}>}
+ */
+export async function addChild(familyId, childData) {
+  const token = localStorage.getItem('token');
+
+  const response = await fetch(`${API_BASE_URL}/families/${familyId}/children`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(childData)
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || 'Failed to add child');
+  }
+
+  return result;
+}
+
+/**
+ * Update child information
+ * @param {number} childId - Child user ID
+ * @param {Object} childData - Updated child information
+ * @returns {Promise<{success: boolean}>}
+ */
+export async function updateChild(childId, childData) {
+  const token = localStorage.getItem('token');
+
+  const response = await fetch(`${API_BASE_URL}/children/${childId}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(childData)
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || 'Failed to update child');
+  }
+
+  return result;
+}
+
+/**
+ * Delete (soft delete) a child
+ * @param {number} childId - Child user ID
+ * @returns {Promise<{success: boolean}>}
+ */
+export async function deleteChild(childId) {
+  const token = localStorage.getItem('token');
+
+  const response = await fetch(`${API_BASE_URL}/children/${childId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || 'Failed to delete child');
+  }
+
+  return result;
+}
