@@ -1,126 +1,83 @@
-# Phase 1: Project Foundation - BDD Scenarios
+# Phase 1: Project Foundation - Test Scenarios
 
 **Project:** ADHDLearn.com
 **Phase:** 1 of 36
-**Last Updated:** October 22, 2025
+**Last Updated:** October 26, 2025
 
 ---
 
-## Feature: Directory Structure Creation
-
+## Feature: Project Foundation Setup
 **As a** developer
-**I want to** have an organized project structure
-**So that** code is maintainable and scalable
+**I want to** have an organized monorepo structure
+**So that** I can develop all components efficiently
 
-### Scenario: Root directory structure exists
-
+### Scenario: Directory structure created
 ```gherkin
-Given I am in the project root
-When I run "tree -L 1 -d"
+Given I am in the project root "/home/corey/Desktop/ADHDLearn.com"
+When I list the directories
 Then I should see:
-  | Directory | Purpose |
-  | /api | Backend Node.js + Express API |
-  | /child-portal | Child-facing React application |
-  | /parent-portal | Parent-facing React application |
-  | /marketing-site | Public marketing website (static) |
-  | /shared | Shared utilities, types, constants |
-  | /games | Phaser 3 games (Letter Pop, etc.) |
-  | /database | SQL migrations and seeds |
-  | /.ai | AI-generated plans and documentation |
-  | /docs | Technical documentation |
-  | /scripts | Deployment and utility scripts |
+  | Directory | Exists |
+  | .ai/ | Yes |
+  | backend/ | Yes |
+  | child-portal/ | Yes |
+  | parent-portal/ | Yes |
+  | marketing-website/ | Yes |
+  | shared/ | Yes |
+  | tests/ | Yes |
+  | scripts/ | Yes |
 ```
 
-### Scenario: API directory structure
-
+### Scenario: Backend directory structure
 ```gherkin
-Given I am in "/api"
-When I run "tree -L 2 -d"
+Given I am in "/home/corey/Desktop/ADHDLearn.com/backend"
+When I list the directories
 Then I should see:
-  | Directory | Purpose |
-  | /src | Source code |
-  | /src/routes | Express route handlers |
-  | /src/controllers | Business logic controllers |
-  | /src/models | Database models |
-  | /src/middleware | Express middleware |
-  | /src/utils | Utility functions |
-  | /src/config | Configuration files |
-  | /tests | Test files |
-
-And I should see configuration files:
-  | File | Purpose |
-  | package.json | Node dependencies |
-  | tsconfig.json | TypeScript configuration |
-  | .env.example | Environment variable template |
-  | jest.config.js | Test configuration |
+  | Directory/File | Exists |
+  | src/ | Yes |
+  | src/index.js | Yes |
+  | package.json | Yes |
+  | README.md | Yes |
 ```
 
 ### Scenario: Child portal directory structure
-
 ```gherkin
-Given I am in "/child-portal"
-When I run "tree -L 2 -d src"
+Given I am in "/home/corey/Desktop/ADHDLearn.com/child-portal"
+When I list the directories
 Then I should see:
-  | Directory | Purpose |
-  | /src/components | React components |
-  | /src/pages | Page-level components |
-  | /src/hooks | Custom React hooks |
-  | /src/contexts | React context providers |
-  | /src/services | API service functions |
-  | /src/utils | Utility functions |
-  | /src/assets | Images, fonts, icons |
-  | /src/styles | Global styles, theme |
-
-And I should see configuration files:
-  | File | Purpose |
-  | package.json | React dependencies |
-  | vite.config.ts | Vite build configuration |
-  | tsconfig.json | TypeScript configuration |
-  | index.html | HTML entry point |
+  | Directory/File | Exists |
+  | src/ | Yes |
+  | public/ | Yes |
+  | package.json | Yes |
+  | vite.config.js | Yes |
+  | README.md | Yes |
 ```
 
-### Scenario: Games directory structure
-
+### Scenario: Parent portal directory structure
 ```gherkin
-Given I am in "/games"
-When I run "tree -L 2 -d"
+Given I am in "/home/corey/Desktop/ADHDLearn.com/parent-portal"
+When I list the directories
 Then I should see:
-  | Directory | Purpose |
-  | /letter-pop | Letter Pop game source |
-  | /word-builder | Word Builder game source |
-  | /sight-words | Sight Words game source |
-  | /counting-game | Counting game source |
-  | /shapes-game | Shapes game source |
-  | /addition-game | Addition game source |
-  | /shared | Shared game assets and utilities |
-
-And each game should have:
-  | Directory | Purpose |
-  | /scenes | Phaser 3 scene classes |
-  | /assets | Game-specific images, audio |
-  | /config | Game configuration |
-```
-
-### Scenario: Database directory structure
-
-```gherkin
-Given I am in "/database"
-When I run "tree -L 2"
-Then I should see:
-  | Directory/File | Purpose |
-  | /migrations | SQL migration files |
-  | /seeds | SQL seed data files |
-  | schema.sql | Complete database schema |
-  | README.md | Database documentation |
+  | Directory/File | Exists |
+  | src/ | Yes |
+  | public/ | Yes |
+  | package.json | Yes |
+  | vite.config.js | Yes |
+  | README.md | Yes |
 ```
 
 ### Scenario: Git repository initialized
-
 ```gherkin
 Given I am in the project root
 When I run "git status"
 Then I should see "On branch staging"
-And I should see a .gitignore file containing:
+And I should not see fatal errors
+```
+
+### Scenario: Gitignore configured
+```gherkin
+Given I am in the project root
+When I read ".gitignore"
+Then it should contain:
   """
   node_modules/
   dist/
@@ -130,73 +87,116 @@ And I should see a .gitignore file containing:
   *.log
   .DS_Store
   coverage/
-  .vscode/
-  .idea/
-  *.swp
-  *.swo
   """
 ```
 
-### Scenario: Package.json workspaces configured
-
+### Scenario: npm workspaces configured
 ```gherkin
 Given I am in the project root
 When I read "package.json"
-Then I should see workspaces configuration:
-  """json
-  {
-    "name": "adhdlearn-monorepo",
-    "private": true,
-    "workspaces": [
-      "api",
-      "child-portal",
-      "parent-portal",
-      "marketing-site",
-      "games/*",
-      "shared"
-    ],
-    "scripts": {
-      "install:all": "npm install",
-      "build:all": "npm run build --workspaces",
-      "test:all": "npm run test --workspaces",
-      "dev:api": "npm run dev --workspace=api",
-      "dev:child": "npm run dev --workspace=child-portal",
-      "dev:parent": "npm run dev --workspace=parent-portal"
-    }
-  }
-  """
+Then the "workspaces" field should contain:
+  | Workspace |
+  | backend |
+  | child-portal |
+  | parent-portal |
+  | shared |
+
+And the "scripts" field should contain:
+  | Script | Command |
+  | dev:backend | npm run dev --workspace=backend |
+  | dev:child | npm run dev --workspace=child-portal |
+  | dev:parent | npm run dev --workspace=parent-portal |
+  | build:all | npm run build --workspaces |
+  | test:all | npm run test --workspaces |
+  | lint | eslint . --ext .js,.jsx |
+  | format | prettier --write "**/*.{js,jsx,json,md}" |
+```
+
+### Scenario: npm install works from root
+```gherkin
+Given I am in the project root
+When I run "npm install"
+Then it should install dependencies for all workspaces
+And I should not see any errors
+And "node_modules/" should exist in:
+  | Directory |
+  | . (root) |
+  | backend/ |
+  | child-portal/ |
+  | parent-portal/ |
+```
+
+### Scenario: ESLint configured with McCabe complexity
+```gherkin
+Given I am in the project root
+When I read ".eslintrc.json"
+Then it should have a "complexity" rule set to ["error", 5]
+And the environments should include:
+  | Environment |
+  | browser |
+  | es2021 |
+  | node |
+```
+
+### Scenario: ESLint passes
+```gherkin
+Given I am in the project root
+When I run "npm run lint"
+Then there should be no errors
+```
+
+### Scenario: Prettier configured
+```gherkin
+Given I am in the project root
+When I check for Prettier configuration
+Then ".prettierrc" or ".prettierrc.json" should exist
+OR prettier config should be in package.json
+```
+
+### Scenario: Prettier can format code
+```gherkin
+Given I am in the project root
+When I run "npm run format"
+Then it should format all JavaScript, JSX, JSON, and Markdown files
+And there should be no errors
 ```
 
 ### Scenario: README files exist
-
 ```gherkin
-Given I am in the project root
-Then I should see README.md with content explaining:
+Given the project structure is created
+Then README.md should exist in:
+  | Directory | Contains Project Info |
+  | / (root) | Yes |
+  | backend/ | Yes |
+  | child-portal/ | Yes |
+  | parent-portal/ | Yes |
+  | marketing-website/ | Yes |
+  | shared/ | Yes |
+  | tests/ | Yes |
+```
+
+### Scenario: Root README documents structure
+```gherkin
+Given I read "/home/corey/Desktop/ADHDLearn.com/README.md"
+Then it should explain:
   - Project overview
   - Directory structure
   - Setup instructions
   - Development workflow
-  - Deployment process
-
-And each subdirectory should have its own README.md:
-  | Directory | README content |
-  | /api | API documentation, endpoints, setup |
-  | /child-portal | Child portal features, components |
-  | /parent-portal | Parent portal features, components |
-  | /games | Game development guide |
-  | /database | Database schema, migrations |
 ```
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] All directories created with correct structure
-- [ ] package.json configured with workspaces
-- [ ] .gitignore excludes node_modules, .env, dist
-- [ ] Git repository initialized on staging branch
-- [ ] README.md files exist at root and in major subdirectories
-- [ ] TypeScript configured in all TypeScript projects
-- [ ] No dependencies installed yet (that happens in subsequent phases)
-- [ ] Directory structure supports monorepo approach
-- [ ] All paths use forward slashes (cross-platform compatible)
+From PLAN.md - All must pass:
+
+- [ ] All directories created with README files
+- [ ] Git repository initialized
+- [ ] npm workspaces configured and working
+- [ ] ESLint passes with McCabe ≤ 5 rule
+- [ ] Prettier configured
+- [ ] Can run `npm install` from root (installs all workspaces)
+- [ ] README.md documents project structure
+
+---

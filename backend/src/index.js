@@ -3,6 +3,8 @@ const cors = require('cors');
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
+const authController = require('./controllers/authController');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -11,8 +13,12 @@ app.use(cors({
   origin: [
     'https://child.adhdlearn.com',
     'https://child-staging.adhdlearn.com',
+    'https://parent.adhdlearn.com',
+    'https://parent-staging.adhdlearn.com',
     'http://localhost:5173',
-    'http://localhost:4173'
+    'http://localhost:4173',
+    'http://localhost:5174',
+    'http://localhost:4174'
   ],
   credentials: true
 }));
@@ -27,6 +33,23 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10
 });
+
+// Initialize auth controller with database pool
+authController.setPool(pool);
+
+// =============================================================================
+// AUTH ROUTES (Phase 4)
+// =============================================================================
+
+// POST /api/auth/register - Register new family + parent
+app.post('/api/auth/register', authController.register);
+
+// POST /api/auth/login/parent - Parent login
+app.post('/api/auth/login/parent', authController.loginParent);
+
+// =============================================================================
+// GAME SESSION ROUTES (Phase 3)
+// =============================================================================
 
 // POST /api/sessions - Save game session
 // McCabe complexity: 4

@@ -1,8 +1,9 @@
 # START HERE - AI Development Entry Point
 
 ## Current Status
-**Current Phase:** Phase 3 (Completed) → Ready for Phase 4
+**Current Phase:** Phase 4 (Completed) → Ready for Phase 5
 **Last Updated:** October 26, 2025
+**Recent Work:** GHERKIN alignment + Testing framework (84/84 tests passing)
 
 ---
 
@@ -27,10 +28,10 @@ Before doing ANYTHING, you MUST read these files in order:
 
 ### 3. Current Phase Documentation
 ```
-.ai/phases/phase-04/PLAN.md        # What to build
-.ai/phases/phase-04/GHERKIN.md     # How to test (acceptance criteria)
-.ai/phases/phase-04/UML.md         # Architecture diagrams
-.ai/phases/phase-04/WIREFRAMES.md  # UI/UX designs (if applicable)
+.ai/phases/phase-05/PLAN.md        # What to build
+.ai/phases/phase-05/GHERKIN.md     # How to test (acceptance criteria)
+.ai/phases/phase-05/UML.md         # Architecture diagrams
+.ai/phases/phase-05/WIREFRAMES.md  # UI/UX designs (if applicable)
 ```
 
 ### 4. Supporting Documentation (as needed)
@@ -45,12 +46,20 @@ Before doing ANYTHING, you MUST read these files in order:
 
 **Completed:**
 - ✅ Phase 0: Server Infrastructure (8 Apache vhosts, SSL)
-- ✅ Phase 1: Project Foundation (monorepo, npm workspaces, ESLint)
-- ✅ Phase 2: Letter Pop Standalone (React + Vite + Phaser, automated tests)
-- ✅ Phase 3: Database + Backend (MySQL 8.0, Express API, PM2, score persistence)
+- ✅ Phase 1: Project Foundation (monorepo, npm workspaces, ESLint) - 13/13 tests ✅
+- ✅ Phase 2: Letter Pop Standalone (React + Vite + Phaser) - 15/15 tests ✅
+- ✅ Phase 3: Database + Backend (MySQL 8.0, Express API, PM2) - 20/20 tests ✅
+- ✅ Phase 4: Parent Auth (bcrypt, JWT, React Router, protected routes) - 36/36 tests ✅
+
+**Testing Infrastructure:**
+- ✅ GHERKIN scenarios aligned with PLAN.md for all phases
+- ✅ Automated test suite (tests/automated/phase-*.test.mjs)
+- ✅ Manual test checklists (tests/manual/)
+- ✅ Master test runner (tests/run-phase-tests.sh)
+- ✅ All 84/84 tests passing
 
 **Next:**
-- 🔜 Phase 4: TBD (check phase-04 documentation)
+- 🔜 Phase 5: TBD (check phase-05 documentation)
 
 ---
 

@@ -1,15 +1,55 @@
 import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
 
-// ADHDLearn.com Parent Portal
-// Main React application for parent dashboard and management
+// Protected route component
+// McCabe complexity: 2
+function ProtectedRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
 
+  if (loading) {
+    return <div style={styles.loading}>Loading...</div>;
+  }
+
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
+}
+
+// Main App component
+// McCabe complexity: 1
 function App() {
   return (
-    <div className="app">
-      <h1>ADHDLearn.com - Parent Portal</h1>
-      <p>Placeholder - will be implemented in Phase 4</p>
-    </div>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
+
+const styles = {
+  loading: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '100vh',
+    fontSize: '20px',
+    color: '#667eea'
+  }
+};
 
 export default App;
