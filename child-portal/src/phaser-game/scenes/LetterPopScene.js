@@ -1,4 +1,6 @@
 // ES6 Module
+import { saveSession } from '../../services/api.js';
+
 export default class LetterPopScene extends Phaser.Scene {
     constructor() {
         super({ key: 'LetterPop' });
@@ -789,18 +791,46 @@ export default class LetterPopScene extends Phaser.Scene {
         });
     }
 
-    endRound() {
+    async endRound() {
 
         // Calculate round time
         const roundEndTime = Date.now();
         const totalTimeSeconds = Math.round((roundEndTime - this.roundStartTime) / 1000);
 
+        // Calculate statistics
+        const totalLetters = 10;
+        const correctAttempts = this.score;
+        const accuracyPercentage = (correctAttempts / totalLetters) * 100;
+
         // Prepare data for results scene
         const resultsData = {
             score: this.score,
-            totalLetters: 10,
-            timeSeconds: totalTimeSeconds
+            totalLetters,
+            timeSeconds: totalTimeSeconds,
+            accuracyPercentage,
+            correctAttempts,
+            totalAttempts: totalLetters
         };
+
+        // Save to API
+        try {
+            const apiResult = await saveSession({
+                gameName: 'Letter Pop',
+                score: this.score,
+                accuracyPercentage,
+                correctAttempts,
+                totalAttempts: totalLetters,
+                durationSeconds: totalTimeSeconds,
+                mode: 'uppercase'
+            });
+
+            // Add API response to results data
+            resultsData.isHighScore = apiResult.isHighScore;
+            resultsData.rank = apiResult.rank;
+        } catch (error) {
+            console.error('Failed to save score to API:', error);
+            // Continue anyway - game works offline
+        }
 
         // Transition to results screen
         this.time.delayedCall(1000, () => {

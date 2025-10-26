@@ -1,4 +1,6 @@
 // ES6 Module
+import { getHighScores } from '../../services/api.js';
+
 export default class ResultsScene extends Phaser.Scene {
     constructor() {
         super({ key: 'Results' });
@@ -9,9 +11,11 @@ export default class ResultsScene extends Phaser.Scene {
         this.score = data.score || 0;
         this.totalLetters = data.totalLetters || 10;
         this.timeSeconds = data.timeSeconds || 0;
+        this.isHighScore = data.isHighScore || false;
+        this.rank = data.rank || 0;
     }
 
-    create() {
+    async create() {
         // Initialize responsive utilities
         this.r = new ResponsiveUtils(this);
 
@@ -94,6 +98,46 @@ export default class ResultsScene extends Phaser.Scene {
             });
         }
 
+        // New high score badge
+        if (this.isHighScore && this.rank > 0) {
+            const badge = this.add.text(
+                this.r.centerX,
+                this.r.getY(36),
+                `🏆 NEW HIGH SCORE! #${this.rank}`,
+                {
+                    fontSize: this.r.getFontSize(38) + 'px',
+                    fontFamily: 'Fredoka One, Arial',
+                    color: '#FFD700',
+                    fontStyle: 'bold',
+                    stroke: '#FF6B00',
+                    strokeThickness: this.r.scaleX(6)
+                }
+            ).setOrigin(0.5);
+
+            badge.setScale(0);
+            this.tweens.add({
+                targets: badge,
+                scaleX: 1,
+                scaleY: 1,
+                duration: 600,
+                delay: 600,
+                ease: 'Back.easeOut'
+            });
+
+            // Pulsing animation
+            this.time.delayedCall(1200, () => {
+                this.tweens.add({
+                    targets: badge,
+                    scaleX: 1.08,
+                    scaleY: 1.08,
+                    duration: 800,
+                    ease: 'Sine.easeInOut',
+                    yoyo: true,
+                    repeat: -1
+                });
+            });
+        }
+
         // Score display with slide in
         const scoreText = this.add.text(this.r.centerX, this.r.getY(42), `Score: ${this.score} out of ${this.totalLetters}`, {
             fontSize: this.r.getFontSize(48) + 'px',
@@ -124,6 +168,9 @@ export default class ResultsScene extends Phaser.Scene {
         // Performance message
         this.displayPerformanceMessage();
 
+        // High scores display
+        await this.displayHighScores();
+
         // Add floating stars decoration
         this.createFloatingStars();
 
@@ -142,6 +189,45 @@ export default class ResultsScene extends Phaser.Scene {
 
     shutdown() {
         VisibilityHandlerMixin.cleanup(this);
+    }
+
+    // McCabe complexity: 3
+    async displayHighScores() {
+        try {
+            const result = await getHighScores('Letter Pop', 5);
+
+            if (result.success && result.scores.length > 0) {
+                // Title
+                this.add.text(this.r.centerX, this.r.getY(60), 'Top Scores', {
+                    fontSize: this.r.getFontSize(32) + 'px',
+                    fontFamily: 'Fredoka One, Arial',
+                    color: '#FFD700',
+                    stroke: '#9C27B0',
+                    strokeThickness: this.r.scaleX(4)
+                }).setOrigin(0.5);
+
+                // Display scores
+                result.scores.forEach((scoreData, index) => {
+                    const yPos = this.r.getY(65 + (index * 3));
+                    const date = new Date(scoreData.playedAt);
+                    const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    const accuracy = scoreData.accuracyPercentage ? `${Math.round(scoreData.accuracyPercentage)}%` : '';
+
+                    const scoreText = `${index + 1}. ${scoreData.score} points ${accuracy ? `(${accuracy})` : ''} - ${formattedDate}`;
+
+                    this.add.text(this.r.centerX, yPos, scoreText, {
+                        fontSize: this.r.getFontSize(24) + 'px',
+                        fontFamily: 'Fredoka One, Arial',
+                        color: '#ffffff',
+                        stroke: '#00BCD4',
+                        strokeThickness: this.r.scaleX(3)
+                    }).setOrigin(0.5);
+                });
+            }
+        } catch (error) {
+            console.error('Failed to fetch high scores:', error);
+            // Fail gracefully - game still works without high scores display
+        }
     }
 
     createBackground() {
