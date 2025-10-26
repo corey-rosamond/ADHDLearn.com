@@ -97,8 +97,8 @@ router.get('/children/:childId/sessions', async (req, res) => {
       params.push(gameName);
     }
 
-    query += ' ORDER BY played_at DESC LIMIT ? OFFSET ?';
-    params.push(limit, offset);
+    // MySQL doesn't support placeholders for LIMIT/OFFSET
+    query += ` ORDER BY played_at DESC LIMIT ${limit} OFFSET ${offset}`;
 
     const [sessions] = await pool.execute(query, params);
 
