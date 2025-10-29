@@ -76,6 +76,9 @@ app.post('/api/sessions', async (req, res) => {
       mode
     } = req.body;
 
+    console.log('[API] POST /api/sessions - req.body:', JSON.stringify(req.body));
+    console.log('[API] userId extracted:', userId, 'type:', typeof userId);
+
     // Validate input (complexity: 2)
     if (!gameName || score === undefined) {
       return res.status(400).json({
@@ -91,6 +94,8 @@ app.post('/api/sessions', async (req, res) => {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [userId || null, gameName, score, accuracyPercentage, correctAttempts, totalAttempts, durationSeconds, mode]
     );
+
+    console.log('[API] Session inserted with user_id:', userId || null, 'sessionId:', result.insertId);
 
     const sessionId = result.insertId;
 
