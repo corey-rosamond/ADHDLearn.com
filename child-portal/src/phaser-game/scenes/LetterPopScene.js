@@ -830,7 +830,11 @@ export default class LetterPopScene extends Phaser.Scene {
 
         // Get userId from localStorage (set during child login)
         const childData = localStorage.getItem('childData');
-        const userId = childData ? JSON.parse(childData).userId : null;
+        console.log('[LetterPop] childData from localStorage:', childData);
+        const parsed = childData ? JSON.parse(childData) : null;
+        console.log('[LetterPop] Parsed childData:', parsed);
+        const userId = parsed ? parsed.userId : null;
+        console.log('[LetterPop] userId for session:', userId);
 
         // Prepare data for results scene
         const resultsData = {
