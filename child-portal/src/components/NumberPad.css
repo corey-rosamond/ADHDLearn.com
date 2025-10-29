@@ -1,0 +1,102 @@
+/* NumberPad.css - ADHD-friendly number pad styling */
+
+.number-pad {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin: 20px auto;
+  max-width: 400px;
+}
+
+.number-pad-row {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.number-pad-button {
+  /* Large touch target - ADHD-friendly */
+  width: 100px;
+  height: 100px;
+
+  /* Colorful and engaging */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 3px solid #fff;
+  border-radius: 20px;
+
+  /* Large, readable text */
+  font-size: 36px;
+  font-weight: bold;
+  color: #fff;
+  font-family: 'Comic Neue', 'Quicksand', sans-serif;
+
+  /* Interaction */
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+
+  /* Center content */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Hover effect - immediate feedback */
+.number-pad-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Active/pressed state - immediate visual feedback */
+.number-pad-button:active,
+.number-pad-button.pressed {
+  transform: scale(0.95);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+/* Special buttons (Back, Clear) - different color */
+.number-pad-button.special {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  font-size: 32px;
+}
+
+.number-pad-button.special:hover {
+  background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+}
+
+/* Accessibility */
+.number-pad-button:focus {
+  outline: 3px solid #ffd700;
+  outline-offset: 3px;
+}
+
+/* Tablet landscape optimizations */
+@media (min-width: 1024px) and (orientation: landscape) {
+  .number-pad {
+    max-width: 500px;
+  }
+
+  .number-pad-button {
+    width: 120px;
+    height: 120px;
+    font-size: 42px;
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 480px) {
+  .number-pad-button {
+    width: 80px;
+    height: 80px;
+    font-size: 30px;
+  }
+
+  .number-pad-row {
+    gap: 10px;
+  }
+
+  .number-pad {
+    gap: 10px;
+  }
+}

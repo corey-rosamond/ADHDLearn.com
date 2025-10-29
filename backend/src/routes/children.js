@@ -53,6 +53,14 @@ router.get('/families/:familyId/children', async (req, res) => {
   try {
     const { familyId } = req.params;
 
+    // Get family name
+    const [families] = await pool.execute(
+      'SELECT family_name FROM families WHERE family_id = ?',
+      [familyId]
+    );
+
+    const familyName = families.length > 0 ? families[0].family_name : null;
+
     // Query children from the family with last active date
     const [children] = await pool.execute(
       `SELECT u.user_id, u.first_name, u.last_name, u.avatar_url, u.birth_date,
@@ -68,6 +76,7 @@ router.get('/families/:familyId/children', async (req, res) => {
 
     res.json({
       success: true,
+      familyName,
       children: children.map(child => ({
         userId: child.user_id,
         firstName: child.first_name,

@@ -8,7 +8,7 @@ export default class LetterPopMenuScene extends Phaser.Scene {
         // Initialize responsive utilities
         this.r = new ResponsiveUtils(this);
 
-        // Create gradient background
+        // Create gradient background directly (fix for missing texture issue)
         this.createBackground();
 
         // Create title
@@ -22,10 +22,41 @@ export default class LetterPopMenuScene extends Phaser.Scene {
 
         // Add floating stars decoration
         this.createFloatingStars();
+
+        // Notify React that scene is fully rendered and ready
+        if (window.gameCallbacks && window.gameCallbacks.onReady) {
+            console.log('[LetterPopMenuScene] Calling onReady callback');
+            // Small delay to ensure everything is fully rendered
+            this.time.delayedCall(200, () => {
+                console.log('[LetterPopMenuScene] Executing onReady');
+                window.gameCallbacks.onReady();
+            });
+        } else {
+            console.warn('[LetterPopMenuScene] No onReady callback found!', {
+                hasCallbacks: !!window.gameCallbacks,
+                hasOnReady: window.gameCallbacks?.onReady
+            });
+        }
     }
 
     createBackground() {
-        BackgroundComponent.createGradient(this, 'letterPopMenuBg');
+        // Add underwater background image (same as LetterPopScene)
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
+
+        const bg = this.add.image(0, 0, 'gameBackground').setOrigin(0, 0);
+
+        // Scale to cover screen
+        const scaleX = width / bg.width;
+        const scaleY = height / bg.height;
+        const scale = Math.max(scaleX, scaleY);
+        bg.setScale(scale);
+
+        // Center the background
+        bg.x = (width - bg.width * scale) / 2;
+        bg.y = (height - bg.height * scale) / 2;
+
+        bg.setDepth(0); // Behind everything
     }
 
     createTitle() {
@@ -482,7 +513,13 @@ export default class LetterPopMenuScene extends Phaser.Scene {
                 yoyo: true,
                 onComplete: () => {
                     backButton.setTexture('btnBlue');
-                    this.scene.start('MainMenu');
+                    // Exit to dashboard instead of MainMenu
+                    if (window.gameCallbacks && window.gameCallbacks.onExit) {
+                        window.gameCallbacks.onExit();
+                    } else {
+                        // Fallback (shouldn't happen)
+                        this.scene.start('MainMenu');
+                    }
                 }
             });
         });

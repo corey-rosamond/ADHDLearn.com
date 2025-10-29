@@ -1,0 +1,165 @@
+/* PinEntry.css - ADHD-friendly PIN entry screen */
+
+.pin-entry {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  font-family: 'Comic Neue', 'Quicksand', sans-serif;
+}
+
+.pin-entry-header {
+  text-align: center;
+  margin-bottom: 40px;
+  animation: fadeInDown 0.6s ease;
+}
+
+.pin-entry-header h1 {
+  font-size: 42px;
+  color: #fff;
+  margin: 0 0 15px 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.pin-entry-header p {
+  font-size: 24px;
+  color: #f0f0f0;
+  margin: 0;
+}
+
+/* PIN Dots Display */
+.pin-dots {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+  transition: all 0.3s ease;
+}
+
+.pin-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.pin-dot.filled {
+  background: #fff;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+  transform: scale(1.1);
+}
+
+/* Shake animation for incorrect PIN */
+.pin-dots.shake {
+  animation: shake 0.5s;
+}
+
+.pin-dots.error .pin-dot {
+  border-color: #ff6b6b;
+}
+
+.pin-dots.error .pin-dot.filled {
+  background: #ff6b6b;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+  20%, 40%, 60%, 80% { transform: translateX(10px); }
+}
+
+/* Error Message */
+.pin-error {
+  background: rgba(255, 107, 107, 0.9);
+  color: #fff;
+  padding: 15px 30px;
+  border-radius: 15px;
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  animation: bounceIn 0.5s;
+  text-align: center;
+  max-width: 400px;
+}
+
+/* Loading State */
+.pin-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  color: #fff;
+  font-size: 20px;
+}
+
+.pin-loading .spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Animations */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 480px) {
+  .pin-entry-header h1 {
+    font-size: 32px;
+  }
+
+  .pin-entry-header p {
+    font-size: 18px;
+  }
+
+  .pin-dot {
+    width: 25px;
+    height: 25px;
+    border-width: 3px;
+  }
+
+  .pin-dots {
+    gap: 15px;
+  }
+
+  .pin-error {
+    font-size: 18px;
+    padding: 12px 20px;
+  }
+}

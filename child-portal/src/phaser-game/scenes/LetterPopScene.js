@@ -1,5 +1,5 @@
 // ES6 Module
-import { saveSession } from '../../services/api.js';
+import { saveSession, saveLetterAttempts } from '../../services/api.js';
 
 export default class LetterPopScene extends Phaser.Scene {
     constructor() {
@@ -18,6 +18,9 @@ export default class LetterPopScene extends Phaser.Scene {
         this.currentLetterIndex = 0;   // Which letter (0-9) we're on
         this.roundStartTime = 0;       // When round started
         this.progressText = null;      // "Letter X of 10" display
+
+        // Letter attempts tracking (for parent analytics)
+        this.letterAttempts = [];      // Track all attempts for confusion matrix
 
         // Countdown timer (per letter)
         this.letterTimeLimit = 10;     // 10 seconds per letter
@@ -64,6 +67,7 @@ export default class LetterPopScene extends Phaser.Scene {
         this.roundStartTime = 0;
         this.startTime = 0;
         this.isPaused = false;
+        this.letterAttempts = [];  // Reset attempt tracking
 
         // Handle page visibility to prevent audio queuing
         this.setupVisibilityHandling();
@@ -461,7 +465,7 @@ export default class LetterPopScene extends Phaser.Scene {
             });
         });
 
-        // Click handler - goes back to main menu
+        // Click handler - exits to dashboard or main menu
         button.on('pointerdown', () => {
             this.tweens.add({
                 targets: button,
@@ -470,7 +474,13 @@ export default class LetterPopScene extends Phaser.Scene {
                 duration: 80,
                 yoyo: true,
                 onComplete: () => {
-                    this.scene.start('MainMenu');
+                    // Check if onExit callback exists (from React)
+                    if (window.gameCallbacks && window.gameCallbacks.onExit) {
+                        window.gameCallbacks.onExit();
+                    } else {
+                        // Fallback to MainMenu for backwards compatibility
+                        this.scene.start('MainMenu');
+                    }
                 }
             });
         });
@@ -692,6 +702,14 @@ export default class LetterPopScene extends Phaser.Scene {
 
     handleCorrectClick(bubble) {
 
+        // Record this attempt for analytics
+        this.letterAttempts.push({
+            letterShown: this.targetLetter,
+            letterSelected: this.targetLetter,
+            isCorrect: true,
+            attemptOrder: this.currentLetterIndex + 1
+        });
+
         // Stop countdown timer
         if (this.countdownTimer) {
             this.countdownTimer.remove();
@@ -733,6 +751,14 @@ export default class LetterPopScene extends Phaser.Scene {
     }
 
     handleLetterTimeout() {
+
+        // Record timeout as an incorrect attempt (no selection)
+        this.letterAttempts.push({
+            letterShown: this.targetLetter,
+            letterSelected: '', // Empty = timeout
+            isCorrect: false,
+            attemptOrder: this.currentLetterIndex + 1
+        });
 
         // Stop countdown timer
         if (this.countdownTimer) {
@@ -802,6 +828,10 @@ export default class LetterPopScene extends Phaser.Scene {
         const correctAttempts = this.score;
         const accuracyPercentage = (correctAttempts / totalLetters) * 100;
 
+        // Get userId from localStorage (set during child login)
+        const childData = localStorage.getItem('childData');
+        const userId = childData ? JSON.parse(childData).userId : null;
+
         // Prepare data for results scene
         const resultsData = {
             score: this.score,
@@ -815,6 +845,7 @@ export default class LetterPopScene extends Phaser.Scene {
         // Save to API
         try {
             const apiResult = await saveSession({
+                userId,  // Link session to child
                 gameName: 'Letter Pop',
                 score: this.score,
                 accuracyPercentage,
@@ -823,6 +854,11 @@ export default class LetterPopScene extends Phaser.Scene {
                 durationSeconds: totalTimeSeconds,
                 mode: 'uppercase'
             });
+
+            // Save letter attempts for confusion matrix analysis
+            if (apiResult.sessionId && this.letterAttempts.length > 0) {
+                await saveLetterAttempts(apiResult.sessionId, this.letterAttempts);
+            }
 
             // Add API response to results data
             resultsData.isHighScore = apiResult.isHighScore;
@@ -839,6 +875,14 @@ export default class LetterPopScene extends Phaser.Scene {
     }
 
     handleIncorrectClick(bubble) {
+
+        // Record this attempt for analytics (confusion matrix)
+        this.letterAttempts.push({
+            letterShown: this.targetLetter,
+            letterSelected: bubble.letter,
+            isCorrect: false,
+            attemptOrder: this.currentLetterIndex + 1
+        });
 
         // Play the letter's audio (e.g., "B", "C", "D") instead of wrong answer sound
         // Play letter pronunciation via AudioManager

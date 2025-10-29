@@ -1,36 +1,35 @@
-import { useEffect, useRef } from 'react';
-import startLetterPopGame from './phaser-game/index.js';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import ChildSelector from './pages/ChildSelector';
+import PinEntry from './pages/PinEntry';
+import ChildDashboard from './pages/ChildDashboard';
+import LetterPopGame from './pages/LetterPopGame';
+import SettingsPage from './pages/SettingsPage';
 import './App.css';
 
+/**
+ * App Component
+ *
+ * Main app with React Router for Phase 7 child login flow
+ * Routes:
+ *   / - Child selector (login screen)
+ *   /pin-entry - PIN entry screen
+ *   /dashboard - Child dashboard
+ *   /letter-pop - Letter Pop game
+ *   /settings - Game settings
+ *
+ * McCabe complexity: 1
+ */
 function App() {
-  const gameRef = useRef(null);
-
-  useEffect(() => {
-    // Initialize Phaser game with existing working code
-    const game = startLetterPopGame();
-    gameRef.current = game;
-
-    // Cleanup on unmount
-    return () => {
-      if (gameRef.current) {
-        gameRef.current.destroy(true);
-        gameRef.current = null;
-      }
-    };
-  }, []);
-
   return (
-    <div id="game-container" style={{
-      width: '100vw',
-      height: '100vh',
-      margin: 0,
-      padding: 0,
-      overflow: 'hidden',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: '#00BCD4'
-    }} />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<ChildSelector />} />
+        <Route path="/pin-entry" element={<PinEntry />} />
+        <Route path="/dashboard" element={<ChildDashboard />} />
+        <Route path="/letter-pop" element={<LetterPopGame />} />
+        <Route path="/settings" element={<SettingsPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

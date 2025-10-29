@@ -204,8 +204,91 @@ async function loginParent(req, res) {
   }
 }
 
+// POST /api/auth/login/child - Child PIN login
+// McCabe complexity: 4
+async function loginChild(req, res) {
+  try {
+    const { userId, pinCode } = req.body;
+
+    // Validate input
+    if (!userId || !pinCode) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields'
+      });
+    }
+
+    // Find child
+    const [children] = await pool.execute(
+      `SELECT user_id, family_id, pin_code, first_name, avatar_url
+       FROM users
+       WHERE user_id = ? AND role = 'child' AND is_active = TRUE`,
+      [userId]
+    );
+
+    if (children.length === 0) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid credentials'
+      });
+    }
+
+    const child = children[0];
+
+    // Verify PIN
+    const pinMatch = await bcrypt.compare(pinCode, child.pin_code);
+
+    if (!pinMatch) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid credentials'
+      });
+    }
+
+    // Generate JWT token with 2-hour expiry (child session)
+    const secret = process.env.JWT_SECRET || 'dev-secret-change-in-production';
+    const token = jwt.sign({
+      userId: child.user_id,
+      familyId: child.family_id,
+      role: 'child'
+    }, secret, { expiresIn: '2h' });
+
+    // Save session
+    const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours
+    await pool.execute(
+      `INSERT INTO auth_sessions (user_id, token, expires_at, ip_address, user_agent)
+       VALUES (?, ?, ?, ?, ?)`,
+      [child.user_id, token, expiresAt, req.ip, req.get('user-agent') || null]
+    );
+
+    // Update last_login
+    await pool.execute(
+      'UPDATE users SET last_login = NOW() WHERE user_id = ?',
+      [child.user_id]
+    );
+
+    res.status(200).json({
+      success: true,
+      token,
+      child: {
+        userId: child.user_id,
+        familyId: child.family_id,
+        firstName: child.first_name,
+        avatar: child.avatar_url
+      }
+    });
+  } catch (error) {
+    console.error('Child login error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+}
+
 module.exports = {
   setPool,
   register,
-  loginParent
+  loginParent,
+  loginChild
 };

@@ -49,6 +49,9 @@ app.post('/api/auth/register', authController.register);
 // POST /api/auth/login/parent - Parent login
 app.post('/api/auth/login/parent', authController.loginParent);
 
+// POST /api/auth/login/child - Child PIN login (Phase 7)
+app.post('/api/auth/login/child', authController.loginChild);
+
 // =============================================================================
 // CHILDREN/FAMILY ROUTES (Phase 5)
 // =============================================================================
@@ -63,6 +66,7 @@ app.use('/api', childrenRoutes.router);
 app.post('/api/sessions', async (req, res) => {
   try {
     const {
+      userId,
       gameName,
       score,
       accuracyPercentage,
@@ -80,12 +84,12 @@ app.post('/api/sessions', async (req, res) => {
       });
     }
 
-    // Insert session
+    // Insert session with userId
     const [result] = await pool.execute(
       `INSERT INTO game_sessions
-       (game_name, score, accuracy_percentage, correct_attempts, total_attempts, duration_seconds, mode)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [gameName, score, accuracyPercentage, correctAttempts, totalAttempts, durationSeconds, mode]
+       (user_id, game_name, score, accuracy_percentage, correct_attempts, total_attempts, duration_seconds, mode)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [userId || null, gameName, score, accuracyPercentage, correctAttempts, totalAttempts, durationSeconds, mode]
     );
 
     const sessionId = result.insertId;
@@ -142,6 +146,52 @@ app.get('/api/sessions/high-scores', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching high scores:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// POST /api/sessions/:sessionId/attempts - Save letter attempts for a session
+// McCabe complexity: 3
+app.post('/api/sessions/:sessionId/attempts', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { attempts } = req.body;
+
+    // Validate input
+    if (!attempts || !Array.isArray(attempts) || attempts.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing or invalid attempts array'
+      });
+    }
+
+    // Insert all attempts in a batch
+    const values = attempts.map(a => [
+      sessionId,
+      a.letterShown,
+      a.letterSelected,
+      a.isCorrect,
+      a.attemptOrder
+    ]);
+
+    const placeholders = values.map(() => '(?, ?, ?, ?, ?)').join(', ');
+    const flatValues = values.flat();
+
+    await pool.execute(
+      `INSERT INTO letter_attempts (session_id, letter_shown, letter_selected, is_correct, attempt_order)
+       VALUES ${placeholders}`,
+      flatValues
+    );
+
+    res.status(201).json({
+      success: true,
+      attemptsRecorded: attempts.length
+    });
+  } catch (error) {
+    console.error('Error saving letter attempts:', error);
     res.status(500).json({
       success: false,
       error: 'Internal server error'

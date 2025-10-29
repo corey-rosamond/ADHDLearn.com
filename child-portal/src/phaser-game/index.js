@@ -30,7 +30,6 @@ import LetterPopMenuScene from './scenes/LetterPopMenuScene.js';
 import LetterPopScene from './scenes/LetterPopScene.js';
 import ResultsScene from './scenes/ResultsScene.js';
 import SettingsScene from './scenes/SettingsScene.js';
-import LetterTestScene from './scenes/LetterTestScene.js';
 
 // Make classes globally available for scenes (temporary bridge solution)
 // This allows existing scene code to work without massive refactoring
@@ -70,7 +69,7 @@ const config = {
       debug: false
     }
   },
-  backgroundColor: '#00BCD4',
+  backgroundColor: '#667eea',
   scene: [
     BootScene,
     PreloadScene,
@@ -78,20 +77,20 @@ const config = {
     LetterPopMenuScene,
     LetterPopScene,
     ResultsScene,
-    SettingsScene,
-    LetterTestScene
-  ]
+    SettingsScene
+  ],
+  autoStart: true // Automatically start the first scene (BootScene)
 };
 
-export default function startLetterPopGame() {
-  console.log('[Letter Pop] Initializing game...');
-  console.log('[Letter Pop] Config:', config);
-  console.log('[Letter Pop] Scenes:', config.scene);
+export default function startLetterPopGame(callbacks = {}) {
+  // Store callbacks globally so scenes can access them
+  window.gameCallbacks = callbacks;
 
   const game = new Phaser.Game(config);
 
+  // Start BootScene once Phaser is ready
   game.events.once('ready', () => {
-    console.log('[Letter Pop] Game ready! Current scene:', game.scene.keys);
+    game.scene.start('Boot');
   });
 
   // Log any errors
