@@ -87,15 +87,24 @@ app.post('/api/sessions', async (req, res) => {
       });
     }
 
-    // Insert session with userId
+    // Insert session with userId (convert undefined to null for all fields)
     const [result] = await pool.execute(
       `INSERT INTO game_sessions
        (user_id, game_name, score, accuracy_percentage, correct_attempts, total_attempts, duration_seconds, mode)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [userId || null, gameName, score, accuracyPercentage, correctAttempts, totalAttempts, durationSeconds, mode]
+      [
+        userId ?? null,
+        gameName,
+        score ?? 0,
+        accuracyPercentage ?? null,
+        correctAttempts ?? null,
+        totalAttempts ?? null,
+        durationSeconds ?? null,
+        mode ?? null
+      ]
     );
 
-    console.log('[API] Session inserted with user_id:', userId || null, 'sessionId:', result.insertId);
+    console.log('[API] Session inserted with user_id:', userId ?? null, 'sessionId:', result.insertId);
 
     const sessionId = result.insertId;
 
